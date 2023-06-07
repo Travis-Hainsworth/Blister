@@ -15,39 +15,68 @@ import numpy as np
 import pandas as pd
 
 
-def clean_mocap_data(file_path):
-    mocap = pd.read_csv(file_path, skiprows=7)
+def clean_mocap_data(mocap):
+    #mocap = pd.read_csv(file_path, skiprows=7)
 
     # Find the MTS head column
-    i = max(mocap.iloc[1, :])
-    max_height = max(mocap.iloc[:, 1])
+    firstRow = mocap.iloc[0]
+    YVals = firstRow[3::3]
+    maxY = max(YVals)
+    
+    end = len(mocap.columns)
+    firstRow = mocap.iloc[0]
+    YVals = firstRow[3::3]
+    maxY = max(YVals)
 
-    y_vars = np.array(mocap.iloc[:, 3::3])
+    findingRimTop = YVals
+    for val in findingRimTop.index:
+        if(findingRimTop[val] == maxY):
+            #MTS Head Column -> mtsHeadY
+            mtsHeadY = val
+            YVals = YVals.drop(val)
 
-    for i in range(3):
-        if y_vars[1, i] == max_height:
-            y_vars[2, i] = 0
+    secondMaxY = max(YVals)
 
-    rim_top_index = np.argmax(y_vars[0, :])
-    y_vars = np.delete(y_vars, rim_top_index, 1)
-    rim_top = (rim_top_index-1)*3+4
+    for val in YVals.index:
+        if(YVals[val] == secondMaxY):
+            #Rim Top Column -> rimTopY
+            rimTopY = val
+            YVals = YVals.drop(val)
 
-    center_index = np.argmax(y_vars[0, :])
-    center = (center_index-1)*3+4
+    thirdMaxY = max(YVals)
+    minY = min(YVals)
 
-    mo_head_height = mocap[:, i]
-    mo_head_height = mo_head_height - mo_head_height[1]
-    mo_head_height = -mo_head_height
+    for val in YVals.index:
+        if(YVals[val] == thirdMaxY):
+            #Center Hub Column -> centerY
+            centerY = val
+        elif(YVals[val] == minY):
+            #Bottom Rim Column -> bottomRimY
+            bottomRimY = val
 
-    thresh = .05
-    starting_index = np.argmax(mo_head_height > thresh)
+    findingRimTop[mtsHeadY] = maxY
 
-    peak_height = max(mo_head_height)
-    thresh = .025
+    MTSHeadYCol = testDF[mtsHeadY]
 
-    index_of_top_height = np.argmax(mo_head_height > peak_height-thresh)
-    print("hello")
-    #mocap = mocap(starting_index:index_of_top_height, :)
+    start = False
+    index = 3
+    maxYFloat = float(maxY)
+    
+    
+    #Finding row where MTS Head starts to move (allegedly) -> startIndex
+    while(start == False):
+        val = float(MTSHeadYCol[index])
+        if(val < maxYFloat-0.05):
+            start = True
+            startIndex = index
+        index = index+1
+    
+    #dropping all values in the dataframe before the start index
+    mocap = mocap.drop(mocap.index[:startIndex])
+
+    #Still need to find the "end" of the test. Previous group
+    #was finding the row where the MTS head had reached back to the
+    #original starting height.
 
 
 clean_mocap_data(r"C:\Users\ethan\Test\WAOU700lbf.csv")
