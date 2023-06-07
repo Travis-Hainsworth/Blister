@@ -4,7 +4,7 @@ close all
 
 filePath = '/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/DTS 2-10-23 Tire On/';
 filePathMocap = strcat(filePath, 'Optitrack Data/DTS700lbf.csv');
-filePathMTS = strcat(filePath, 'MTS Data/DTS700lbf_MTS_2-10.csv');
+filePathMTS = strcat(filePath, 'MTS Data/0DTS700lbf_MTS_2-10.csv');
 
 [mocap, RimTop, Center, I] = cleanMocapData(filePathMocap);
 [MTS, MTS_time, MTS_height, MTS_load] = cleanMTSData(filePathMTS);
