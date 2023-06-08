@@ -1,4 +1,4 @@
-import math
+from scipy import interpolate
 import pandas as pd
 import numpy as np
 from os import listdir
@@ -188,27 +188,58 @@ def clean_mocap_data(list_df):
 
 """
 If we want a force vs. displacement graph then we need the mocap data to
-have the same sampling frequency as the MTS (plot(MTS load vs mocap height))
-
-Mocap has more data points
+have the same sampling frequency as the MTS (plot(MTS load vs mocap height)).
+Mocap has more data points so the amount of data points is getting equalized using a linear interpolation.
 
 Input:
-mocap = individual mocap data
-MTS = individual MTS data
+mocap = List of mocap dataframes.
+mts = List of mts dataframes.
 
 Output:
-synced = trimmed mocap data based upon size of MTS data
+synced_df_list = List of interpolated mocap data as a dataframe.  
 """
 
 
-def mocap_synced(mocap_list, mts_list):
+def mocap_synced(mocap, mts):
     synced_df_list = []
-    for counter in range(len(mocap_list)):
-        ratio = mocap_list[counter].shape[0] / mts_list[counter].shape[0]
-        synced = mocap_list[counter][0::math.ceil(ratio)]
 
-        # Reset the indexing of the data frames so it starts at 0 instead of 3.
-        synced_df_list.append(synced.reset_index(drop=True))
+    for counter in range(len(mocap)):
+        # Determine the min length between mocap and mts.
+        min_length = min(mocap[counter].shape[0], mts[counter].shape[0])
+
+        # Need a time range to use in the interpolation so this takes the smallest time value of either test.
+        max_mocap_time = np.double(mocap[counter]['Time (sec)'].max())
+        max_mts_time = np.double(mts[counter]['Time (sec)'].max())
+        # Overall end time of the tests.
+        max_time = min(max_mts_time, max_mocap_time)
+
+        # Create time vectors for interpolation starting at 0 and going to the max time.
+        time_mocap = np.linspace(0, max_time, mocap[counter].shape[0])
+
+        # Interpolate the data frames to the minimum length.
+        interp_func_mocap = interpolate.interp1d(time_mocap, mocap[counter], axis=0, kind='linear')
+        interpolated_mocap = interp_func_mocap(np.linspace(0, max_time, min_length))
+
+        # Preserve the column names from the original dataframes.
+        columns_mocap = mocap[counter].columns
+
+        # Change the interpolated data back into a dataframe and fix the column names.
+        interpolated_mocap_df = pd.DataFrame(interpolated_mocap, columns=columns_mocap)
+
+        # Append the interpolated dataframe to the list
+        synced_df_list.append(interpolated_mocap_df)
 
     return synced_df_list
+
+
+# def mocap_synced(mocap_list, mts_list):
+#     synced_df_list = []
+#     for counter in range(len(mocap_list)):
+#         ratio = mocap_list[counter].shape[0] / mts_list[counter].shape[0]
+#         synced = mocap_list[counter][0::math.ceil(ratio)]
+#
+#         # Reset the indexing of the data frames, so it starts at 0 instead of 3.
+#         synced_df_list.append(synced.reset_index(drop=True))
+#
+#     return synced_df_list
 

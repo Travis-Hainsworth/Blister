@@ -17,7 +17,7 @@ rim_top_marker = All the data related to the rim_top marker.
 
 
 def get_useful_markers(mocap_synced,  axle_column, rim_top_column):
-    print(axle_column)
+
     rim_top_marker = mocap_synced.iloc[:, rim_top_column-1:rim_top_column+2]
     axle_marker = mocap_synced.iloc[:, axle_column-1:axle_column+2]
 
@@ -55,7 +55,6 @@ def calc_radial_compression(axle_marker_data, rim_top_marker_data, smooth=True):
 
     # Calculate radial compression by removing the first value from every value so the data starts at (0, 0)
     radial_compression = [x - radial_length[0] for x in radial_length]
-
     # Calculate the moving average to help reduce noise
     window_size = 50
     radial_compression_smooth = convolve(radial_compression, np.ones(window_size) / window_size, mode='valid')
