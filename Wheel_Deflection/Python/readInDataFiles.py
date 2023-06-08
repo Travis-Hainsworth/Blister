@@ -1,9 +1,7 @@
 import math
-
 import pandas as pd
 import numpy as np
 from os import listdir
-
 """"
 Gets all MTS files within a folder. Make sure the files are named with a number
 
@@ -205,21 +203,12 @@ synced = trimmed mocap data based upon size of MTS data
 
 def mocap_synced(mocap_list, mts_list):
     synced_df_list = []
-
     for counter in range(len(mocap_list)):
         ratio = mocap_list[counter].shape[0] / mts_list[counter].shape[0]
         synced = mocap_list[counter][0::math.ceil(ratio)]
-        synced_df_list.append(synced)
+
+        # Reset the indexing of the data frames so it starts at 0 instead of 3.
+        synced_df_list.append(synced.reset_index(drop=True))
 
     return synced_df_list
-
-
-list_mocap_data = getMocapData(r"C:\Users\ethan\Test\WAOU_Mocap_Data")
-clean_mocap = clean_mocap_data(list_mocap_data)
-list_mts_data = getMTSData(r"C:\Users\ethan\Test\WAOU_MTS_Data")
-clean_mts = clean_MTS_data(list_mts_data)
-
-synced_data = mocap_synced(clean_mocap, clean_mts)
-print(synced_data)
-
 
