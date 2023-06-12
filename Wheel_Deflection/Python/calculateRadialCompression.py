@@ -59,7 +59,7 @@ def calc_radial_compression(axle_marker_data, rim_top_marker_data, smooth=True):
     radial_compression_smooth = convolve(radial_compression, np.ones(window_size) / window_size, mode='same')
 
     if smooth:
-        return radial_compression
-    else:
         return radial_compression_smooth
+    else:
+        return radial_compression
 
