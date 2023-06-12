@@ -1,6 +1,3 @@
-import numpy as np
-from matplotlib import ticker
-
 from readInDataFiles import *
 from calculateRadialCompression import *
 import matplotlib.pyplot as plt
