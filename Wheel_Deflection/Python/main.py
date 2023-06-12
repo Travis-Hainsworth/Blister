@@ -32,6 +32,7 @@ def dataProcessingMain(filePathOptitrack, filePathMTS):
                                               'Compression (in)': np.double(radial_compression_data_inches)})
         
         synced_data[counter]['Compression (in)'] = np.double(radial_compression_data_inches)
+        synced_data[counter]['Load (lbf)'] = np.double(clean_mts[counter]['Load (lbf)'])
 
         fig, ax = plt.subplots(figsize=(12, 6))
         ax.plot(load_compression_data['Load (lbf)'], load_compression_data['Compression (in)'])
