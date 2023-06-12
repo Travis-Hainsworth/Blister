@@ -40,18 +40,17 @@ radial_compression_smooth = Reduce noise of radial_compression using a moving av
 
 
 def calc_radial_compression(axle_marker_data, rim_top_marker_data, smooth=True):
-
     # For some reason some data points in these data frames are considered type 'str'.
     # These 2 lines make all points into numeric values. It does not remove any data points.
     rim_top_marker_data = rim_top_marker_data.apply(pd.to_numeric, errors='coerce')
     axle_marker_data = axle_marker_data.apply(pd.to_numeric, errors='coerce')
 
     # Align the columns for subtraction to find radial vectors.
-    rim_top_marker_data.columns = axle_marker_data.columns
-    radial_vector = axle_marker_data - rim_top_marker_data
+    radial_vector = axle_marker_data['center_hub_y'] - rim_top_marker_data['rim_top_y']
 
     # Calculate Euclidian length for each radial vector.
-    radial_length = np.sqrt(np.sum(radial_vector**2, axis=1))
+    # radial_length = np.sqrt(np.sum(radial_vector.values**2, axis=1))
+    radial_length = np.abs(radial_vector)
 
     # Calculate radial compression by removing the first value from every value so the data starts at (0, 0)
     radial_compression = [x - radial_length[0] for x in radial_length]

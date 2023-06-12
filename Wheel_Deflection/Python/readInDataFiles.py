@@ -127,6 +127,7 @@ i = index of the matrix column corresponding to the MTS head reflective dot
 
 
 def clean_mocap_data(list_df):
+    clean_list_df = []
     # Find the MTS head column
     for df in list_df:
         firstRow = df.iloc[0]
@@ -179,11 +180,11 @@ def clean_mocap_data(list_df):
         # Finding where the compression of the MTS ends
         peak_height = df['mts_head_y'].max()
         peak_height_index = np.argmax(df['mts_head_y'] > peak_height - .025)
+        df = df.iloc[starting_index:peak_height_index]
 
-        # Trimming all the mocap data based on the bounds
-        df = df[starting_index:peak_height_index]
+        clean_list_df.append(df)
 
-    return list_df
+    return clean_list_df
 
 
 """
