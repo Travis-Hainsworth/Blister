@@ -57,10 +57,10 @@ def calc_radial_compression(axle_marker_data, rim_top_marker_data, smooth=True):
     radial_compression = [x - radial_length[0] for x in radial_length]
     # Calculate the moving average to help reduce noise
     window_size = 50
-    radial_compression_smooth = convolve(radial_compression, np.ones(window_size) / window_size, mode='valid')
+    radial_compression_smooth = convolve(radial_compression, np.ones(window_size) / window_size, mode='same')
 
     if smooth:
-        return radial_compression
-    else:
         return radial_compression_smooth
+    else:
+        return radial_compression
 
