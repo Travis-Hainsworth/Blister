@@ -1,4 +1,3 @@
-from scipy import interpolate
 import pandas as pd
 import numpy as np
 from os import listdir
@@ -112,7 +111,7 @@ def clean_MTS_data(list_df):
 
 
 """"
-Mocap data processsing function
+Mocap data processing function
 
 Input:
 file_path = the path to the .csv file containing the data collected by the mocap system

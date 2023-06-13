@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from dataProcessing import *
-
 """
 PLots a shaded error bar graph of all tests performed. Shaded region is +/- 1 standard deviation.
 Also plots the individual tests.
@@ -16,13 +15,13 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
     plt.subplot(121)
     plt.ylabel('Compression (in)')
     plt.xlabel('Load (lbf)')
-    lower_bound = mean_of_displacements - (2*std_of_displacements)
-    upper_bound = mean_of_displacements + (2*std_of_displacements)
+    lower_bound = mean_of_displacements - std_of_displacements
+    upper_bound = mean_of_displacements + std_of_displacements
 
     plt.suptitle('Quasi-Static Loading on Bike Rims with Tires')
-    plt.title('Shaded Region: +/- 2 sigma')
+    plt.title('Shaded Region: +/- 1 sigma')
 
-    plt.fill_between(independent_variable, lower_bound, upper_bound, color='green', alpha=.25)
+    plt.fill_between(independent_variable, lower_bound, upper_bound, color='green', alpha=.15)
     plt.plot(independent_variable, mean_of_displacements, color='gray')
 
     plt.setp(plt.gca().lines, linewidth=1)
@@ -36,3 +35,4 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
         plt.plot(independent_variable, displacements[i])
 
     plt.show()
+
