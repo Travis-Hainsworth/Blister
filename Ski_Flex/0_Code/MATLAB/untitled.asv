@@ -26,7 +26,7 @@ data_matrix = zeros(0, 4);
 pause_time = get_pause_time(test_interval_mm, change_per_rev, seconds_per_rev);
 
 %% RUN TEST
-s=serialport(arudiuno_port,115200); 
+s=serialport(arudiuno_port,9600); 
 stop_num=0;
 
 
