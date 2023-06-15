@@ -38,7 +38,7 @@ void setup() {
   
 
   stepper1.setMaxSpeed(1500); //pulse/steps per second
-  stepper1.setAcceleration(500); //steps per second per second to accelerate
+  stepper1.setAcceleration(750); //steps per second per second to accelerate
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
@@ -82,7 +82,7 @@ void stop_testing(){
     //move_x_steps((long) -stepper1.currentPosition());
     byte sig = 42;
     Serial.flush();
-    Serial.println(-stepper1.currentPosition());
+    Serial.println(sig);
     testing_state = false; 
     detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN));   
 }
@@ -112,7 +112,7 @@ void loop() {
           count+=1;
           //limitSwitchObj.loop(); // MUST call the loop() function first
 
-          String message = Serial.readString();
+          String message = Serial.readStringUntil("\n");
           
           //String message = "4,32000,0";
           int numValues = 3;
@@ -137,8 +137,10 @@ void loop() {
             {
               long num_steps = (long) message_arr[1];
               long dir = get_direction(message_arr[2]);
-              move_x_steps(dir*num_steps);
-              delay(10000);
+              // Serial.flush();
+              // Serial.println(num_steps);
+              move_x_steps(dir*abs(num_steps));
+              //delay(10000);
               Serial.flush();//exit(1);
               break;
             }
@@ -149,7 +151,7 @@ void loop() {
             // }
             default:
             {
-              Serial.println("In default section of switch stament");
+              //Serial.println("In default section of switch stament");
               break;
             }
           }  
@@ -159,7 +161,7 @@ void loop() {
 void test_logic(float length_between_data_points, long direction){
   if (testing_state){
       //float length_between_data_points = 10;//signal_dis.toFloat();//desired distance in mm between each datapoint 
-      long steps2 = direction*length_between_data_points_to_SP_steps(stepsPerRevolution, length_between_data_points, lead_distance);
+      long steps2 = direction*abs(length_between_data_points_to_SP_steps(stepsPerRevolution, length_between_data_points, lead_distance));
       number_steps_for_test += steps2;
       //stepper_status();
       move_x_steps(steps2);
@@ -170,12 +172,13 @@ void test_logic(float length_between_data_points, long direction){
       // detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN));
       //stepper_status();
       move_x_steps((long) -stepper1.currentPosition());
-      stepper1.stop();
+      //stepper1.stop();
       byte sig = 42;
       Serial.flush();
       Serial.println(sig);
       //stepper1.stop()
-      delay(10000);
+      //delay(10000);
+      //stepper1.setCurrentPosition(0);
       Serial.flush();//exit(1);
   }
 }
