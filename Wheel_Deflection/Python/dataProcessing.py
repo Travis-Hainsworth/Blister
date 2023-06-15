@@ -27,6 +27,7 @@ def data_processing(filePathOptitrack, filePathMTS, smoothing=False):
     synced_data = mocap_synced(clean_mocap, clean_mts)
 
     for counter in range(len(list_mocap_data)):
+        string = "csv" + str(counter) + ".csv"
         column_names = synced_data[counter].columns
         axle_marker_data, rim_top_marker_data = get_useful_markers(synced_data[counter],
                                                                    column_names.get_loc('center_hub_y'),
@@ -47,6 +48,8 @@ def data_processing(filePathOptitrack, filePathMTS, smoothing=False):
         pad = len(clean_mts[counter]) - len(synced_data[counter])
         synced_data[counter]['Load (lbf)'] = \
             np.double(clean_mts[counter]['Load (lbf)'][pad:])
+
+        # synced_data[counter].to_csv(string)
 
     return synced_data
 

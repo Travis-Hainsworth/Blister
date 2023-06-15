@@ -52,9 +52,7 @@ def getMocapData(folder_dir):
 
         DF = DF.drop(index=0)
         DF = DF.drop(index=1)
-
         DF = fixMocapDF(DF)
-
         DF = DF.drop(index=2)
 
         combinedCSVs.append(DF)

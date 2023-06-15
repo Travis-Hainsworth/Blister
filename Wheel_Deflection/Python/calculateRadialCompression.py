@@ -46,19 +46,20 @@ def calc_radial_compression(axle_marker_data, rim_top_marker_data, smooth=True):
     axle_marker_data = axle_marker_data.apply(pd.to_numeric, errors='coerce')
 
     # Align the columns for subtraction to find radial vectors.
-    radial_vector = axle_marker_data['center_hub_y'] - rim_top_marker_data['rim_top_y']
+    radial_vector = rim_top_marker_data['rim_top_y'] - axle_marker_data['center_hub_y']
 
     # Calculate Euclidian length for each radial vector.
-    # radial_length = np.sqrt(np.sum(radial_vector.values**2, axis=1))
+    # radial_length = np.sqrt(np.sum(radial_vector**2))
     radial_length = np.abs(radial_vector)
 
     # Calculate radial compression by removing the first value from every value so the data starts at (0, 0)
     radial_compression = [x - radial_length[0] for x in radial_length]
 
     # Calculate the moving average to help reduce noise
-    window_size = 50
+    window_size = 360
     radial_compression_smooth = convolve(radial_compression, np.ones(window_size) / window_size,
                                          mode='valid')
+    # same or valid
 
     if smooth:
         return radial_compression
