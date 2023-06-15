@@ -49,13 +49,13 @@ while stop_num~=42
     flush(s);
     stop_num = str2num(readData2);
     count = count + 1;
-    disp("number of datapoints");
-    disp(count);
-    disp("number of rotations");
-    disp(stop_num/(200*8));
-    disp("numer of steps for test at this point");
-    disp(stop_num);
-    disp("");
+    % disp("number of datapoints");
+    % disp(count);
+    % disp("number of rotations");
+    % disp(stop_num/(200*8));
+    % disp("numer of steps for test at this point");
+    % disp(stop_num);
+    % disp("");
 %     if stop_num == 42
 %         disp("number of step that it is going to walk back");
 %         pause(1.5);
