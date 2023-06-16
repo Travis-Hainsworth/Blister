@@ -149,10 +149,8 @@ void loop() {
             {
               //"command,#,#"
               long steps_from_start = stepper1.currentPosition();
-              if(steps_from_start != 0){
-                move_x_steps(-1*steps_from_start);
-              }
-              send_finish_signal(MOVE_TO_START);
+              move_x_steps(-1*steps_from_start);
+              send_finish_signal(steps_from_start);
               break;
             }
             case SET_CURRENT_POS:

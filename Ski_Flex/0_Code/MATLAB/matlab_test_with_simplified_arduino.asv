@@ -63,9 +63,13 @@ end
 % data_matrix(end,:) = []; 
 
 
-serial_string_move_to_start = strcat(num2str(MOVE_TO_START),",0,0");
+serial_string_move_to_start = strcat(num2str(MOVE_TO_START),",1,0");
 flush(s);
 writeline(s,serial_string_move_data_points);
+r = readline(s);
+flush(s);
+stop_num = str2num(r);
+disp(r);
 
 flush(s);
 clear s;
@@ -95,18 +99,39 @@ arduino_port = 'COM3';
 mm = get_current_position(arduino_port);
 disp(mm);
 %%
+function write(s, message)
+    flush(s);
+    writeline(s,message);
+end
+
+function out = read(s)
+    out = readline(s);
+    flush(s);
+end
+
+function sig = write_and_read(s, message)
+    write(s,message);
+    pause(1);
+    disp("wait");
+    waitfor(s, "NumBytesAvailable");
+    sig = read(s);
+end
+
+function ret_mm = return_to_start(arduino_port)
+    GET_CURRENT_POSITION = 14;
+    s=serialport(arduino_port,115200); 
+    pause(2);
+    serial_string = strcat(num2str(GET_CURRENT_POSITION),",-1,-1");
+    ret_mm = write_and_read(s, serial_string);
+    clear s;
+end 
+
 function ret_mm = get_current_position(arduino_port)
     GET_CURRENT_POSITION = 14;
     s=serialport(arduino_port,115200); 
     pause(2);
     serial_string = strcat(num2str(GET_CURRENT_POSITION),",-1,-1");
-    flush(s);
-    writeline(s,serial_string);
-    pause(1);
-    disp("wait");
-    waitfor(s, "NumBytesAvailable");
-    ret_mm = readline(s);
-    flush(s);
+    ret_mm = write_and_read(s, serial_string);
     clear s;
 end
 
@@ -115,12 +140,7 @@ function ret_signal = move_x_mm(dis_mm, dir, arduino_port)
     s=serialport(arduino_port,115200); 
     pause(2);
     serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
-    flush(s);
-    writeline(s,serial_string);
-    pause(1);
-    disp("wait");
-    waitfor(s, "NumBytesAvailable");
-    ret_signal = readline(s);
+    ret_signal = write_and_read(s, serial_string);
     flush(s);
     clear s;
 end
@@ -130,12 +150,7 @@ function ret_signal = set_current_position(pos,arduino_port)
     s=serialport(arduino_port,115200); 
     pause(2);
     serial_string = strcat(num2str(SET_CURRENT_POS),",",num2str(pos),",0");
-    flush(s);
-    writeline(s,serial_string);
-    pause(1);
-    disp("wait");
-    waitfor(s, "NumBytesAvailable");
-    ret_signal = readline(s);
+    ret_signal = write_and_read(s, serial_string);
     flush(s);
     clear s;
 end

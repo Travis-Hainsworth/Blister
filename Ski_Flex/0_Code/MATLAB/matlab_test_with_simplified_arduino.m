@@ -99,33 +99,38 @@ arduino_port = 'COM3';
 mm = get_current_position(arduino_port);
 disp(mm);
 %%
-function ret_mm = get_current_position(arduino_port)
-    GET_CURRENT_POSITION = 14;
+%FUNCTION TO MOVE TO START FROM CURRENT POSITION
+%"command,#,#"
+arduino_port = 'COM3';
+sig = return_to_start(arduino_port);
+disp(sig);
+%%
+
+function ret_mm = return_to_start(arduino_port)
+    MOVE_TO_START = 2;
     s=serialport(arduino_port,115200); 
     pause(2);
-    serial_string = strcat(num2str(GET_CURRENT_POSITION),",-1,-1");
-    flush(s);
-    writeline(s,serial_string);
-    pause(1);
-    disp("wait");
-    waitfor(s, "NumBytesAvailable");
-    ret_mm = readline(s);
-    flush(s);
+    serial_string = strcat(num2str(MOVE_TO_START),",0,1");
+    ret_mm = serial_communication(s, serial_string);
     clear s;
-end
+end 
 
 function ret_signal = move_x_mm(dis_mm, dir, arduino_port)
     MOVE_X = 4;
     s=serialport(arduino_port,115200); 
     pause(2);
     serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
+    ret_signal = serial_communication(s, serial_string);
     flush(s);
-    writeline(s,serial_string);
-    pause(1);
-    disp("wait");
-    waitfor(s, "NumBytesAvailable");
-    ret_signal = readline(s);
-    flush(s);
+    clear s;
+end
+
+function ret_mm = get_current_position(arduino_port)
+    GET_CURRENT_POSITION = 14;
+    s=serialport(arduino_port,115200); 
+    pause(2);
+    serial_string = strcat(num2str(GET_CURRENT_POSITION),",0,1");
+    ret_mm = serial_communication(s, serial_string);
     clear s;
 end
 
@@ -134,12 +139,55 @@ function ret_signal = set_current_position(pos,arduino_port)
     s=serialport(arduino_port,115200); 
     pause(2);
     serial_string = strcat(num2str(SET_CURRENT_POS),",",num2str(pos),",0");
+    ret_signal = serial_communication(s, serial_string);
     flush(s);
-    writeline(s,serial_string);
+    clear s;
+end
+
+function ret_signal = set_stepsPerRev(stepsPerRev,arduino_port)
+    SET_STEPS_PER_REVOLUTION = 12;
+    s=serialport(arduino_port,115200); 
+    pause(2);
+    serial_string = strcat(num2str(SET_STEPS_PER_REVOLUTION),",",num2str(stepsPerRev),",0");
+    ret_signal = serial_communication(s, serial_string);
+    flush(s);
+    clear s;
+end
+
+function ret_signal = set_acceleration(acceleration,arduino_port)
+    SET_ACCELERATION = 10;
+    s=serialport(arduino_port,115200); 
+    pause(2);
+    serial_string = strcat(num2str(SET_ACCELERATION),",",num2str(acceleration),",0");
+    ret_signal = serial_communication(s, serial_string);
+    flush(s);
+    clear s;
+end
+
+function ret_signal = set_max_speed(max_speed,arduino_port)
+    SET_MAX_SPEED = 8;
+    s=serialport(arduino_port,115200); 
+    pause(2);
+    serial_string = strcat(num2str(SET_MAX_SPEED),",",num2str(max_speed),",0");
+    ret_signal = serial_communication(s, serial_string);
+    flush(s);
+    clear s;
+end
+
+function sig = serial_communication(s, message)
+    write(s,message);
     pause(1);
     disp("wait");
     waitfor(s, "NumBytesAvailable");
-    ret_signal = readline(s);
+    sig = read(s);
+end
+
+function write(s, message)
     flush(s);
-    clear s;
+    writeline(s,message);
+end
+
+function out = read(s)
+    out = readline(s);
+    flush(s);
 end
