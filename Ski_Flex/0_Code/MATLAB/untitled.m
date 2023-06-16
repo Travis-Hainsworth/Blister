@@ -134,7 +134,7 @@ inclinometer_port_back = "COM6";
 force_gage1_port = 'COM5'; 
 force_gage2_port = 'COM6';
 
-counter = 143;
+counter = 94;
 while(counter ~= 0)
     %[pitchFront, rollFront] = get_HWT905TTL_data("COM5");
     %[pitchBack, rollBack] = get_HWT905TTL_data("COM6");
@@ -142,7 +142,8 @@ while(counter ~= 0)
     rollFront = .02;
     pitchBack = .02;
     rollBack = .02;
-    [force1, force2]=force_average("COM7", "COM8",1);
+    force1 = .3;
+    force2 = .4;
     
     disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
     disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
@@ -158,12 +159,56 @@ while(counter ~= 0)
 
 end
 
+%%
+
+test_distance_mm = 715;
+dist_between_mm = 940;
+test_interval_mm = 10;
+
+data_matrix = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, dist_between_mm)
+
+
 %% DateTime String for datafile creation
 
 % Creates Datetime of start of test
 dateTime = strrep(datestr(now),' ','_'); 
 dateTime = strrep(dateTime,':','-');
 fileName = strcat(model_name, '_',  test_type, '_', dateTime, '.xlsx');
+
+%% cancat data together, fill in missing data
+
+function output = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, dist_between_mm)
+        num_of_missing_points = (dist_between_mm-test_distance_mm)/test_interval_mm;
+        front_force_data = data_matrix_front(end, 3:4);
+        back_force_data = data_matrix_back(1, 3:4);
+
+        force1_front = front_force_data(1);
+        force2_front = front_force_data(2);
+        
+        force1_back = back_force_data(1);
+        force2_back = back_force_data(2);
+
+        pitch_roll_front_data = data_matrix_front
+
+        force1_average = (force1_back+force1_front)/2;
+        force2_average = (force2_back+force2_front)/2;
+
+        pitch = 0;
+        roll = 0; 
+
+        row_entry = [pitch, roll, force1_average, force2_average];
+        
+        for i = 1:num_of_missing_points
+            data_matrix_front = [data_matrix_front; row_entry];
+        end
+
+        data_matrix = [data_matrix_front;data_matrix_back];
+
+        output = data_matrix;
+end
+
+
+
 
 %% Old Inclinometer Code
 
