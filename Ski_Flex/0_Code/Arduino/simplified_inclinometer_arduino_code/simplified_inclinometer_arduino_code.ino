@@ -13,17 +13,17 @@
 #define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
 #define DRIVER_ADDRESS   0b00   // TMC2209 Driver address according to MS1 and MS2
 #define R_SENSE          0.11f  // SilentStepStick series use 0.11 ...and so does my fysetc TMC2209 (?)
-#define LIMIT_SWITCH_PIN 2
-#define LIMIT_SWITCH_PIN 3
-// #define LIMIT_SWITCH_PIN 4
-// #define LIMIT_SWITCH_PIN 5
+#define LIMIT_SWITCH_PIN_1 2
+#define LIMIT_SWITCH_PIN_2 3
+// #define LIMIT_SWITCH_PIN_3 4
+// #define LIMIT_SWITCH_PIN_4 5
 
 
 SoftwareSerial SoftSerial(SW_RX, SW_TX);
 TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
-ezButton limitSwitchObj(LIMIT_SWITCH_PIN);
+ezButton limitSwitchObj(LIMIT_SWITCH_PIN_1);
 
 float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
@@ -74,9 +74,9 @@ void setup() {
   // digitalWrite(EN_PIN, LOW);
   
   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
   number_steps_for_test = 0;
   count = 0;
@@ -107,12 +107,13 @@ void stop_testing(){
 *
 */
 
-const int TEST = 2;
+const int MOVE_TO_START = 2;
 const int MOVE_X = 4;
 const int SET_CURRENT_POS = 6;
 const int SET_MAX_SPEED = 8;
 const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
+const int GET_CURRENT_POSITION = 14;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
@@ -137,11 +138,11 @@ void loop() {
             case MOVE_X:
             {
               //"command,distance_mm,direction"
-              float distance_between_data_points = (float) message_arr[1];
+              float length_mm = (float) message_arr[1];
               long direction = get_direction(message_arr[2]);
-              long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_between_data_points, lead_distance));
+              long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
               move_x_steps(steps);
-              send_finish_signal(SET_CURRENT_POS);
+              send_finish_signal(MOVE_X);
               break;
             }
             case MOVE_TO_START:
@@ -151,7 +152,7 @@ void loop() {
               if(steps_from_start != 0){
                 move_x_steps(-1*steps_from_start);
               }
-              send_finish_signal(SET_CURRENT_POS);
+              send_finish_signal(MOVE_TO_START);
               break;
             }
             case SET_CURRENT_POS:
@@ -185,8 +186,10 @@ void loop() {
             }
             case GET_CURRENT_POSITION:
             {
+              //"command,#,#"
               long current_position = stepper1.currentPosition();
-              send_finish_signal
+              int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+              send_finish_signal(current_position_in_mm);
             }
             default:
             {
@@ -208,10 +211,16 @@ long get_direction(int dir){
   else        {return (long) -1;}
 }
 
-int convert_distance_from_mm_to_steps(float spr, float length_between_data, float lead_distance){
-      float num_rotations = length_between_data / lead_distance;
+long convert_distance_from_mm_to_steps(float spr, float length_mm, float lead_distance){
+      float num_rotations = length_mm / lead_distance;
       float num_steps = spr * num_rotations;
       return (long) num_steps;
+}
+
+int convert_distance_from_steps_to_mm(float spr, float length_steps, float lead_distance){
+      float num_rotations = length_steps / spr;
+      float num_mm = num_rotations * lead_distance;
+      return (int) num_mm;
 }
 
 void move_x_steps(long x){

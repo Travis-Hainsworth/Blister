@@ -63,13 +63,9 @@ end
 % data_matrix(end,:) = []; 
 
 
-serial_string_move_to_start = strcat(num2str(MOVE_TO_START),",1,0");
+serial_string_move_to_start = strcat(num2str(MOVE_TO_START),",0,0");
 flush(s);
 writeline(s,serial_string_move_data_points);
-r = readline(s);
-flush(s);
-stop_num = str2num(r);
-disp(r);
 
 flush(s);
 clear s;

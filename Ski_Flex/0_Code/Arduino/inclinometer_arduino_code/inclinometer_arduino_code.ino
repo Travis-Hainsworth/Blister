@@ -37,8 +37,8 @@ void setup() {
   //limitSwitchObj.setDebounceTime(200);
   
 
-  stepper1.setMaxSpeed(1500); //pulse/steps per second
-  stepper1.setAcceleration(750); //steps per second per second to accelerate
+  stepper1.setMaxSpeed(2000); //pulse/steps per second
+  stepper1.setAcceleration(1500);//750 //steps per second per second to accelerate
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 

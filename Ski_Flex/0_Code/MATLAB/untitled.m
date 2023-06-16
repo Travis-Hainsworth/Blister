@@ -8,7 +8,7 @@ model_name = 'line_92';      % Input model name
 year = 2020;                 % Input model year
 manufacturer = "K2";         % Input ski Manufacturer
 model_length_cm = 197;       %   Input Length of ski in cm
-test_interval_mm = 25;       % Input the desired distance between data points in mm (multiples of 5 work best)
+test_interval_mm = 15;       % Input the desired distance between data points in mm (multiples of 5 work best)
 test_type = 'loaded';        % Test Type (string that is either loaded, unloaded, or torsion)
 
 % Serial USB connections
@@ -35,10 +35,10 @@ stop_num=0;
 count = 0;
 while stop_num~=42
 
-    [pitchFront, rollFront] = get_HWT905TTL_data("COM5");
-    [pitchBack, rollBack] = get_HWT905TTL_data("COM6");
+    [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
+    [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
 
-    [force1, force2]=force_average("COM7", "COM8",1);
+    [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
 
     disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
     disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
@@ -54,7 +54,7 @@ while stop_num~=42
     data_matrix_front = [data_matrix_front;row_entry_front];
     data_matrix_back = [data_matrix_back;row_entry_back];
 
-    serial_string = strcat("2,",num2str(test_interval_mm),",1");
+    serial_string = strcat("2,",num2str(test_interval_mm),",0");
     %disp(serial_string);
     pause(2);
     %writedata = string(uint16(test_interval_mm)); % 0x01F4
@@ -87,12 +87,12 @@ clear s;
 clear all;
 clc;
 
-arudiuno_port = 'COM6';
+arudiuno_port = 'COM3';
 s=serialport(arudiuno_port,115200);
 pause(5);
 
-dis = 106*6; %-1 if not moving by number of steps
-steps = 16000;
+dis = -1; %-1 if not moving by number of steps
+steps = 148800;
 max_steps = 32767;
 if dis ~= -1
     steps = (dis/5)*1600
@@ -104,13 +104,17 @@ extra_steps = 0;
 if steps > max_steps
     iterations = floor(steps/32767);
     extra_steps = mod(steps, max_steps); 
-end
+end 
+
+disp(iterations);
+disp(extra_steps);
 
 count = 0;
 while count ~= extra_steps
     message = strcat('4,',num2str(max_steps),',0');
     flush(s);
     writeline(s,message);
+    pause(120);
     count = count + 1;
 end
 
