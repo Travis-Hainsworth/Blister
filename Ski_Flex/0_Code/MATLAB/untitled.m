@@ -12,17 +12,20 @@ test_interval_mm = 25;       % Input the desired distance between data points in
 test_type = 'loaded';        % Test Type (string that is either loaded, unloaded, or torsion)
 
 % Serial USB connections
-arudiuno_port = 'COM6';     % write in arduino port
-inclinometer_port = 'COM12';  % write in inclometer port
-force_gage1_port = 'COM5';   % write in loadcell1 port
-force_gage2_port = 'COM6';   % write in loadcell2 port
+arudiuno_port = 'COM3';     % write in arduino port
+inclinometer_port_front = 'COM9';  % write in front inclometer port
+inclinometer_port_back = 'COM11';  % write in back inclometer port
+force_gage1_port = 'COM7';   % write in loadcell1 port
+force_gage2_port = 'COM8';   % write in loadcell2 port
 
 % Motor build parameters don't change
 change_per_rev = 5;          %  How many milimeters a single revolution of the stepper motor moves sensor along lead screw
 seconds_per_rev = 2.5;         % Roughly how many seconds it takes stepper to complete one revolution ()
 
 % setup
-data_matrix = zeros(0, 4); 
+data_matrix_front = zeros(0, 4);
+data_matrix_back = zeros(0, 4);
+data_matrix = zeros(0,4);
 pause_time = get_pause_time(test_interval_mm, change_per_rev, seconds_per_rev);
 
 % RUN TEST (SINGLE SIDE, SINGLE INCLINOMETER)
@@ -32,14 +35,25 @@ stop_num=0;
 count = 0;
 while stop_num~=42
 
-%     [pitch, roll, force1, force2] = collect_sensor_data(inclinometer_port, force_gage1_port, force_gage2_port);
-% 
-%     disp('Data Point Collected');
-%     console_display = strcat(' Pitch: ' ,num2str(pitch), ' Roll: ', num2str(roll), ' Force1: ', num2str(force1), ' Force2: ', num2str(force2));
-%     disp(console_display)
-%  
-%     row_entry = [pitch, roll, force1, force2];
-%     data_matrix = [data_matrix;row_entry];
+    [pitchFront, rollFront] = get_HWT905TTL_data("COM5");
+    [pitchBack, rollBack] = get_HWT905TTL_data("COM6");
+
+    [force1, force2]=force_average("COM7", "COM8",1);
+
+    disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
+    disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
+    disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
+
+    row_entry_front = [pitchFront, rollFront, force1, force2];
+    row_entry_back = [pitchBack, rollBack, force1, force2];
+    data_matrix_front = [data_matrix_front;row_entry_front];
+    data_matrix_back = [data_matrix_back;row_entry_back];
+
+    row_entry_front = [pitchFront, rollFront, force1, force2];
+    row_entry_back = [pitchBack, rollBack, force1, force2];
+    data_matrix_front = [data_matrix_front;row_entry_front];
+    data_matrix_back = [data_matrix_back;row_entry_back];
+
     serial_string = strcat("2,",num2str(test_interval_mm),",1");
     %disp(serial_string);
     pause(2);
@@ -65,7 +79,7 @@ end
 
 flush(s);
 clear s;
-
+%%
 
 
 %%
@@ -107,6 +121,42 @@ pause(5);
 % r = readline(s);
 % disp(r);
 clear s;
+
+%% Testing Sensor Data Collection
+
+data_matrix_front = zeros(0, 4);
+data_matrix_back = zeros(0, 4);
+data_matrix = zeros(0,4);
+
+inclinometer_port_front = "COM5";
+inclinometer_port_back = "COM6";
+
+force_gage1_port = 'COM5'; 
+force_gage2_port = 'COM6';
+
+counter = 143;
+while(counter ~= 0)
+    %[pitchFront, rollFront] = get_HWT905TTL_data("COM5");
+    %[pitchBack, rollBack] = get_HWT905TTL_data("COM6");
+    pitchFront = .02;
+    rollFront = .02;
+    pitchBack = .02;
+    rollBack = .02;
+    [force1, force2]=force_average("COM7", "COM8",1);
+    
+    disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
+    disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
+    disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
+
+    row_entry_front = [pitchFront, rollFront, force1, force2];
+    row_entry_back = [pitchBack, rollBack, force1, force2];
+    data_matrix_front = [data_matrix_front;row_entry_front];
+    data_matrix_back = [data_matrix_back;row_entry_back];
+
+    counter = counter - 1; 
+    
+
+end
 
 %% DateTime String for datafile creation
 
