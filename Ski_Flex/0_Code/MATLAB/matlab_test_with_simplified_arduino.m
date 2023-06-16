@@ -75,103 +75,103 @@ flush(s);
 clear s;
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%%
+%the bellow code needs to use the same serial port
+%clear s will reset the code on arduino
+%%
+arduino_port = 'COM6';
+s=serialport(arduino_port,115200); 
+pause(2);
 %%
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
-arduino_port = 'COM3';
 distance_in = 19;
-distance_mm = floor(457.2);%floor(convlength([distance_in 0], 'in', 'm'));
+distance_mm = floor(381);%floor(convlength([distance_in 0], 'in', 'm'));
 direction = 0;
-sig = move_x_mm(distance_mm, direction, arduino_port);
+sig = move_x_mm(distance_mm, direction, s);
 disp(sig);
 
 %%
 %FUNCTION TO SET CURRENT POSITION
 %"command,#,#" most likely = "signal,0,#"
 position = 0;
-arduino_port = 'COM3';
-sig = set_current_position(position, arduino_port);
+sig = set_current_position(position, s );
 disp(sig); 
 
 %%
 %FUNCTION TO GET CURRENT POSITION
 %"command,#,#"
-arduino_port = 'COM3';
-mm = get_current_position(arduino_port);
+mm = get_current_position(s);
 disp(mm);
 %%
 %FUNCTION TO MOVE TO START FROM CURRENT POSITION
 %"command,#,#"
-arduino_port = 'COM3';
-sig = return_to_start(arduino_port);
+sig = return_to_start(s);
 disp(sig);
 %%
+clear s;
+clc;
+%%
 
-function ret_mm = return_to_start(arduino_port)
+function ret_mm = return_to_start(s)
     MOVE_TO_START = 2;
-    s=serialport(arduino_port,115200); 
-    pause(2);
     serial_string = strcat(num2str(MOVE_TO_START),",0,1");
     ret_mm = serial_communication(s, serial_string);
-    clear s;
 end 
 
-function ret_signal = move_x_mm(dis_mm, dir, arduino_port)
+function ret_signal = move_x_mm(dis_mm, dir, s)
     MOVE_X = 4;
-    s=serialport(arduino_port,115200); 
-    pause(2);
     serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
     ret_signal = serial_communication(s, serial_string);
     flush(s);
-    clear s;
 end
 
-function ret_mm = get_current_position(arduino_port)
+function ret_mm = get_current_position(s)
     GET_CURRENT_POSITION = 14;
-    s=serialport(arduino_port,115200); 
-    pause(2);
     serial_string = strcat(num2str(GET_CURRENT_POSITION),",0,1");
     ret_mm = serial_communication(s, serial_string);
     clear s;
 end
 
-function ret_signal = set_current_position(pos,arduino_port)
+function ret_signal = set_current_position(pos,s)
     SET_CURRENT_POS = 6;
-    s=serialport(arduino_port,115200); 
-    pause(2);
     serial_string = strcat(num2str(SET_CURRENT_POS),",",num2str(pos),",0");
     ret_signal = serial_communication(s, serial_string);
     flush(s);
-    clear s;
 end
 
-function ret_signal = set_stepsPerRev(stepsPerRev,arduino_port)
+function ret_signal = set_stepsPerRev(stepsPerRev,s)
     SET_STEPS_PER_REVOLUTION = 12;
-    s=serialport(arduino_port,115200); 
-    pause(2);
     serial_string = strcat(num2str(SET_STEPS_PER_REVOLUTION),",",num2str(stepsPerRev),",0");
     ret_signal = serial_communication(s, serial_string);
     flush(s);
-    clear s;
 end
 
-function ret_signal = set_acceleration(acceleration,arduino_port)
+function ret_signal = set_acceleration(acceleration,s)
     SET_ACCELERATION = 10;
-    s=serialport(arduino_port,115200); 
-    pause(2);
     serial_string = strcat(num2str(SET_ACCELERATION),",",num2str(acceleration),",0");
     ret_signal = serial_communication(s, serial_string);
     flush(s);
-    clear s;
 end
 
-function ret_signal = set_max_speed(max_speed,arduino_port)
+function ret_signal = set_max_speed(max_speed,s)
     SET_MAX_SPEED = 8;
-    s=serialport(arduino_port,115200); 
-    pause(2);
     serial_string = strcat(num2str(SET_MAX_SPEED),",",num2str(max_speed),",0");
     ret_signal = serial_communication(s, serial_string);
     flush(s);
-    clear s;
 end
 
 function sig = serial_communication(s, message)
