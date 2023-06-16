@@ -30,7 +30,7 @@ const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state = true;
 
-int number_steps_for_test;
+int stepper1_current_position;
 int count;
 
 void setup() {
@@ -78,7 +78,7 @@ void setup() {
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
-  number_steps_for_test = 0;
+  stepper1_current_position = 0;
   count = 0;
 }
 const int STOP_SIGNAL = 42;
@@ -141,8 +141,9 @@ void loop() {
               float length_mm = (float) message_arr[1];
               long direction = get_direction(message_arr[2]);
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
+              stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              send_finish_signal(MOVE_X);
+              send_finish_signal(stepper1_current_position);
               break;
             }
             case MOVE_TO_START:
@@ -150,7 +151,7 @@ void loop() {
               //"command,#,#"
               long steps_from_start = stepper1.currentPosition();
               move_x_steps(-1*steps_from_start);
-              send_finish_signal(steps_from_start);
+              send_finish_signal((int) steps_from_start);
               break;
             }
             case SET_CURRENT_POS:
@@ -185,9 +186,9 @@ void loop() {
             case GET_CURRENT_POSITION:
             {
               //"command,#,#"
-              long current_position = stepper1.currentPosition();
-              int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
-              send_finish_signal(current_position_in_mm);
+              //long current_position = stepper1.currentPosition();
+              //int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+              send_finish_signal(abs(stepper1_current_position));
             }
             default:
             {
