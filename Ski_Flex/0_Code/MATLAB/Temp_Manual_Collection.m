@@ -12,10 +12,10 @@ test_type = 'loaded';        % Test Type (string that is either loaded, unloaded
 test_interval_mm = 50.8;
 
 % Serial USB connections
-inclinometer_port_front = 'COM11';  % write in front inclometer port
+inclinometer_port_front = 'COM9';  % write in front inclometer port
 inclinometer_port_back = 'COM12';  % write in back inclometer port
-force_gage1_port = 'COM7';   % write in loadcell1 port
-force_gage2_port = 'COM8';   % write in loadcell2 port
+force_gage1_port = 'COM8';   % write in loadcell1 port
+force_gage2_port = 'COM7';   % write in loadcell2 port
 
 
 % setup
@@ -44,13 +44,12 @@ temp_counter = 20;
     data_matrix_front = [data_matrix_front;row_entry_front];
     %data_matrix_back = [data_matrix_back;row_entry_back];
 
-    row_entry_front = [pitchFront, rollFront, force1, force2];
     %row_entry_back = [pitchBack, rollBack, force1, force2];
-    data_matrix_front = [data_matrix_front;row_entry_front];
     %data_matrix_back = [data_matrix_back;row_entry_back];
     %counter = counter + 1;
     temp_counter = temp_counter -1;
 %end
+
 
 %% Save unloaded data matrix ORDER#3 
 %test_interval_mm = 50.8;
@@ -85,9 +84,7 @@ temp_counter = 20;
     data_matrix_front = [data_matrix_front;row_entry_front];
     %data_matrix_back = [data_matrix_back;row_entry_back];
 
-    row_entry_front = [pitchFront, rollFront, force1, force2];
     %row_entry_back = [pitchBack, rollBack, force1, force2];
-    data_matrix_front = [data_matrix_front;row_entry_front];
     %data_matrix_back = [data_matrix_back;row_entry_back];
     %counter = counter + 1;
     temp_counter = temp_counter -1;
@@ -123,9 +120,7 @@ temp_counter = 20;
     data_matrix_front = [data_matrix_front;row_entry_front];
     %data_matrix_back = [data_matrix_back;row_entry_back];
 
-    row_entry_front = [pitchFront, rollFront, force1, force2];
     %row_entry_back = [pitchBack, rollBack, force1, force2];
-    data_matrix_front = [data_matrix_front;row_entry_front];
     %data_matrix_back = [data_matrix_back;row_entry_back];
     %counter = counter + 1;
     temp_counter = temp_counter -1;
@@ -186,7 +181,7 @@ plotEI = EI(3:measurements-1);
 tiledlayout(2,1);
 nexttile;
 plot(plotEI);
-title('EJ');
+title('EI');
 
 gcf
 
@@ -242,7 +237,7 @@ plotGJ = abs(GJ(2:measurements-1));
 p = tiledlayout(2,1);
 nexttile;
 plot(plotEI);
-title('EJ');
+title('EI');
 
 nexttile;
 plot(plotGJ);
@@ -258,13 +253,20 @@ title('GJ');
 
 %% Save Data and Plots (DON't Exist out of plot generated out of last block) ORDER#10
 %name_brand_year_length?
-directory_name = 'sampleTest2';
+directory_name = 'aluminuim_bar';
 
 saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, gcf, directory_name);
 
 
+%%
+[pitchFront, rollFront] = get_HWT905TTL_data('COM9');
 
 
+
+%%
+
+a=1:29;
+plot(data_matrix_unloaded(:,1),1:14);
 %% cancat data together, fill in missing data
 
 function output = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, dist_between_mm)
@@ -369,8 +371,8 @@ function [pitch, roll] = get_HWT905TTL_data(inclinometer_port)
                     disp(A(1));
                     disp(A(2));
 
-                    pitch = A(1);
-                    roll = A(2);
+                    pitch = A(2);
+                    roll = A(1);
     
                     if (size(aa,1)>5*f)%clear history data
                         aa = aa(f:5*f,:);
@@ -437,4 +439,7 @@ function [dTheta] = dirTheta(n,displacement)
     theta = abs(displacement(n-1)-displacement(n))+abs(displacement(n)-displacement(n+1));
     dTheta = theta*39.37/4; %in radians/meter
 end
+
+
+
 
