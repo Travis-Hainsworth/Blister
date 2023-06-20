@@ -13,9 +13,11 @@ test_type = 'loaded';        % Test Type (string that is either loaded, unloaded
 
 % Serial USB connections
 arudiuno_port = 'COM3';     % write in arduino port
-inclinometer_port = 'COM12';  % write in inclometer port
-force_gage1_port = 'COM5';   % write in loadcell1 port
-force_gage2_port = 'COM6';   % write in loadcell2 port
+inclinometer_port_front = 'COM12';  % write in inclometer port
+inclinometer_port_back = 'COM11'
+
+force_gage1_port = 'COM7';   % write in loadcell1 port
+force_gage2_port = 'COM8';   % write in loadcell2 port
 
 % Motor build parameters don't change
 change_per_rev = 5;          %  How many milimeters a single revolution of the stepper motor moves sensor along lead screw

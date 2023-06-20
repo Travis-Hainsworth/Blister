@@ -1,4 +1,4 @@
-%% Test Setup
+%% Test Setup intial/unloaded
 
 clear all;
 clc;
@@ -12,7 +12,7 @@ test_type = 'loaded';        % Test Type (string that is either loaded, unloaded
 test_interval_mm = 50.8;
 
 % Serial USB connections
-inclinometer_port_front = 'COM9';  % write in front inclometer port
+inclinometer_port_front = 'COM12';  % write in front inclometer port
 inclinometer_port_back = 'COM11';  % write in back inclometer port
 force_gage1_port = 'COM7';   % write in loadcell1 port
 force_gage2_port = 'COM8';   % write in loadcell2 port
@@ -21,11 +21,14 @@ force_gage2_port = 'COM8';   % write in loadcell2 port
 % setup
 data_matrix_front = zeros(0, 4);
 data_matrix_back = zeros(0, 4);
-data_matrix = zeros(0,4);
+data_matrix_unloaded = zeros(0,4);
 counter = 0;
+temp_counter = 20;
 
 
-%% COLLECT DATA POINT
+%% COLLECT DATA POINT UNLOADED
+
+%while(temp_counter ~= 0)
 
     [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
     [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
@@ -46,13 +49,220 @@ counter = 0;
     data_matrix_front = [data_matrix_front;row_entry_front];
     data_matrix_back = [data_matrix_back;row_entry_back];
     counter = counter + 1;
+    temp_counter = temp_counter -1;
+%end
 
-%%
+%% Save unloaded data matrix
 test_interval_mm = 50.8;
 distance_between_mm = 940;
 test_distance_mm = test_interval_mm * counter; 
 
-data_matrix = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
+data_matrix_unloaded = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
+
+%% Test Setup loaded
+data_matrix_front = zeros(0, 4);
+data_matrix_back = zeros(0, 4);
+data_matrix_loaded = zeros(0,4);
+counter = 0;
+temp_counter = 20;
+
+
+%% COLLECT DATA POINT for LOADED
+
+%while(temp_counter ~= 0)
+
+    [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
+    [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
+
+    [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
+
+    disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
+    disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
+    disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
+
+    row_entry_front = [pitchFront, rollFront, force1, force2];
+    row_entry_back = [pitchBack, rollBack, force1, force2];
+    data_matrix_front = [data_matrix_front;row_entry_front];
+    data_matrix_back = [data_matrix_back;row_entry_back];
+
+    row_entry_front = [pitchFront, rollFront, force1, force2];
+    row_entry_back = [pitchBack, rollBack, force1, force2];
+    data_matrix_front = [data_matrix_front;row_entry_front];
+    data_matrix_back = [data_matrix_back;row_entry_back];
+    counter = counter + 1;
+    temp_counter = temp_counter -1;
+%end
+%% Save loaded data matrix
+test_interval_mm = 50.8;
+distance_between_mm = 940;
+test_distance_mm = test_interval_mm * counter; 
+
+data_matrix_loaded = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
+%% Test Setup torsion 
+data_matrix_front = zeros(0, 4);
+data_matrix_back = zeros(0, 4);
+data_matrix_torsion = zeros(0,4);
+counter = 0;
+temp_counter = 20;
+%% COLLECT DATA POINT for LOADED
+
+%while(temp_counter ~= 0)
+
+    [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
+    [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
+
+    [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
+
+    disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
+    disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
+    disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
+
+    row_entry_front = [pitchFront, rollFront, force1, force2];
+    row_entry_back = [pitchBack, rollBack, force1, force2];
+    data_matrix_front = [data_matrix_front;row_entry_front];
+    data_matrix_back = [data_matrix_back;row_entry_back];
+
+    row_entry_front = [pitchFront, rollFront, force1, force2];
+    row_entry_back = [pitchBack, rollBack, force1, force2];
+    data_matrix_front = [data_matrix_front;row_entry_front];
+    data_matrix_back = [data_matrix_back;row_entry_back];
+    counter = counter + 1;
+    temp_counter = temp_counter -1;
+%end
+%% Save torsion data matrix
+test_interval_mm = 50.8;
+distance_between_mm = 940;
+test_distance_mm = test_interval_mm * counter; 
+
+data_matrix_torsion = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
+%% Generate PLOTS
+
+%read the profile(unweighted pitch)
+profile = data_matrix_unloaded(:,1);
+%read the flex (weighted pitch)
+flex = data_matrix_loaded(:,1);
+%read forces from strain guages, and subtract the "unweighted" from
+%weighted to get a net force
+
+%force 1 is left, force 2 is right
+force1 = data_matrix_loaded(:,3)-data_matrix_unloaded(:,3);
+force2 = data_matrix_loaded(:,4)-data_matrix_unloaded(:,4);
+
+% Variables to setup Manually
+
+%measurements is the number of lines measured per round, = length/4
+measurements = length(flex);
+%rollermass = lass of rollers imparting force on skis in lbs
+rollermass = 24.2;
+%initialOffset = distance from applied load or clamp at the tip to the
+%first measurement in inches
+initialOffSet = 4.5;
+
+
+%set empty string for moments
+moment = zeros(measurements,1);
+dTheta = zeros(measurements,1);
+
+% Displacement
+%displacement in radians
+displacement = zeros(1,measurements+1)';
+displacement(1:measurements) = deg2rad(profile - flex);
+
+% Net Force
+%net force in lbs
+forceNet = force1+force2-rollermass;
+
+% EI calcuation
+EI = zeros(measurements,1);
+for n = 2:(measurements)
+    dTheta(n) = dirTheta(n,displacement);
+    moment(n) = momentz(n-1,forceNet,initialOffSet);
+    EI(n) = moment(n)/dTheta(n);
+end
+plotEI = EI(3:measurements-1);
+
+tiledlayout(2,1);
+nexttile;
+plot(plotEI);
+title('EJ');
+
+gcf
+
+% figure
+% plot(displacement);
+% figure
+% plot(dTheta)
+% Generate GJ plot
+
+%read the profile(unweighted pitch)
+tProf = data_matrix_unloaded(:,1);
+%read the flex (weighted pitch)
+rotation = data_matrix_torsion(:,1);
+%read forces from strain guages, and subtract the "unweighted" from
+%weighted to get a net force
+
+%force 1 is left, force 2 is right
+force1 = data_matrix_torsion(:,3)-data_matrix_unloaded(:,3);
+force2 = data_matrix_torsion(:,4)-data_matrix_unloaded(:,4);
+
+% Variables to setup Manually
+
+%measurements is the number of lines measured per round, = length/4
+measurements = length(rotation);
+%rollermass = lass of rollers imparting force on skis in lbs
+rollermass = 24.2;
+%initialOffset = distance from applied load or clamp at the tip to the
+%first measurement in inches
+initialOffSet = 4.5;
+
+
+%set empty string for moments
+moment = zeros(measurements,1);
+dTheta = zeros(measurements,1);
+
+% Displacement
+%displacement in radians
+displacement = zeros(1,measurements+1)';
+displacement(1:measurements) = deg2rad(tProf - rotation);
+
+% Net Torque
+%net force in lbs
+torqueNet = abs(force1-force2)*3.75/12*1.356;
+
+% GJ calcuation
+GJ = zeros(measurements,1);
+for n = 2:(measurements)
+    dTheta(n) = dirTheta(n,displacement);
+    GJ(n) = torqueNet(n)/dTheta(n);
+end
+plotGJ = abs(GJ(2:measurements-1));
+
+p = tiledlayout(2,1);
+nexttile;
+plot(plotEI);
+title('EJ');
+
+nexttile;
+plot(plotGJ);
+title('GJ');
+
+
+% figure
+% plot(displacement);
+% figure
+% plot(dTheta)
+
+%%
+
+
+%% Save Data and Plots
+
+directory_name = 'sampleTest1';
+
+saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, gcf, directory_name);
+
+
+
 
 %% cancat data together, fill in missing data
 
@@ -112,6 +322,18 @@ function [force1,force2] = force_data(portname1,portname2)
     force2=str2double(force2);          %converts data to double
 
 end
+
+% gets the average force data (written by fin)
+
+function [force1,force2] = force_average(portname1, portname2,average)
+        
+    for i=1:average
+        [force1(i),force2(i)]=force_data(portname1,portname2);
+    end
+
+    force1=mean(force1);
+    force2=mean(force2);
+end
 %% Get HWT905TTL pitch and roll data.
 
 function [pitch, roll] = get_HWT905TTL_data(inclinometer_port)
@@ -168,7 +390,7 @@ end
 
 
 %%
-function saveData(data_matrix, plot, dir_name)
+function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, plot, dir_name)
 
     relative_dir_path = strcat('..\..\0_Data\',dir_name);
 
@@ -184,8 +406,34 @@ function saveData(data_matrix, plot, dir_name)
     mkdir(relative_save_path);
 
     saveas(plot,strcat(relative_save_path, "\plots.png"));
-
-
-
+    writematrix(data_matrix_unloaded, strcat(relative_save_path, "\unloaded.csv" ));
+    writematrix(data_matrix_loaded, strcat(relative_save_path, "\loaded.csv" ));
+    writematrix(data_matrix_unloaded, strcat(relative_save_path, "\torsion.csv" ));
     
 end
+%% EJ functions 
+% Moment about z(x)
+%calculate moment about z at x in newton meters
+%1.3558 is the conversion of ft-lbs to Nm
+%12 is to convert to feet form inches
+
+function [moment] = momentz(n,forceNet,initialOffSet)
+    moment = (forceNet(n) * distanceFromTip(n,initialOffSet)) * 1.3558/24;
+end
+
+% Distance From Tip
+
+function [distanceFromTip] = distanceFromTip(n,initialOffSet)
+    %the distance of the measured pitch form the applied load in inches
+    distanceFromTip = initialOffSet+n*2;
+end
+
+% Change in Theta at X
+
+function [dTheta] = dirTheta(n,displacement)
+    %calcualte the change in theta (the displacement) at a given x location
+    %39.37 converts inches to meters
+    theta = abs(displacement(n-1)-displacement(n))+abs(displacement(n)-displacement(n+1));
+    dTheta = theta*39.37/4; %in radians/meter
+end
+
