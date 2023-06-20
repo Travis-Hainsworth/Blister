@@ -150,8 +150,10 @@ disp(mm);
 sig = return_to_start(s);
 disp(sig);
 %%
+
 clear s;
 clc;
+
 %%
 
 function ret_mm = return_to_start(s)
