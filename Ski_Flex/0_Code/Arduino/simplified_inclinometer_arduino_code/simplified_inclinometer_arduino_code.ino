@@ -30,7 +30,7 @@ const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state = true;
 
-int number_steps_for_test;
+int stepper1_current_position;
 int count;
 
 void setup() {
@@ -78,7 +78,7 @@ void setup() {
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
-  number_steps_for_test = 0;
+  stepper1_current_position = 0;
   count = 0;
 }
 
@@ -142,6 +142,7 @@ void loop() {
               float length_mm = (float) message_arr[1];
               long direction = get_direction(message_arr[2]);
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
+              stepper1_current_position+= (int) steps;
               move_x_steps(steps);
               send_finish_signal(steps);
               break;
