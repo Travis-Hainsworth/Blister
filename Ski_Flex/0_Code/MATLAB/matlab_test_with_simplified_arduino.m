@@ -121,7 +121,7 @@ clear s;
 %the bellow code needs to use the same serial port
 %clear s will reset the code on arduino
 %%
-arduino_port = 'COM6';
+arduino_port = 'COM3';
 s=serialport(arduino_port,115200); 
 pause(2);
 %%

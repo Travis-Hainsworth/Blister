@@ -186,9 +186,9 @@ void loop() {
             case GET_CURRENT_POSITION:
             {
               //"command,#,#"
-              //long current_position = stepper1.currentPosition();
-              //int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
-              send_finish_signal(abs(stepper1_current_position));
+              long current_position = stepper1.currentPosition();
+              int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+              send_finish_signal(current_position_in_mm);
             }
             default:
             {
