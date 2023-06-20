@@ -1,4 +1,4 @@
-%% Test Setup intial/unloaded
+%% Test Setup intial/unloaded ORDER#1
 
 clear all;
 clc;
@@ -12,8 +12,8 @@ test_type = 'loaded';        % Test Type (string that is either loaded, unloaded
 test_interval_mm = 50.8;
 
 % Serial USB connections
-inclinometer_port_front = 'COM12';  % write in front inclometer port
-inclinometer_port_back = 'COM11';  % write in back inclometer port
+inclinometer_port_front = 'COM11';  % write in front inclometer port
+inclinometer_port_back = 'COM12';  % write in back inclometer port
 force_gage1_port = 'COM7';   % write in loadcell1 port
 force_gage2_port = 'COM8';   % write in loadcell2 port
 
@@ -26,116 +26,118 @@ counter = 0;
 temp_counter = 20;
 
 
-%% COLLECT DATA POINT UNLOADED
+%% COLLECT DATA POINT UNLOADED ORDER#2 (RUN THIS BLOCK FOR EVERY DATA POINT)
 
 %while(temp_counter ~= 0)
 
     [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
-    [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
+    %[pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
 
     [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
 
     disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
-    disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
+    %disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
     disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
 
     row_entry_front = [pitchFront, rollFront, force1, force2];
-    row_entry_back = [pitchBack, rollBack, force1, force2];
+    %row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
-    data_matrix_back = [data_matrix_back;row_entry_back];
+    %data_matrix_back = [data_matrix_back;row_entry_back];
 
     row_entry_front = [pitchFront, rollFront, force1, force2];
-    row_entry_back = [pitchBack, rollBack, force1, force2];
+    %row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
-    data_matrix_back = [data_matrix_back;row_entry_back];
-    counter = counter + 1;
+    %data_matrix_back = [data_matrix_back;row_entry_back];
+    %counter = counter + 1;
     temp_counter = temp_counter -1;
 %end
 
-%% Save unloaded data matrix
-test_interval_mm = 50.8;
-distance_between_mm = 940;
-test_distance_mm = test_interval_mm * counter; 
+%% Save unloaded data matrix ORDER#3 
+%test_interval_mm = 50.8;
+%distance_between_mm = 940;
+%test_distance_mm = test_interval_mm * counter; 
 
-data_matrix_unloaded = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
-
-%% Test Setup loaded
+%data_matrix_unloaded = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
+data_matrix_unloaded = data_matrix_front;
+%% Test Setup loaded ORDER#4 
 data_matrix_front = zeros(0, 4);
 data_matrix_back = zeros(0, 4);
 data_matrix_loaded = zeros(0,4);
-counter = 0;
+%counter = 0;
 temp_counter = 20;
 
 
-%% COLLECT DATA POINT for LOADED
+%% COLLECT DATA POINT for LOADED ORDER#5 (Run this block for each data point)
 
 %while(temp_counter ~= 0)
 
     [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
-    [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
+    %[pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
 
     [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
 
     disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
-    disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
+    %disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
     disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
 
     row_entry_front = [pitchFront, rollFront, force1, force2];
-    row_entry_back = [pitchBack, rollBack, force1, force2];
+    %row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
-    data_matrix_back = [data_matrix_back;row_entry_back];
+    %data_matrix_back = [data_matrix_back;row_entry_back];
 
     row_entry_front = [pitchFront, rollFront, force1, force2];
-    row_entry_back = [pitchBack, rollBack, force1, force2];
+    %row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
-    data_matrix_back = [data_matrix_back;row_entry_back];
-    counter = counter + 1;
+    %data_matrix_back = [data_matrix_back;row_entry_back];
+    %counter = counter + 1;
     temp_counter = temp_counter -1;
 %end
-%% Save loaded data matrix
-test_interval_mm = 50.8;
-distance_between_mm = 940;
-test_distance_mm = test_interval_mm * counter; 
+%% Save loaded data matrix ORDER#6
+%test_interval_mm = 50.8;
+%distance_between_mm = 940;
+%test_distance_mm = test_interval_mm * counter; 
 
-data_matrix_loaded = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
-%% Test Setup torsion 
+%data_matrix_loaded = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
+data_matrix_loaded = data_matrix_front;
+%% Test Setup torsion ORDER#7
 data_matrix_front = zeros(0, 4);
 data_matrix_back = zeros(0, 4);
 data_matrix_torsion = zeros(0,4);
-counter = 0;
+%counter = 0;
 temp_counter = 20;
-%% COLLECT DATA POINT for LOADED
+%% COLLECT DATA POINT for torsion ORDER#8 (run this block for each data point)
 
 %while(temp_counter ~= 0)
 
     [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
-    [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
+    %[pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
 
     [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
 
     disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
-    disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
+    %disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
     disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
 
     row_entry_front = [pitchFront, rollFront, force1, force2];
-    row_entry_back = [pitchBack, rollBack, force1, force2];
+    %row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
-    data_matrix_back = [data_matrix_back;row_entry_back];
+    %data_matrix_back = [data_matrix_back;row_entry_back];
 
     row_entry_front = [pitchFront, rollFront, force1, force2];
-    row_entry_back = [pitchBack, rollBack, force1, force2];
+    %row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
-    data_matrix_back = [data_matrix_back;row_entry_back];
-    counter = counter + 1;
+    %data_matrix_back = [data_matrix_back;row_entry_back];
+    %counter = counter + 1;
     temp_counter = temp_counter -1;
 %end
-%% Save torsion data matrix
-test_interval_mm = 50.8;
-distance_between_mm = 940;
-test_distance_mm = test_interval_mm * counter; 
+%% Save torsion data matrix ORDER#9
+%test_interval_mm = 50.8;
+%distance_between_mm = 940;
+%test_distance_mm = test_interval_mm * counter; 
 
-data_matrix_torsion = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
-%% Generate PLOTS
+%data_matrix_torsion = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, distance_between_mm)
+data_matrix_torsion = data_matrix_front;
+%% Generate PLOTS ORDER#10 (DON't close plot tab! needs to be open in order to save)
 
 %read the profile(unweighted pitch)
 profile = data_matrix_unloaded(:,1);
@@ -252,12 +254,11 @@ title('GJ');
 % figure
 % plot(dTheta)
 
-%%
 
 
-%% Save Data and Plots
-
-directory_name = 'sampleTest1';
+%% Save Data and Plots (DON't Exist out of plot generated out of last block) ORDER#10
+%name_brand_year_length?
+directory_name = 'sampleTest2';
 
 saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, gcf, directory_name);
 
