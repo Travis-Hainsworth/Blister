@@ -150,8 +150,10 @@ disp(mm);
 sig = return_to_start(s);
 disp(sig);
 %%
+
 clear s;
 clc;
+
 %%
 
 function ret_mm = return_to_start(s)
@@ -175,7 +177,7 @@ function ret_mm = get_distance_from_start(s)
     write(s, serial_string);
     ret_mm = read(s);
     flush(s);
-end
+end 
 
 function ret_signal = set_current_position(pos,s)
     SET_CURRENT_POS = 6;
