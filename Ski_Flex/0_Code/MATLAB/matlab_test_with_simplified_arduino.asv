@@ -156,7 +156,8 @@ end
 function ret_signal = set_stepsPerRev(stepsPerRev,s)
     SET_STEPS_PER_REVOLUTION = 12;
     serial_string = strcat(num2str(SET_STEPS_PER_REVOLUTION),",",num2str(stepsPerRev),",0");
-    ret_signal = serial_communication(s, serial_string);
+    %ret_signal = serial_communication(s, serial_string);
+    ret_signal = 
     flush(s);
 end
 
