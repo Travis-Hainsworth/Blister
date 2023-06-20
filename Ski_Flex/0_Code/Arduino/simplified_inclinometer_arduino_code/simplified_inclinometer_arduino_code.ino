@@ -81,13 +81,14 @@ void setup() {
   number_steps_for_test = 0;
   count = 0;
 }
+
 const int STOP_SIGNAL = 42;
 
 void stop_testing(){
     stepper1.stop();
     //testing_state = false;
     send_finish_signal(STOP_SIGNAL);
-    //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN));   
+    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));   
 }
 
 /*
@@ -142,7 +143,7 @@ void loop() {
               long direction = get_direction(message_arr[2]);
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
               move_x_steps(steps);
-              send_finish_signal(MOVE_X);
+              send_finish_signal(steps);
               break;
             }
             case MOVE_TO_START:
@@ -150,7 +151,7 @@ void loop() {
               //"command,#,#"
               long steps_from_start = stepper1.currentPosition();
               move_x_steps(-1*steps_from_start);
-              send_finish_signal(steps_from_start);
+              send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
               break;
             }
             case SET_CURRENT_POS:
@@ -224,9 +225,9 @@ int convert_distance_from_steps_to_mm(float spr, float length_steps, float lead_
 void move_x_steps(long x){
   stepper1.move(x);
   //stepper1.runSpeedToPosition();
- while (stepper1.distanceToGo() != 0){
-          stepper1.run();
- }
+  while (stepper1.distanceToGo() != 0){
+      stepper1.run();
+  }
 }
 
 void parse_serial_input(String inputString, int& numValues, int* message_arr){

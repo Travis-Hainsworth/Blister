@@ -8,11 +8,11 @@ model_name = 'line_92';      % Input model name
 year = 2020;                 % Input model year
 manufacturer = "K2";         % Input ski Manufacturer
 model_length_cm = 197;       %   Input Length of ski in cm
-test_interval_mm = 25;       % Input the desired distance between data points in mm (multiples of 5 work best)
+test_interval_mm = 5;       % Input the desired distance between data points in mm (multiples of 5 work best)
 test_type = 'loaded';        % Test Type (string that is either loaded, unloaded, or torsion)
 
 % Serial USB connections
-arudiuno_port = 'COM3';     % write in arduino port
+arudiuno_port = 'COM6';     % write in arduino port
 inclinometer_port = 'COM12';  % write in inclometer port
 force_gage1_port = 'COM5';   % write in loadcell1 port
 force_gage2_port = 'COM6';   % write in loadcell2 port
@@ -99,10 +99,16 @@ pause(2);
 %%
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
 distance_in = 19;
-distance_mm = floor(381);%floor(convlength([distance_in 0], 'in', 'm'));
+distance_mm = floor(20);%floor(convlength([distance_in 0], 'in', 'm'));
 direction = 0;
 sig = move_x_mm(distance_mm, direction, s);
 disp(sig);
+
+%%
+%FUNCTION TO GET CURRENT POSITION
+%"command,#,#"
+mm = get_distance_from_start(s);
+disp(mm);
 
 %%
 %FUNCTION TO SET CURRENT POSITION
@@ -116,14 +122,59 @@ disp(sig);
 %"command,#,#"
 mm = get_distance_from_start(s);
 disp(mm);
+
+%%
+%FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
+distance_in = 19;
+distance_mm = floor(30);%floor(convlength([distance_in 0], 'in', 'm'));
+direction = 0;
+sig = move_x_mm(distance_mm, direction, s);
+disp(sig);
+
+%%
+%FUNCTION TO GET CURRENT POSITION
+%"command,#,#"
+mm = get_distance_from_start(s);
+disp(mm);
+
 %%
 %FUNCTION TO MOVE TO START FROM CURRENT POSITION
 %"command,#,#"
 sig = return_to_start(s);
 disp(sig);
+
+%%
+%FUNCTION TO GET CURRENT POSITION
+%"command,#,#"
+mm = get_distance_from_start(s);
+disp(mm);
 %%
 clear s;
 clc;
+
+%%
+arduino_port = 'COM6';
+s=serialport(arduino_port,115200); 
+pause(2);
+distance_mm = 10;
+direction = 1;
+stop_num = 0;
+while stop_num~=42
+    %collect data
+    sig = move_x_mm(distance_mm, direction, s);
+    disp(sig);
+    stop_num = str2double(sig);
+end
+pause(5);
+mm1 = get_distance_from_start(s);
+disp("mm1");
+disp(mm1);
+sig = return_to_start(s);
+disp(sig);
+mm2 = get_distance_from_start(s);
+disp("mm2");
+disp(mm2);
+clear s;
 %%
 
 function ret_mm = return_to_start(s)
@@ -145,7 +196,7 @@ function ret_mm = get_distance_from_start(s)
     %ret_mm = serial_communication(s, serial_string);
     write(s, serial_string);
     ret_mm = read(s);
-    clear s;
+    flush(s);
 end
 
 function ret_signal = set_current_position(pos,s)
