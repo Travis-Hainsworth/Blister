@@ -18,15 +18,15 @@ inclinometer_port_back = 'COM11';  % write in back inclometer port
 force_gage1_port = 'COM7';   % write in loadcell1 port
 force_gage2_port = 'COM8';   % write in loadcell2 port
 
-% Motor build parameters don't change
-change_per_rev = 5;          %  How many milimeters a single revolution of the stepper motor moves sensor along lead screw
-seconds_per_rev = 2.5;         % Roughly how many seconds it takes stepper to complete one revolution ()
-
+% % Motor build parameters don't change
+% change_per_rev = 5;          %  How many milimeters a single revolution of the stepper motor moves sensor along lead screw
+% seconds_per_rev = 2.5;         % Roughly how many seconds it takes stepper to complete one revolution ()
+% 
 % setup
 data_matrix_front = zeros(0, 4);
 data_matrix_back = zeros(0, 4);
 data_matrix = zeros(0,4);
-pause_time = get_pause_time(test_interval_mm, change_per_rev, seconds_per_rev);
+% pause_time = get_pause_time(test_interval_mm, change_per_rev, seconds_per_rev);
 
 % RUN TEST (SINGLE SIDE, SINGLE INCLINOMETER)
 s=serialport(arudiuno_port,115200); 
