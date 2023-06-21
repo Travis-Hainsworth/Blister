@@ -415,7 +415,7 @@ function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion,
     writematrix(data_matrix_unloaded, strcat(relative_save_path, "\torsion.csv" ));
     
 end
-%% EJ functions 
+%% EI functions 
 % Moment about z(x)
 %calculate moment about z at x in newton meters
 %1.3558 is the conversion of ft-lbs to Nm
