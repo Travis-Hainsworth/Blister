@@ -16,11 +16,11 @@ synced_data = This is the end all list of dataframes from testing. It is cleaned
 
 def data_processing(filePathOptitrack, filePathMTS, smoothing=False):
     # Import mocap data. Make sure every file you want to look at is in the folder you input.
-    list_mocap_data = getMocapData(filePathOptitrack)
+    list_mocap_data = get_mocap_data(filePathOptitrack)
     clean_mocap = clean_mocap_data(list_mocap_data)
 
     # Import mts data. Make sure every file you want to look at is in the folder you input.
-    list_mts_data = getMTSData(filePathMTS)
+    list_mts_data = get_mts_data(filePathMTS)
     clean_mts = clean_MTS_data(list_mts_data)
 
     # Make both of the files the same size, so they can be graphed.
@@ -105,3 +105,8 @@ def interpolate_data(df_list):
     std_displacements = np.nanstd(displacements, axis=0)
 
     return mean_displacements, std_displacements, independent_variable_scale, displacements
+
+
+def spoke_data(file_path):
+    df = pd.read_csv(file_path, low_memory=False)
+    return df['Before']*0.0393701, df['After']*0.0393701
