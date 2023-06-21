@@ -94,6 +94,6 @@ end
 
 %%
 %define max step size 
-function precentage_of_step = find_precentage_of_step_to_adjust_force_gauge():
+function precentage_of_step = find_precentage_of_step_to_adjust_force_gauge()
 
 end
