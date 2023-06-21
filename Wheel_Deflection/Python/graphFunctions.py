@@ -40,16 +40,6 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
     plt.show()
 
 
-def random_graphing(df_list):
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.set_xticks(np.arange(0, 701, 100))
-    plt.ylabel('Compression (in)')
-    plt.xlabel('Load (lbf)')
-    for i in range(len(df_list)):
-        plt.plot(df_list[i]['Load (lbf)'], df_list[i]['Compression (in)'], color='gray')
-    plt.show()
-
-
 """"
 Plot multiple shaded error bad graphs onto the same graph.
 """
@@ -90,13 +80,13 @@ def multiple_rims_graph(mean_list, std_list, ind_var, rims, old_data_index=0):
         plt.fill_between(unified_ind_var, lower_bound, upper_bound, color=color, alpha=.1)
 
         if i >= old_data_index != 0:
-            linestyle = '--'
+            line_style = '--'
             label = rim_label.replace("old ", "")  # Remove "old " from the label
         else:
-            linestyle = '-'
+            line_style = '-'
             label = rim_label
 
-        plt.plot(unified_ind_var, interpolated_mean, color=color, linestyle=linestyle, label=label)
+        plt.plot(unified_ind_var, interpolated_mean, color=color, linestyle=line_style, label=label)
         plt.setp(plt.gca().lines, linewidth=1)
 
     plt.legend()
@@ -113,5 +103,5 @@ def spoke_tension_plot(compression, before, after):
     plt.scatter(after, compression, c=colors, marker="x")
     plt.xticks(np.arange(0.005, .015, .005))
 
-
     plt.show()
+

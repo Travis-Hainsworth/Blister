@@ -1,15 +1,17 @@
+import threading
 import pandas as pd
 import numpy as np
 import os
-
+from concurrent.futures import ThreadPoolExecutor
 """"
 Gets all MTS files within a folder. Make sure the files are named with a number
+This function uses threading to read in multiple csvs at the same time to reduce the run time.
 
 Input: 
 folder_dir = path to the folder containing the MTS data
 
 Output:
-combinedCSVs = list of dataframes containing the data from all of the files with in the folder
+list_of_csvs = list of dataframes containing the data from all of the files with in the folder
 """
 
 
@@ -17,20 +19,33 @@ def get_mts_data(folder_dir):
     list_of_csvs = []
     files = os.listdir(folder_dir)
     files.sort()
+    num_csv_files = sum(file.endswith('.csv') for file in files)
+    list_of_csvs = num_csv_files * [None]
+    lock = threading.RLock()
 
-    for file in files:
-        if file.endswith('.csv'):  # Process only CSV files
-            path = os.path.join(folder_dir, file)
-            df = pd.read_csv(path, header=6, low_memory=False)
-            df = df.drop(index=0)
-            df = df.rename(columns={'Crosshead ': 'Crosshead (in)', 'Load ': 'Load (lbf)', 'Time ': 'Time (sec)'})
-            list_of_csvs.append(df)
+    def read_csv_file(index, file):
+        if file.endswith('.csv'):
+            try:
+                path = os.path.join(folder_dir, file)
+                df = pd.read_csv(path, header=6, low_memory=False, dtype=str)
+                df = df.drop(index=0)
+                df = df.rename(columns={'Crosshead ': 'Crosshead (in)', 'Load ': 'Load (lbf)', 'Time ': 'Time (sec)'})
+
+                with lock:
+                    list_of_csvs[index] = df
+            except (pd.errors.EmptyDataError, pd.errors.ParserError):
+                # Handle the error if the CSV file cannot be read or processed correctly
+                print(f"Error processing file: {file}")
+
+    with ThreadPoolExecutor() as executor:
+        executor.map(read_csv_file, range(num_csv_files), files)
 
     return list_of_csvs
 
 
 """"
-Gets all mocap files within a folder. Make sure the files are named with a number
+Gets all mocap files within a folder. Make sure the files are named with a number.
+This function uses threading to read in multiple csvs at the same time to reduce the run time.
 
 Input: 
 folder_dir = path to the folder containing the MTS data
@@ -41,17 +56,28 @@ combinedCSVs = list of dataframes containing the data from all of the files with
 
 
 def get_mocap_data(folder_dir):
-    list_of_csvs = []
     files = os.listdir(folder_dir)
     files.sort()
+    num_csv_files = sum(file.endswith('.csv') for file in files)
+    list_of_csvs = num_csv_files * [None]
+    lock = threading.RLock()
 
-    for file in files:
-        if file.endswith('.csv'):  # Process only CSV files
-            path = os.path.join(folder_dir, file)
-            df = pd.read_csv(path, header=2, low_memory=False)
-            df = df.drop([0, 1, 2])
-            df = fix_mocap_df(df)
-            list_of_csvs.append(df)
+    def read_csv_file(index, file):
+        if file.endswith('.csv'):
+            try:
+                path = os.path.join(folder_dir, file)
+                df = pd.read_csv(path, header=2, low_memory=False, dtype=str)
+                df = df.drop([0, 1, 2])
+                df = fix_mocap_df(df)
+
+                with lock:
+                    list_of_csvs[index] = df
+            except (pd.errors.EmptyDataError, pd.errors.ParserError):
+                # Handle the error if the CSV file cannot be read or processed correctly
+                print(f"Error processing file: {file}")
+
+    with ThreadPoolExecutor() as executor:
+        executor.map(read_csv_file, range(num_csv_files), files)
 
     return list_of_csvs
 
@@ -77,14 +103,16 @@ def fix_mocap_df(df):
         new_cols[col] = f"{marker_name} {first_row[count]}"
 
     df = df.rename(columns=new_cols)
+
     return df
 
 
 """"
-Makes the height and time columns start at (0, 0)
+Makes the height and time columns start at (0, 0).
+This function uses threading because it takes a really long time using one core.
 
 Input:
-list_df = list of data frames from getMTSData
+list_df = list of dataframes from getMTSData
 
 Output:
 list_df = list of trimmed dataframes with updated "Crosshead (in)" and "Time (sec)" columns
@@ -92,13 +120,19 @@ list_df = list of trimmed dataframes with updated "Crosshead (in)" and "Time (se
 
 
 def clean_MTS_data(list_df):
-    for df in list_df:
-        # Set the columns "Crosshead (in)" and "Time (sec)" to start at (0, 0)
-        # by subtracting the first row from every row
-        df['Crosshead (in)'] = [np.double(x) - np.double(df['Crosshead (in)'][1]) for x in df['Crosshead (in)']]
-        df['Time (sec)'] = [np.double(y) - np.double(df['Time (sec)'][1]) for y in df['Time (sec)']]
+    def clean_dataframe(df):
+        crosshead_diff = np.double(df['Crosshead (in)'][1:]) - np.double(df['Crosshead (in)'][:-1])
+        time_diff = np.double(df['Time (sec)'][1:]) - np.double(df['Time (sec)'][:-1])
 
-    return list_df
+        df['Crosshead (in)'] = np.concatenate(([0], crosshead_diff))
+        df['Time (sec)'] = np.concatenate(([0], time_diff))
+
+        return df
+
+    with ThreadPoolExecutor() as executor:
+        cleaned_data = list(executor.map(clean_dataframe, list_df))
+
+    return cleaned_data
 
 
 """"
