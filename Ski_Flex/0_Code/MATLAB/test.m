@@ -8,14 +8,14 @@ clc
 
 %ser_ard=serialport("COM3",9600);
 ser_inc=serialport("COM13",9600); %Open Com Port
-%ser_force_1 = serialport("COM7",9600);
-%ser_force_2 = serialport("COM8",9600);
+ser_force_1 = serialport("COM7",9600);
+ser_force_2 = serialport("COM8",9600);
 [pitchFront, rollFront] = get_HWT905TTL_data(ser_inc);
 stop_num =0;
 
 while stop_num~=42
     [pitchFront, rollFront] = get_HWT905TTL_data(ser_inc);
-    [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
+    [force1, force2]=force_average(ser_force_1, ser_force_2,1);
     %MOVE SENSOR
     sig = move_x_mm(test_interval_mm, direction, ser_ard);
     disp(sig);
@@ -114,14 +114,17 @@ function [force1,force2] = force_data(serial1,serial2)
     force2=strrep(force2,'l','1');      %changes L to 1 (weird data read)
     force2=str2double(force2);          %converts data to double
 
+    flush(serial1);
+    flush(serail2);
+
 end
 
 % gets the average force data (written by fin)
 
-function [force1,force2] = force_average(portname1, portname2,average)
+function [force1,force2] = force_average(ser1, ser2,average)
         
     for i=1:average
-        [force1(i),force2(i)]=force_data(portname1,portname2);
+        [force1(i),force2(i)]=force_data(ser1,ser2);
     end
 
     force1=mean(force1);
