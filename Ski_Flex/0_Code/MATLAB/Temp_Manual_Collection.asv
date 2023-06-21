@@ -12,7 +12,7 @@ test_type = 'loaded';        % Test Type (string that is either loaded, unloaded
 test_interval_mm = 50.8;
 
 % Serial USB connections
-inclinometer_port_front = 'COM9';  % write in front inclometer port
+inclinometer_port_front = 'COM13';  % write in front inclometer port
 inclinometer_port_back = 'COM12';  % write in back inclometer port
 force_gage1_port = 'COM8';   % write in loadcell1 port
 force_gage2_port = 'COM7';   % write in loadcell2 port
@@ -261,6 +261,12 @@ saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, gcf, dir
 %%
 [pitchFront, rollFront] = get_HWT905TTL_data('COM9');
 
+
+
+%%
+
+a=1:29;
+plot(data_matrix_unloaded(:,1),1:14);
 %% cancat data together, fill in missing data
 
 function output = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, dist_between_mm)
@@ -435,7 +441,5 @@ function [dTheta] = dirTheta(n,displacement)
 end
 
 
-%%
-plot(data_matrix_unloaded(:,1) ...
-)
+
 

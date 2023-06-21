@@ -6,11 +6,11 @@ clc
 % force_gage1_port = 'COM7';   % write in loadcell1 port
 % force_gage2_port = 'COM8';   % write in loadcell2 port
 
-ser_ard=serialport("COM3",9600);
-ser_inc=serialport("COM9",9600); %Open Com Port
-ser_force_1 = serialport("COM7",9600);
-ser_force_2 = serialport("COM8",9600);
-
+%ser_ard=serialport("COM3",9600);
+ser_inc=serialport("COM13",9600); %Open Com Port
+%ser_force_1 = serialport("COM7",9600);
+%ser_force_2 = serialport("COM8",9600);
+[pitchFront, rollFront] = get_HWT905TTL_data(ser_inc);
 stop_num =0;
 
 while stop_num~=42

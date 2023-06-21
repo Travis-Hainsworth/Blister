@@ -80,32 +80,6 @@ force_gage2_port = 'COM8';   % write in loadcell2 port
 [force1, force2]=force_average(force_gage1_port, force_gage2_port,1);
 [pitchFront, rollFront] = get_HWT905TTL_data('COM9');
 
-%% Force Gage Code
-% reads force data from sensor (written by fin)
-
-function [force1,force2] = force_data(portname1,portname2)
-    %connects and reads first sensor
-    serial1=serialport(portname1,9600); %connects to serial port 
-    write(serial1,'?','string');        %queries serial port (required to obtain data)
-    force1=read(serial1,5,"string");    %reads data point
-
-    %connects and read second sensor
-    serial2=serialport(portname2,9600); %connects to serial port
-    write(serial2,'?','string');        %queries serial port (required to obtain data)
-    force2=read(serial2,5,"string");    %reads data point
-
-    %converts and outputs data for first sensor
-    force1=strrep(force1,' ','');       %removes any spaces in read data
-    force1=strrep(force1,'l','1');      %changes L to 1 (weird data read)
-    force1=str2double(force1);          %converts data to double
-
-    %converts and outputs data for second sensor
-    force2=strrep(force2,' ','');       %removes any spaces in read data
-    force2=strrep(force2,'l','1');      %changes L to 1 (weird data read)
-    force2=str2double(force2);          %converts data to double
-
-end
-
 
 
 %% Get HWT905TTL pitch and roll data.
@@ -210,7 +184,7 @@ function ret_signal = set_acceleration(acceleration, s)
     serial_string = strcat(num2str(SET_ACCELERATION),",",num2str(acceleration),",0");
     %ret_signal = serial_communication(s, serial_string);
     write(s, serial_string);
-    ret_signal = read(s);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
@@ -218,27 +192,65 @@ function ret_signal = set_max_speed(max_speed,s)
     SET_MAX_SPEED = 8;
     serial_string = strcat(num2str(SET_MAX_SPEED),",",num2str(max_speed),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_signal = read(s);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
 function sig = serial_communication(s, message)
-    write(s,message);
+    custom_write(s,message);
     pause(1);
     disp("wait");
     waitfor(s, "NumBytesAvailable");
-    sig = read(s);
+    sig = custom_read(s);
 end
 
-function write(s, message)
+function custom_write(s, message)
     flush(s);
     writeline(s,message);
 end
 
-function out = read(s)
+function out = custom_read(s)
     out = readline(s);
     flush(s);
+end
+
+%% Force Gage Code
+% reads force data from sensor (written by fin)
+
+function [force1,force2] = force_data(portname1,portname2)
+    %connects and reads first sensor
+    serial1=serialport(portname1,9600); %connects to serial port 
+    write(serial1,'?','string');        %queries serial port (required to obtain data)
+    force1=read(serial1,5,"string");    %reads data point
+
+    %connects and read second sensor
+    serial2=serialport(portname2,9600); %connects to serial port
+    write(serial2,'?','string');        %queries serial port (required to obtain data)
+    force2=read(serial2,5,"string");    %reads data point
+
+    %converts and outputs data for first sensor
+    force1=strrep(force1,' ','');       %removes any spaces in read data
+    force1=strrep(force1,'l','1');      %changes L to 1 (weird data read)
+    force1=str2double(force1);          %converts data to double
+
+    %converts and outputs data for second sensor
+    force2=strrep(force2,' ','');       %removes any spaces in read data
+    force2=strrep(force2,'l','1');      %changes L to 1 (weird data read)
+    force2=str2double(force2);          %converts data to double
+
+end
+
+% gets the average force data (written by fin)
+
+function [force1,force2] = force_average(portname1, portname2,average)
+        
+    for i=1:average
+        [force1(i),force2(i)]=force_data(portname1,portname2);
+    end
+
+    force1=mean(force1);
+    force2=mean(force2);
 end
 
 

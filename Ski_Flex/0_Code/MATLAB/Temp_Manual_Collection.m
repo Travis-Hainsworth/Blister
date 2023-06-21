@@ -12,7 +12,7 @@ test_type = 'loaded';        % Test Type (string that is either loaded, unloaded
 test_interval_mm = 50.8;
 
 % Serial USB connections
-inclinometer_port_front = 'COM9';  % write in front inclometer port
+inclinometer_port_front = 'COM13';  % write in front inclometer port
 inclinometer_port_back = 'COM12';  % write in back inclometer port
 force_gage1_port = 'COM8';   % write in loadcell1 port
 force_gage2_port = 'COM7';   % write in loadcell2 port
@@ -30,6 +30,7 @@ temp_counter = 20;
 
 %while(temp_counter ~= 0)
 
+    ser_ard=serialport("COM3",9600);
     [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_port_front);
     %[pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
 

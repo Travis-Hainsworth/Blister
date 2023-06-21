@@ -14,7 +14,7 @@ direction = 1;
 
 % Serial USB connections
 arudiuno_port = 'COM3';     % write in arduino port
-inclinometer_port_front = 'COM9';  % write in front inclometer port
+inclinometer_port_front = 'COM13';  % write in front inclometer port
 %inclinometer_port_back = 'COM11';  % write in back inclometer port
 force_gage1_port = 'COM7';   % write in loadcell1 port
 force_gage2_port = 'COM8';   % write in loadcell2 port
@@ -156,8 +156,8 @@ function ret_mm = get_distance_from_start(s)
     GET_CURRENT_POSITION = 14;
     serial_string = strcat(num2str(GET_CURRENT_POSITION),",0,1");
     %ret_mm = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_mm = read(s);
+    custom_write(s, serial_string);
+    ret_mm = custom_read(s);
     flush(s);
 end 
 
@@ -165,8 +165,8 @@ function ret_signal = set_current_position(pos,s)
     SET_CURRENT_POS = 6;
     serial_string = strcat(num2str(SET_CURRENT_POS),",",num2str(pos),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_signal = read(s);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
@@ -174,8 +174,8 @@ function ret_signal = set_stepsPerRev(stepsPerRev, s)
     SET_STEPS_PER_REVOLUTION = 12;
     serial_string = strcat(num2str(SET_STEPS_PER_REVOLUTION),",",num2str(stepsPerRev),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_signal = read(s);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
@@ -183,8 +183,8 @@ function ret_signal = set_acceleration(acceleration, s)
     SET_ACCELERATION = 10;
     serial_string = strcat(num2str(SET_ACCELERATION),",",num2str(acceleration),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_signal = read(s);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
@@ -192,25 +192,25 @@ function ret_signal = set_max_speed(max_speed,s)
     SET_MAX_SPEED = 8;
     serial_string = strcat(num2str(SET_MAX_SPEED),",",num2str(max_speed),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_signal = read(s);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
 function sig = serial_communication(s, message)
-    write(s,message);
+    custom_write(s,message);
     pause(1);
     disp("wait");
     waitfor(s, "NumBytesAvailable");
-    sig = read(s);
+    sig = custom_read(s);
 end
 
-function write(s, message)
+function custom_write(s, message)
     flush(s);
     writeline(s,message);
 end
 
-function out = read(s)
+function out = custom_read(s)
     out = readline(s);
     flush(s);
 end
