@@ -37,28 +37,6 @@ data_matrix = zeros(0,4);
 %command_arduino = Commands_for_Arduino;
 
 % RUN TEST (SINGLE SIDE, SINGLE INCLINOMETER)
-<<<<<<< HEAD
-%define serial ports
-s=serialport(arudiuno_port,115200); 
-pause(2);
-
-%%
-%adjust for unloaded
-[data_matrix_front_unloaded, data_matrix_back_unloaded] = automation_test();
-% test_distance_mm = data_matrix_back.shape(1)*test_interval_mm;
-% distance_between_mm = 944; %need to change when second inclinometer is step up. 
-% data_matrix_unloaded = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, dist_between_mm);
-%%
-%adjust force gauges for loaded
-[data_matrix_front_loaded, data_matrix_back_loaded] = automation_test();
-%%
-%adjust force gauges for torsion
-[data_matrix_front_torsion, data_matrix_back_torsion] = automation_test();
-%%
-%flush and clear serail ports
-flush(ard_ser);
-clear ard_ser;
-=======
 pause(2);
 stop_num=0;
 count = 0;
@@ -68,64 +46,7 @@ while stop_num~=42
     % [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_port_back);
 
     [force1, force2]=force_average(force_gage1_serial, force_gage2_serial, 1);
->>>>>>> 0ab9489a77a9a41662cc7551f1123116d3db81f4
 
-
-<<<<<<< HEAD
-
-
-
-
-
-
-
-
-
-
-%%
-function [data_matrix_front, data_matrix_back] = automation_test(ard_ser, inc_front_ser, force1_ser, force2_ser) %,inc_back_ser
-    data_matrix_front = zeros(0, 4);
-    data_matrix_back = zeros(0, 4);
-    stop_num=0;
-    while stop_num~=42
-        %collect data
-        [pitchFront, rollFront] = get_HWT905TTL_data(inc_front_ser);
-        % [pitchBack, rollBack] = get_HWT905TTL_data(inc_back_ser);
-    
-        [force1, force2]=force_average(force1_ser, force2_ser, 1);
-    
-        disp(strcat("Inclometer front data: Pitch-", num2str(pitchFront), " Roll-", num2str(rollFront)));
-        % disp(strcat("Inclometer back data: Pitch-", num2str(pitchBack), " Roll-", num2str(rollBack)));
-        disp(strcat("Force gage readings: Gage1-", num2str(force1), " gage2-", num2str(force2)));
-    
-        row_entry_front = [pitchFront, rollFront, force1, force2];
-        % row_entry_back = [pitchBack, rollBack, force1, force2];
-        data_matrix_front = [data_matrix_front; row_entry_front];
-        % data_matrix_back = [data_matrix_back;row_entry_back];
-        % pause(2);
-        %MOVE SENSOR
-        sig = move_x_mm(test_interval_mm, direction, ard_ser);
-        disp(sig);
-        stop_num = str2double(sig);
-    end
-    %MOVE BACK TO START
-    pause(5);
-    mm1 = get_distance_from_start(ard_ser);
-    % disp("mm1 START: ");
-    % disp(mm1);
-    sig = return_to_start(ard_ser);
-    % disp(sig);
-    mm2 = get_distance_from_start(ard_ser);
-    % disp("mm2 END: ");
-    % disp(mm2);
-end
-%% 
-function output = data_merge_fill(data_matrix_front, data_matrix_back, test_interval_mm, test_distance_mm, dist_between_mm)
-    
-        num_of_missing_points = (dist_between_mm-test_distance_mm)/test_interval_mm;
-        front_force_data = data_matrix_front(end, 3:4);
-        back_force_data = data_matrix_back(1, 3:4);
-=======
     row_entry_front = [pitchFront, rollFront, force1, force2];
     % row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
@@ -149,32 +70,6 @@ mm2 = get_distance_from_start(arudiuno_serial);
 % disp(mm2);
 flush(arudiuno_serial);
 clear arudiuno_serial inclinometer_serial force_gage1_serial force_gage2_serial;
->>>>>>> 0ab9489a77a9a41662cc7551f1123116d3db81f4
-
-        force1_front = front_force_data(1);
-        force2_front = front_force_data(2);
-        
-        force1_back = back_force_data(1);
-        force2_back = back_force_data(2);
-
-        pitch_roll_front_data = data_matrix_front
-
-        force1_average = (force1_back+force1_front)/2;
-        force2_average = (force2_back+force2_front)/2;
-
-        pitch = 0;
-        roll = 0; 
-
-        row_entry = [pitch, roll, force1_average, force2_average];
-        
-        for i = 1:num_of_missing_points
-            data_matrix_front = [data_matrix_front; row_entry];
-        end
-
-        data_matrix = [data_matrix_front;data_matrix_back];
-
-        output = data_matrix;
-end
 
 %% Get HWT905TTL pitch and roll data.
 
