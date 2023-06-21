@@ -13,11 +13,11 @@ test_interval_mm = 15;       % Input the desired distance between data points in
 direction = 1;
 
 % Serial USB connections
-arudiuno_port = 'COM3';     % write in arduino port
-inclinometer_port_front = 'COM9';  % write in front inclometer port
+arudiuno_port = 'COM6';     % write in arduino port
+inclinometer_port_front = 'COM11';  % write in front inclometer port
 %inclinometer_port_back = 'COM11';  % write in back inclometer port
-force_gage1_port = 'COM7';   % write in loadcell1 port
-force_gage2_port = 'COM8';   % write in loadcell2 port
+force_gage1_port = 'COM10';   % write in loadcell1 port
+force_gage2_port = 'COM7';   % write in loadcell2 port
 
 % % Motor build parameters don't change
 % change_per_rev = 5;          %  How many milimeters a single revolution of the stepper motor moves sensor along lead screw
@@ -33,7 +33,7 @@ data_matrix = zeros(0,4);
 %command_arduino = Commands_for_Arduino;
 
 % RUN TEST (SINGLE SIDE, SINGLE INCLINOMETER)
-s=serialport(arudiuno_port,9600); 
+s=serialport(arudiuno_port,115200); 
 pause(2);
 stop_num=0;
 count = 0;
@@ -52,7 +52,7 @@ while stop_num~=42
     % row_entry_back = [pitchBack, rollBack, force1, force2];
     data_matrix_front = [data_matrix_front;row_entry_front];
     % data_matrix_back = [data_matrix_back;row_entry_back];
-    
+    pause(2);
     %MOVE SENSOR
     sig = move_x_mm(test_interval_mm, direction, s);
     disp(sig);
@@ -156,8 +156,8 @@ function ret_mm = get_distance_from_start(s)
     GET_CURRENT_POSITION = 14;
     serial_string = strcat(num2str(GET_CURRENT_POSITION),",0,1");
     %ret_mm = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_mm = read(s);
+    custom_write(s, serial_string);
+    ret_mm = custom_read(s);
     flush(s);
 end 
 
@@ -165,8 +165,8 @@ function ret_signal = set_current_position(pos,s)
     SET_CURRENT_POS = 6;
     serial_string = strcat(num2str(SET_CURRENT_POS),",",num2str(pos),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_signal = read(s);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
@@ -174,8 +174,8 @@ function ret_signal = set_stepsPerRev(stepsPerRev, s)
     SET_STEPS_PER_REVOLUTION = 12;
     serial_string = strcat(num2str(SET_STEPS_PER_REVOLUTION),",",num2str(stepsPerRev),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
-    ret_signal = read(s);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
     flush(s);
 end
 
@@ -183,7 +183,7 @@ function ret_signal = set_acceleration(acceleration, s)
     SET_ACCELERATION = 10;
     serial_string = strcat(num2str(SET_ACCELERATION),",",num2str(acceleration),",0");
     %ret_signal = serial_communication(s, serial_string);
-    write(s, serial_string);
+    custom_write(s, serial_string);
     ret_signal = custom_read(s);
     flush(s);
 end
