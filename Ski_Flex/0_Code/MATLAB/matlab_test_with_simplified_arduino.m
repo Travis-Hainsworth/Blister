@@ -129,7 +129,7 @@ pause(2);
 %%
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
 distance_in = 19;
-distance_mm = floor(20);%floor(convlength([distance_in 0], 'in', 'm'));
+distance_mm = floor(254);%floor(convlength([distance_in 0], 'in', 'm'));
 direction = 0;
 sig = move_x_mm(distance_mm, direction, s);
 disp(sig);
@@ -184,11 +184,11 @@ clear s;
 clc;
 
 %%
-arduino_port = 'COM6';
+arduino_port = 'COM3';
 s=serialport(arduino_port,115200); 
 pause(2);
 distance_mm = 10;
-direction = 1;
+direction = 0;
 stop_num = 0;
 while stop_num~=42
     %collect data
