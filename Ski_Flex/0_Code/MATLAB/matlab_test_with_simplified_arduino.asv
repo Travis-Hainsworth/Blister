@@ -130,8 +130,8 @@ pause(2);
 %%
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
 distance_in = 19;
-distance_mm = floor(610);%floor(convlength([distance_in 0], 'in', 'm'));
-direction = 1;
+distance_mm = floor(144);%floor(convlength([distance_in 0], 'in', 'm'));
+direction = 0;
 sig = move_x_mm(distance_mm, direction, s);
 disp(sig);
  

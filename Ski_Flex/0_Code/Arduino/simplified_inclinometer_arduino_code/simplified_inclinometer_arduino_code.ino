@@ -88,7 +88,7 @@ void stop_testing(){
     stepper1.stop();
     //testing_state = false;
     send_finish_signal(STOP_SIGNAL);
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));   
+    //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));   
 }
 
 /*

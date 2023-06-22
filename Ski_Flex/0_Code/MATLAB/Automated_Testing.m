@@ -28,7 +28,7 @@ force_gage2_serial = serialport(force_gage2_port, 9600);
 % adjust for unloaded test
 % run unloaded test 
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
-direction = 1;
+direction = 1; 
 [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction);
 %%
 flush(arudiuno_serial);
@@ -47,18 +47,28 @@ clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_g
 %adjust for torsion test
 %run torsion test
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
-direction = 1;
+direction = 1; 
 [data_matrix_front_torsion,data_matrix_back_torsion] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction);
 %%
-flush(arudiuno_serial);
-clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+% flush(arudiuno_serial);
+% clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+
+
+
+
+
+
+
+
+
 %% this is to move the motor if it does not reach the start point
-%FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
+% %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
 distance_in = 19;
-distance_mm = floor(20);%floor(convlength([distance_in 0], 'in', 'm'));
-direction = 1;
+distance_mm = floor(260);%floor(convlength([distance_in 0], 'in', 'm'));
+direction = 0;
 sig = move_x_mm(distance_mm, direction, arudiuno_serial);
 disp(sig);
+%%
 %"command,#,#" most likely = "signal,0,#"
 position = 0;
 sig = set_current_position(position, arudiuno_serial );
@@ -67,27 +77,63 @@ mm = get_distance_from_start(arudiuno_serial);
 disp(mm);
 %%
 %flush(arudiuno_serial);
-clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+% clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
 %%
 %FUNCTION TO MOVE TO START FROM CURRENT POSITION
 %"command,#,#"
-sig = return_to_start(arudiuno_serial);
-disp(sig);
+% sig = return_to_start(arudiuno_serial);
+% disp(sig);
 %% create full matrcies
 test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
 dist_between_mm = 944; %change when setup
 
+%%
+% dat_unl_f = data_matrix_front_unloaded;
+% dat_unl_f(end,:) = [];
+% dat_unl_b = data_matrix_back_unloaded;
+% dat_unl_b(end,:) = [];
+% dat_l_f = data_matrix_front_loaded;
+% dat_l_f(end,:) = [];
+% dat_l_b = data_matrix_back_loaded;
+% dat_l_b(end,:) = [];
+%%
 data_matrix_unloaded = data_merge_fill(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
 data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
 data_matrix_torsion = data_merge_fill(data_matrix_front_torsion, data_matrix_back_torsion, test_interval_mm, test_distance_mm, dist_between_mm);
 %% plot full matricies
-p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion);
+global ei_dtheta ei_moment ei_disp;
+test_interval_mm = 10;
+p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion, test_interval_mm);
 
 %% Save Data and Plots (DON't Exist out of plot generated out of last block) ORDER#10
 %name_brand_year_length?
-directory_name = 'aluminuim_bar2';
+model_name = 'Sick_Day_94';      % Input model name
+year = '2022';                 % Input model year
+manufacturer = "Line";         % Input ski Manufacturer
+model_length_cm = '186';       %   Input Length of ski in cm
+directory_name = strcat(manufacturer,'_', model_name,'_',year,'_',model_length_cm);
+disp(directory_name);
 
+%%
 saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, gcf, directory_name);
+
+
+
+
+
+
+
+
+
+
+
+
+%%
+
+
+
+
+
 
 
 %%
@@ -273,7 +319,10 @@ end
 
 %% Generate PLOTS ORDER#10 (DON't close plot tab! needs to be open in order to save)
 
-function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion)
+function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion, step_size_mm)
+        global ei_disp ei_moment ei_dtheta;
+        step_size_m = step_size_mm/1000;
+        disp('-------------EI CALCULATIONS--------------');
         %read the profile(unweighted pitch)
         profile = data_matrix_unloaded(:,1);
         %read the flex (weighted pitch)
@@ -304,7 +353,7 @@ function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_
         %displacement in radians
         displacement = zeros(1,measurements+1)';
         displacement(1:measurements) = deg2rad(profile - flex);
-        
+        ei_disp = displacement;
         % Net Force
         %net force in lbs
         forceNet = force1+force2-rollermass;
@@ -312,16 +361,21 @@ function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_
         % EI calcuation
         EI = zeros(measurements,1);
         for n = 2:(measurements)
-            dTheta(n) = dirTheta(n,displacement);
+            dTheta(n) = dirTheta(n,displacement, step_size_m);
             moment(n) = momentz(n-1,forceNet,initialOffSet);
             EI(n) = moment(n)/dTheta(n);
         end
+        
+        ei_dtheta = dTheta;
+        ei_moment = moment;
+        disp('EI data: ')
         plotEI = EI(3:measurements-1);
+        disp(plotEI);
         
         tiledlayout(2,1);
         nexttile;
         plot(plotEI);
-        title('EI');
+        title('EI new');
         
         gcf
         
@@ -330,7 +384,7 @@ function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_
         % figure
         % plot(dTheta)
         % Generate GJ plot
-        
+        disp('------------GJ CALCULATIONS---------------');
         %read the profile(unweighted pitch)
         tProf = data_matrix_unloaded(:,1);
         %read the flex (weighted pitch)
@@ -361,27 +415,33 @@ function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_
         %displacement in radians
         displacement = zeros(1,measurements+1)';
         displacement(1:measurements) = deg2rad(tProf - rotation);
-        
+        disp('displacement');
+        disp(displacement);
         % Net Torque
         %net force in lbs
         torqueNet = abs(force1-force2)*3.75/12*1.356;
-        
+        disp('torqueNet:');
+        disp(torqueNet);
         % GJ calcuation
         GJ = zeros(measurements,1);
         for n = 2:(measurements)
-            dTheta(n) = dirTheta(n,displacement);
+            dTheta(n) = dirTheta(n,displacement, step_size_m);
             GJ(n) = torqueNet(n)/dTheta(n);
         end
+        disp('dTheta: ');
+        disp(dTheta);
         plotGJ = abs(GJ(2:measurements-1));
-        
+        disp('GJ data: ');
+        disp(plotGJ);
+
         p = tiledlayout(2,1);
         nexttile;
         plot(plotEI);
-        title('EI');
+        title('EI new');
         
         nexttile;
         plot(plotGJ);
-        title('GJ');
+        title('GJ new');
 end
 
 %%
@@ -481,7 +541,7 @@ function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion,
     saveas(plot,strcat(relative_save_path, "\plots.png"));
     writematrix(data_matrix_unloaded, strcat(relative_save_path, "\unloaded.csv" ));
     writematrix(data_matrix_loaded, strcat(relative_save_path, "\loaded.csv" ));
-    writematrix(data_matrix_unloaded, strcat(relative_save_path, "\torsion.csv" ));
+    writematrix(data_matrix_torsion, strcat(relative_save_path, "\torsion.csv" ));
     
 end
 
@@ -504,11 +564,11 @@ end
 
 % Change in Theta at X
 
-function [dTheta] = dirTheta(n,displacement)
+function [dTheta] = dirTheta(n,displacement, step_size_m)
     %calcualte the change in theta (the displacement) at a given x location
     %39.37 converts inches to meters
     theta = abs(displacement(n-1)-displacement(n))+abs(displacement(n)-displacement(n+1));
-    dTheta = theta*39.37/4; %in radians/meter
+    dTheta = theta/(2*step_size_m);%*39.37/4; %in radians/meter
 end
 
 
