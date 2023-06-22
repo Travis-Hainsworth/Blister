@@ -11,6 +11,9 @@ clc;
 test_interval_mm = 15;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 
+global arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+global arudiuno_port inclinometer_port_front inclinometer_port_back force_gage1_port force_gage2_port;
+
 % Serial USB connections
 arudiuno_port = 'COM3';     % write in arduino port
 inclinometer_port_front = 'COM9';  % write in front inclometer port
@@ -29,7 +32,7 @@ force_gage2_serial = serialport(force_gage2_port, 9600);
 % run unloaded test 
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
-[data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction);
+[data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_autmation(test_interval_mm, direction);
 %%
 flush(arudiuno_serial);
 clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
@@ -110,20 +113,15 @@ inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 
 %%
 function out = clear_and_reset_serial_ports()
-    global arudiuno_serial;
-    global inclinometer_front_serial;
-    global inclinometer_back_serial;
-    global force_gage1_serial;
-    global force_gage2_serial;
+    global arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    global arudiuno_port inclinometer_port_front inclinometer_port_back force_gage1_port force_gage2_port;
+    
+    try 
+        clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    catch
+        disp("Serials are not connected yet.");
+    end
 
-    clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
-    
-    global arudiuno_port;     % write in arduino port
-    global inclinometer_port_front;  % write in front inclometer port
-    global inclinometer_port_back;  % write in back inclometer port
-    global force_gage1_port;   % write in loadcell1 port
-    global force_gage2_port;   % write in loadcell2 port
-    
     arudiuno_serial = serialport(arudiuno_port, 115200);
     inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
     inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
