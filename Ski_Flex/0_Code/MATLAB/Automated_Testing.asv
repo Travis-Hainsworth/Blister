@@ -105,8 +105,30 @@ inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_back_serial);
 
 
+
 %%
-fruncti
+
+%%
+function out = clear_and_reset_serial_ports()
+    clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    
+    arudiuno_port = 'COM3';     % write in arduino port
+    inclinometer_port_front = 'COM9';  % write in front inclometer port
+    inclinometer_port_back = 'COM14';  % write in back inclometer port
+    force_gage1_port = 'COM8';   % write in loadcell1 port
+    force_gage2_port = 'COM7';   % write in loadcell2 port
+    
+    global arudiuno_serial;
+    arudiuno_serial = serialport(arudiuno_port, 115200);
+    global inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
+    inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
+    global inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
+    inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
+    global force_gage1_serial = serialport(force_gage1_port, 9600);
+    force_gage1_serial = serialport(force_gage1_port, 9600);
+    global force_gage2_serial = serialport(force_gage2_port, 9600);
+    force_gage2_serial = serialport(force_gage2_port, 9600);
+end
 %%
 function [data_matrix_front,data_matrix_back] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction) %inclinometer_front_serial
     data_matrix_front = zeros(0, 4);
