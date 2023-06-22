@@ -42,6 +42,9 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
 
 """"
 Plot multiple shaded error bad graphs onto the same graph.
+There is also functionality for having multiple of the same sets be the same color but as a dotted line.
+For example if you have a set of "new_Enve" data and "old_Enve" data you can graph them as the same color but one 
+will be a dotted line.
 """
 
 
@@ -93,15 +96,52 @@ def multiple_rims_graph(mean_list, std_list, ind_var, rims, old_data_index=0):
     plt.show()
 
 
-def spoke_tension_plot(compression, before, after):
+def lateral_deviation_plot(df, tests):
     fig, ax = plt.subplots(figsize=(12, 6))
-    colors = ['red', 'blue', 'green', 'black', 'yellow']
+    bar_width = .07
+    group_offset = np.arange(tests) * bar_width
 
-    plt.ylabel('Compression (in)')
-    plt.xlabel('Lateral Deviation (in)')
-    plt.scatter(before, compression, c=colors)
-    plt.scatter(after, compression, c=colors, marker="x")
-    plt.xticks(np.arange(0.005, .015, .005))
+    for i in range(tests):
+        tensions = df['Tension' + str(i+1)]
+        x_positions = np.arange(len(df['Rim'])) + group_offset[i]
+        ax.bar(x_positions, tensions, width=bar_width, label='Test Set {}'.format(i+1))
 
+    ax.set_xticks(np.arange(len(df['Rim'])) + (tests - 1) * bar_width / 2)
+    ax.set_xticklabels(df['Rim'])
+
+    ax.set_ylabel('Lateral Deviation (mm)')
+    plt.suptitle('Spoke Tensions After Each Test Set')
+    plt.title('Target .2mm, n=5 per set')
+
+    fig.legend(loc='upper left')
     plt.show()
 
+
+def spoke_tension_plot(df_list, targets, rims):
+    num_plots = len(df_list)
+
+    fig, axs = plt.subplots(num_plots, 1, figsize=(12, 3*num_plots), sharex=True)
+
+    for i, (df, target) in enumerate(zip(df_list, targets)):
+        left_tension = df['Left Tension (kgf)']
+        right_tension = df['Right Tension (kgf)']
+
+        # Plot the left tension
+        axs[i].plot(left_tension, 'bo-', label='Left Tension')
+        axs[i].axhline(y=target, color='r', linestyle='--', label='Target Tension')
+        axs[i].set_ylabel('Tension')
+
+        # Plot the right tension
+        axs[i].plot(right_tension, 'go-', label='Right Tension')
+        axs[i].axhline(y=target, color='r', linestyle='--')
+        axs[i].legend()
+
+        # Set the subplot title as the rim name
+        axs[i].set_title(rims[i])
+
+    plt.xlabel('Set')
+    # plt.suptitle('Deviation from Target Tension After Each Set')
+    # plt.title('n=5 for each set')
+
+    plt.tight_layout()
+    plt.show()

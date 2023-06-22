@@ -1,3 +1,4 @@
+import itertools
 from readInDataFiles import *
 from calculateRadialCompression import *
 """
@@ -107,5 +108,5 @@ def interpolate_data(df_list):
 
 def spoke_data(file_path):
     df = pd.read_csv(file_path, low_memory=False)
+    return df
 
-    return df['Before']*0.0393701, df['After']*0.0393701

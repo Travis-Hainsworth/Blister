@@ -5,8 +5,7 @@ import cProfile
 # Mocap data then MTS data
 # ex: r"C:\Users\ethan\Test\ENVE_Static_Mocap_Data_New"
 # If you want to see the un-smoothed data then add "True" after the last file path.
-pr = cProfile.Profile()
-pr.enable()
+
 ################################################### NEW DATA ###########################################################
 final_data = data_processing(r"C:\Users\ethan\Test\Static_New_Data\Stans_Mocap\Stans_Best",
                              r"C:\Users\ethan\Test\Static_New_Data\Stans_MTS\Stans_Best")
@@ -90,5 +89,5 @@ mean, std, ind_var, disp = interpolate_data(final_data)
 plot_interpolated_data(disp, mean, std, ind_var)
 
 # multiple_rims_graph(mean_list, std_list, ind, rims, 5)
-pr.disable()
-pr.print_stats(sort='cumtime')
+
+
