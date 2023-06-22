@@ -292,15 +292,12 @@ function output = data_merge_fill(data_matrix_front, data_matrix_back, test_inte
         force2_average = (force2_back+force2_front)/2;
 
         pitch_average = (pitch_front+pitch_back)/2;
-        roll_average = (roll_front)
+        roll_average = (roll_front+roll_back)/2; 
 
-        pitch = 0;
-        roll = 0; 
-
-        row_entry = [pitch, roll, force1_average, force2_average];
+        missing_row_entry = [pitch_average, roll_average, force1_average, force2_average];
         
         for i = 1:num_of_missing_points
-            data_matrix_front = [data_matrix_front; row_entry];
+            data_matrix_front = [data_matrix_front; missing_row_entry];
         end
 
         data_matrix = [data_matrix_front;data_matrix_back];
@@ -527,9 +524,9 @@ function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion,
     
 end
 
-function SaveSingleTestData(data_matrix, dir_name, type)
+function SaveSingleTestData(data_matrix, dir_name, type, test_number)
 
-    relative_dir_path = strcat('..\..\0_Data\',dir_name);
+    relative_dir_path = strcat('..\..\0_Data\',dir_name,'\', 'test');
 
     if ~exist(relative_dir_path, 'dir')
        mkdir(relative_dir_path);

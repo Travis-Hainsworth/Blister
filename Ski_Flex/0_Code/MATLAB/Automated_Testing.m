@@ -524,20 +524,13 @@ function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion,
     
 end
 
-function SaveSingleTestData(data_matrix, dir_name, type)
+function SaveSingleTestData(data_matrix, dir_name, type, test_number)
 
-    relative_dir_path = strcat('..\..\0_Data\',dir_name);
+    relative_save_path = strcat('..\..\0_Data\',dir_name,'\', num2str(test_number), '_test');
 
-    if ~exist(relative_dir_path, 'dir')
-       mkdir(relative_dir_path);
+    if ~exist(relative_save_path, 'dir')
+       mkdir(relative_save_path);
     end
-
-    S = dir(relative_dir_path);
-    N = nnz(~ismember({S.name},{'.','..'})&[S.isdir]);
-    test_dir_name = strcat(num2str(N),"_test");
-    relative_save_path = strcat(relative_dir_path,'\',test_dir_name);
-
-    mkdir(relative_save_path);
 
     column_names = {'pitch', 'roll', 'forceLeft', 'forceRight'};
     data = [column_names; num2cell(data_matrix)];
