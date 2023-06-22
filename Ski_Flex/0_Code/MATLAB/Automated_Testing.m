@@ -24,63 +24,60 @@ inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 force_gage1_serial = serialport(force_gage1_port, 9600);
 force_gage2_serial = serialport(force_gage2_port, 9600);
 
+test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
+dist_between_mm = 863; %chnage when distance between inclinomters change
+
 %%
 % adjust for unloaded test
 % run unloaded test 
+clear_and_reset_serial_ports();
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction);
-%%
-flush(arudiuno_serial);
-clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+data_matrix_unloaded = data_merge_fill(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
+%save the single test
+pause(2);
+sig = return_to_start(arudiuno_serial);
+% %%
+% flush(arudiuno_serial);
+% clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
 %%
 %adjust for loaded test
 %run unloaded test
 %arudiuno_serial = serialport('COM3', 115200);
+clear_and_reset_serial_ports();
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1; 
 [data_matrix_front_loaded,data_matrix_back_loaded] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction);
+data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
+%save the single test
+pause(2);
+sig = return_to_start(arudiuno_serial);
 %%
-flush(arudiuno_serial);
-clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+% flush(arudiuno_serial);
+% clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
 %%
 %adjust for torsion test
 %run torsion test
+clear_and_reset_serial_ports();
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 [data_matrix_front_torsion,data_matrix_back_torsion] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction);
-%%
-flush(arudiuno_serial);
-clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
-%% this is to move the motor if it does not reach the start point
-%FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
-distance_in = 19;
-distance_mm = floor(20);%floor(convlength([distance_in 0], 'in', 'm'));
-direction = 1;
-sig = move_x_mm(distance_mm, direction, arudiuno_serial);
-disp(sig);
-%"command,#,#" most likely = "signal,0,#"
-position = 0;
-sig = set_current_position(position, arudiuno_serial );
-disp(sig); 
-mm = get_distance_from_start(arudiuno_serial);
-disp(mm);
-%%
-%flush(arudiuno_serial);
-clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
-%%
-%FUNCTION TO MOVE TO START FROM CURRENT POSITION
-%"command,#,#"
-sig = return_to_start(arudiuno_serial);
-disp(sig);
-%% create full matrcies
-test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
-dist_between_mm = 944; %change when setup
-
-data_matrix_unloaded = data_merge_fill(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
-data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
 data_matrix_torsion = data_merge_fill(data_matrix_front_torsion, data_matrix_back_torsion, test_interval_mm, test_distance_mm, dist_between_mm);
-%% plot full matricies
+%save the single test
+pause(2);
+sig = return_to_start(arudiuno_serial); % might want to not retutn to start and just stop, change rig, then run it th opposite direction for speed (would require data collection change and possible loss of accuracy)
+%%
+% flush(arudiuno_serial);
+% clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+%% create full matrcies
+% test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
+% dist_between_mm = 944; %change when setup
+% 
+% %data_matrix_unloaded = data_merge_fill(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
+% % data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
+% % data_matrix_torsion = data_merge_fill(data_matrix_front_torsion, data_matrix_back_torsion, test_interval_mm, test_distance_mm, dist_between_mm);
+% %% plot full matricies
 p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion);
 
 %% Save Data and Plots (DON't Exist out of plot generated out of last block) ORDER#10
@@ -90,19 +87,44 @@ directory_name = 'aluminuim_bar2';
 saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, gcf, directory_name);
 
 
+
+
+
+
+
+
+%% these functions can be used to maniplate posotion of motor that do not align with test
+%FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
+distance_in = 19;
+distance_mm = floor(20);%floor(convlength([distance_in 0], 'in', 'm'));
+direction = 1;
+sig = move_x_mm(distance_mm, direction, arudiuno_serial);
+disp(sig);
 %%
+%FUNCTION TO GET CURRENT POSITION
+%"command,#,#"
+mm = get_distance_from_start(arudiuno_serial);
+disp(mm);
+%%
+%FUNCTION TO MOVE TO START FROM CURRENT POSITION
+%"command,#,#"
+sig = return_to_start(arudiuno_serial);
+disp(sig);
+%%
+%FUNCTION TO SET CURRENT POSITION
+%"command,#,#" most likely = "signal,0,#"
+position = 0;
+sig = set_current_position(position,arudiuno_serial);
+disp(sig); 
+%%
+%FUNCTION TO reset setup
+RE_SETUP = 16;
+sig = reset_setup(arudiuno_serial);
+disp(sig); 
 
-clear all;
 
 
-inclinometer_port_front = 'COM9';  % write in front inclometer port
-inclinometer_port_back = 'COM14';  % write in back inclometer port
 
-inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
-inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
-
-[pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_front_serial);
-[pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_back_serial);
 
 
 
@@ -115,8 +137,12 @@ function out = clear_and_reset_serial_ports()
     global inclinometer_back_serial;
     global force_gage1_serial;
     global force_gage2_serial;
-
-    clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    
+    try
+        clear inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    catch
+        disp("serial ports not connected yet");
+    end
     
     global arudiuno_port;     % write in arduino port
     global inclinometer_port_front;  % write in front inclometer port
@@ -130,6 +156,7 @@ function out = clear_and_reset_serial_ports()
     force_gage1_serial = serialport(force_gage1_port, 9600);
     force_gage2_serial = serialport(force_gage2_port, 9600);
 end
+
 %%
 function [data_matrix_front,data_matrix_back] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction) %inclinometer_front_serial
     data_matrix_front = zeros(0, 4);
@@ -157,16 +184,16 @@ function [data_matrix_front,data_matrix_back] = sensor_autmation(arudiuno_serial
         disp(sig);
         stop_num = str2double(sig);
     end
-    %MOVE BACK TO START
-    pause(5);
-    mm1 = get_distance_from_start(arudiuno_serial);
-    % disp("mm1 START: ");
-    % disp(mm1);
-    sig = return_to_start(arudiuno_serial);
-    % disp(sig);
-    mm2 = get_distance_from_start(arudiuno_serial);
-    % disp("mm2 END: ");
-    % disp(mm2);
+    % %MOVE BACK TO START
+    % pause(5);
+    % mm1 = get_distance_from_start(arudiuno_serial);
+    % % disp("mm1 START: ");
+    % % disp(mm1);
+    % sig = return_to_start(arudiuno_serial);
+    % % disp(sig);
+    % mm2 = get_distance_from_start(arudiuno_serial);
+    % % disp("mm2 END: ");
+    % % disp(mm2);
 end
 
 %% Get HWT905TTL pitch and roll data.
@@ -473,6 +500,14 @@ function ret_signal = set_max_speed(max_speed,s)
     SET_MAX_SPEED = 8;
     serial_string = strcat(num2str(SET_MAX_SPEED),",",num2str(max_speed),",0");
     %ret_signal = serial_communication(s, serial_string);
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
+    flush(s);
+end
+
+function ret_signal = reset_setup(s)
+    RE_SETUP = 16;
+    serial_string = strcat(num2str(RE_SETUP),",0,0");
     custom_write(s, serial_string);
     ret_signal = custom_read(s);
     flush(s);
