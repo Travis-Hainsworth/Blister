@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+
 from dataProcessing import *
 """
 PLots a shaded error bar graph of all tests performed. Shaded region is +/- 1 standard deviation.
@@ -16,14 +17,20 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
     plt.subplot(121)
     plt.ylabel('Compression (in)')
     plt.xlabel('Load (lbf)')
-    lower_bound = mean_of_displacements - std_of_displacements
-    upper_bound = mean_of_displacements + std_of_displacements
+
+    smooth_mean = convolve(mean_of_displacements, np.ones(360) / 360, mode='valid')
+    smooth_std = convolve(std_of_displacements, np.ones(360) / 360, mode='valid')
+
+    pad = len(independent_variable) - len(smooth_mean)
 
     plt.suptitle('Quasi-Static Loading on Bike Rims with Tires')
-    plt.title('Shaded Region: +/- 1 sigma')
+    plt.title(r'n=20 Shaded Region: +/- 1 $\sigma$')
 
-    plt.fill_between(independent_variable, lower_bound, upper_bound, color='green', alpha=.15)
-    plt.plot(independent_variable, mean_of_displacements, color='gray')
+    lower_bound = smooth_mean - smooth_std
+    upper_bound = smooth_mean + smooth_std
+
+    plt.fill_between(independent_variable[pad:], lower_bound, upper_bound, color='green', alpha=.1)
+    plt.plot(independent_variable[pad:], smooth_mean, color='gray')
 
     plt.setp(plt.gca().lines, linewidth=1)
 
@@ -31,12 +38,12 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
     plt.subplot(122)
     plt.ylabel('Compression (in)')
     plt.xlabel('Load (lbf)')
-    plt.title('Individual test data')
+    plt.title('Individual test data n=20')
 
     for i in range(displacements.shape[0]):
         plt.plot(independent_variable, displacements[i], label=f'Test {i + 1}')
 
-    plt.legend()
+    # plt.legend()
     plt.show()
 
 
@@ -56,7 +63,7 @@ def multiple_rims_graph(mean_list, std_list, ind_var, rims, old_data_index=0):
     plt.xlabel('Load (lbf)')
 
     plt.suptitle('Quasi-Static Loading on Bike Rims with Tires')
-    plt.title(r'Shaded Region: +/- 1 $\sigma$   n=5')
+    plt.title(r'Shaded Region: +/- 1 $\sigma$   n=20')
 
     hues = np.linspace(0, 1, len(mean_list) + 1)  # Generate equally spaced hues
 
@@ -65,11 +72,15 @@ def multiple_rims_graph(mean_list, std_list, ind_var, rims, old_data_index=0):
     color_mapping = {}  # Store the mapping between rim labels and colors
 
     for i in range(len(mean_list)):
-        interpolated_mean = np.interp(unified_ind_var, ind_var[i], mean_list[i])
-        interpolated_std = np.interp(unified_ind_var, ind_var[i], std_list[i])
+        # interpolated_mean = np.interp(unified_ind_var, ind_var[i], mean_list[i])
+        # interpolated_std = np.interp(unified_ind_var, ind_var[i], std_list[i])
+        smooth_mean = convolve(mean_list[i], np.ones(360) / 360, mode='valid')
+        smooth_std = convolve(std_list[i], np.ones(360) / 360, mode='valid')
 
-        lower_bound = interpolated_mean - interpolated_std
-        upper_bound = interpolated_mean + interpolated_std
+        pad = len(unified_ind_var) - len(smooth_mean)
+
+        lower_bound = smooth_mean - smooth_std
+        upper_bound = smooth_mean + smooth_std
 
         rim_label = rims[i]
         for color_key in color_mapping.keys():
@@ -80,7 +91,7 @@ def multiple_rims_graph(mean_list, std_list, ind_var, rims, old_data_index=0):
             color = mcolors.hsv_to_rgb((hues[i], 1, 1))  # Convert HSV to RGB
             color_mapping[rim_label] = color
 
-        plt.fill_between(unified_ind_var, lower_bound, upper_bound, color=color, alpha=.1)
+        plt.fill_between(unified_ind_var[pad:], lower_bound, upper_bound, color=color, alpha=.1)
 
         if i >= old_data_index != 0:
             line_style = '--'
@@ -89,7 +100,7 @@ def multiple_rims_graph(mean_list, std_list, ind_var, rims, old_data_index=0):
             line_style = '-'
             label = rim_label
 
-        plt.plot(unified_ind_var, interpolated_mean, color=color, linestyle=line_style, label=label)
+        plt.plot(unified_ind_var[pad:], smooth_mean, color=color, linestyle=line_style, label=label)
         plt.setp(plt.gca().lines, linewidth=1)
 
     plt.legend()
