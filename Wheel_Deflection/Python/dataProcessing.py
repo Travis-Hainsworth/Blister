@@ -1,6 +1,6 @@
-import itertools
 from readInDataFiles import *
 from calculateRadialCompression import *
+from sklearn.linear_model import LinearRegression
 """
 This function does everything from the "calculateRadialCompression.py" and "readInDataFiles.py" for you.
 
@@ -109,4 +109,17 @@ def interpolate_data(df_list):
 def spoke_data(file_path):
     df = pd.read_csv(file_path, low_memory=False)
     return df
+
+
+def find_line_equation(x, y):
+    # Perform linear regression
+    model = LinearRegression()
+    model.fit(x, y)
+
+    # Get the slope (m) and intercept (b)
+    m = model.coef_[0]
+    b = model.intercept_
+
+    # Return the equation as a string
+    return f"y = {m}x + {b}"
 

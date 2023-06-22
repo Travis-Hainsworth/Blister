@@ -20,9 +20,11 @@ rims = ['ENVE AM30',
 data_list = [
     pd.read_csv(r"C:\Users\ethan\Test\Static_New_Data\spoke_data\spoke_tension_enve.csv"),
     pd.read_csv(r"C:\Users\ethan\Test\Static_New_Data\spoke_data\spoke_tension_stans.csv"),
-    # pd.read_csv(r"C:\Users\ethan\Test\Static_New_Data\spoke_data\spoke_tension_waou.csv"), 115
-
+    pd.read_csv(r"C:\Users\ethan\Test\Static_New_Data\spoke_data\spoke_tension_light.csv"),
+    pd.read_csv(r"C:\Users\ethan\Test\Static_New_Data\spoke_data\spoke_tension_r30.csv"),
+    pd.read_csv(r"C:\Users\ethan\Test\Static_New_Data\spoke_data\spoke_tension_waou.csv"),
 ]
 
-target_list = [100, 130]
+target_list = [100, 130, 120, 115, 115]
 spoke_tension_plot(data_list, target_list, rims)
+

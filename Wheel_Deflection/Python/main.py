@@ -6,39 +6,40 @@ from graphFunctions import *
 # ex: r"C:\Users\ethan\Test\ENVE_Static_Mocap_Data_New"
 # If you want to see the un-smoothed data then add "True" after the last file path.
 
-# ################################################## SINGLE GRAPHS ###########################################################
-# final_data = data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\ENVE_Mocap\6-21",
-#                              r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\ENVE_MTS\6-21")
+# ################################################## SINGLE GRAPHS #####################################################
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_MTS\6-21")
 
-# final_data = data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Stans_Mocap\6-21",
-#                              r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Stans_MTS\6-21")
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Stans_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\Stans_MTS\6-21")
 
-# final_data = data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Light_Mocap\6-21",
-#                              r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Light_MTS\6-21")
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Light_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\Light_MTS\6-21")
+#
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\R30_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\R30_MTS\6-21")
 
-# final_data = data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\R30_Mocap\6-21",
-#                              r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\R30_MTS\6-21")
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_MTS\6-21")
 
-# final_data = data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\WAOU_Mocap\6-21",
-#                              r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\WAOU_MTS\6-21")
-########################################################################################################################
+#################################################### All Graphs ########################################################
 
 rims = ['ENVE', 'Stans', 'Light', 'R30', 'WAOU']
 good_data = [
-    data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\ENVE_Mocap\6-21",
-                    r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\ENVE_MTS\6-21"),
+    data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_Mocap\6-21",
+                    r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_MTS\6-21"),
 
-    data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Stans_Mocap\6-21",
-                    r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Stans_MTS\6-21"),
+    data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Stans_Mocap\6-21",
+                    r"C:\Users\ethan\Test\6-21 cleaned data\Stans_MTS\6-21"),
 
-    data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Light_Mocap\6-21",
-                    r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\Light_MTS\6-21"),
+    data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Light_Mocap\6-21",
+                    r"C:\Users\ethan\Test\6-21 cleaned data\Light_MTS\6-21"),
 
-    data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\R30_Mocap\6-21",
-                    r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\R30_MTS\6-21"),
+    data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\R30_Mocap\6-21",
+                    r"C:\Users\ethan\Test\6-21 cleaned data\R30_MTS\6-21"),
 
-    data_processing(r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\WAOU_Mocap\6-21",
-                    r"C:\Users\Rady-MoCapCamera\Desktop\Static_New_Data_Summer2023\WAOU_MTS\6-21"),
+    data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_Mocap\6-21",
+                    r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_MTS\6-21")
 
 ]
 
