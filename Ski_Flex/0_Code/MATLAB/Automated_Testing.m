@@ -35,10 +35,10 @@ test_interval_mm = 50;       % Input the desired distance between data points in
 direction = 1;
 [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_autmation(arudiuno_serial, inclinometer_front_serial, inclinometer_back_serial, force_gage1_serial, force_gage2_serial, test_interval_mm, direction);
 data_matrix_unloaded = data_merge_fill(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
-%save the single test
+%SaveSingleTestData(data_matrix_unloaded, dir_name, type);
 pause(2);
 sig = return_to_start(arudiuno_serial);
-% %%
+%%
 % flush(arudiuno_serial);
 % clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
 %%
@@ -119,7 +119,7 @@ disp(sig);
 %%
 %FUNCTION TO reset setup
 RE_SETUP = 16;
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig); 
 
 
@@ -505,7 +505,7 @@ function ret_signal = set_max_speed(max_speed,s)
     flush(s);
 end
 
-function ret_signal = reset_setup(s)
+function ret_signal = reset_arduino(s)
     RE_SETUP = 16;
     serial_string = strcat(num2str(RE_SETUP),",0,0");
     custom_write(s, serial_string);
@@ -585,12 +585,58 @@ end
 %1.3558 is the conversion of ft-lbs to Nm
 %12 is to convert to feet form inches
 
+
+function ei_matrix = make_ei_matrix(unloaded_data, loaded_data, interval_mm)
+    %read the profile(unweighted pitch)
+        profile = data_matrix_unloaded(:,1);
+        %read the flex (weighted pitch)
+        flex = data_matrix_loaded(:,1);
+        %read forces from strain guages, and subtract the "unweighted" from
+        %weighted to get a net force
+        
+        %force 1 is left, force 2 is right
+        force1 = data_matrix_loaded(:,3)-data_matrix_unloaded(:,3);
+        force2 = data_matrix_loaded(:,4)-data_matrix_unloaded(:,4);
+        
+        % Variables to setup Manually
+        
+        %measurements is the number of lines measured per round, = length/4
+        measurements = length(flex);
+        %rollermass = lass of rollers imparting force on skis in lbs
+        rollermass = 31;
+        %initialOffset = distance from applied load or clamp at the tip to the
+        %first measurement in inches
+        initialOffSet = 0;
+        
+        
+        %set empty string for moments
+        moment = zeros(measurements,1);
+        dTheta = zeros(measurements,1);
+        
+        % Displacement
+        %displacement in radians
+        displacement = zeros(1,measurements+1)';
+        displacement(1:measurements) = deg2rad(profile - flex);
+        
+        % Net Force
+        %net force in lbs
+        forceNet = force1+force2-rollermass;
+        
+        % EI calcuation
+        EI = zeros(measurements,1);
+        for n = 2:(measurements)
+            dTheta(n) = dirTheta(n,displacement);
+            moment(n) = momentz(n-1,forceNet,initialOffSet);
+            EI(n) = moment(n)/dTheta(n);
+        end
+        plotEI = EI(3:measurements-1);
+end
+
 function [moment] = momentz(n,forceNet,initialOffSet)
     moment = (forceNet(n) * distanceFromTip(n,initialOffSet)) * 1.3558/24;
 end
 
 % Distance From Tip
-
 function [distanceFromTip] = distanceFromTip(n,initialOffSet)
     %the distance of the measured pitch form the applied load in inches
     distanceFromTip = initialOffSet+n*2;
