@@ -273,24 +273,31 @@ function output = data_merge_fill(data_matrix_front, data_matrix_back, test_inte
         front_force_data = data_matrix_front(end, 3:4);
         back_force_data = data_matrix_back(1, 3:4);
 
+        front_inclinometer_data = data_matrix_front(end,1:2);
+        back_inclinometer_data = data_matrix_back(1,1:2);
+
+        pitch_front = front_inclinometer_data(1);
+        roll_front = front_force_data(2);
+
+        pitch_back = back_inclinometer_data(1);
+        roll_back = back_inclinometer_data(2);
+
         force1_front = front_force_data(1);
         force2_front = front_force_data(2);
         
         force1_back = back_force_data(1);
         force2_back = back_force_data(2);
 
-        pitch_roll_front_data = data_matrix_front
-
         force1_average = (force1_back+force1_front)/2;
         force2_average = (force2_back+force2_front)/2;
 
-        pitch = 0;
-        roll = 0; 
+        pitch_average = (pitch_front+pitch_back)/2;
+        roll_average = (roll_front+roll_back)/2; 
 
-        row_entry = [pitch, roll, force1_average, force2_average];
+        missing_row_entry = [pitch_average, roll_average, force1_average, force2_average];
         
         for i = 1:num_of_missing_points
-            data_matrix_front = [data_matrix_front; row_entry];
+            data_matrix_front = [data_matrix_front; missing_row_entry];
         end
 
         data_matrix = [data_matrix_front;data_matrix_back];
@@ -489,7 +496,7 @@ function out = custom_read(s)
     flush(s);
 end
 
-%%
+%% Save Data Functions
 function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, plot, dir_name)
 
     relative_dir_path = strcat('..\..\0_Data\',dir_name);
@@ -505,11 +512,36 @@ function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion,
 
     mkdir(relative_save_path);
 
-    saveas(plot,strcat(relative_save_path, "\plots.png"));
-    writematrix(data_matrix_unloaded, strcat(relative_save_path, "\unloaded.csv" ));
-    writematrix(data_matrix_loaded, strcat(relative_save_path, "\loaded.csv" ));
-    writematrix(data_matrix_unloaded, strcat(relative_save_path, "\torsion.csv" ));
+    column_names = {'pitch', 'roll', 'forceLeft', 'forceRight'};
+
+    unloaded_data = [column_names; num2cell(data_matrix_unloaded)];
+    loaded_data = [column_names; num2cell(data_matrix_loaded)];
+    torsion_data = [column_names; num2cell(data_matrix_torsion)];
+
+    writecell(unloaded_data, strcat(relative_save_path, "\unloaded.csv" ));
+    writecell(loaded_data, strcat(relative_save_path, "\loaded.csv" ));
+    writecell(torsion_data, strcat(relative_save_path, "\torsion.csv" ));
     
+end
+
+function SaveSingleTestData(data_matrix, dir_name, type)
+
+    relative_dir_path = strcat('..\..\0_Data\',dir_name);
+
+    if ~exist(relative_dir_path, 'dir')
+       mkdir(relative_dir_path);
+    end
+
+    S = dir(relative_dir_path);
+    N = nnz(~ismember({S.name},{'.','..'})&[S.isdir]);
+    test_dir_name = strcat(num2str(N),"_test");
+    relative_save_path = strcat(relative_dir_path,'\',test_dir_name);
+
+    mkdir(relative_save_path);
+
+    column_names = {'pitch', 'roll', 'forceLeft', 'forceRight'};
+    data = [column_names; num2cell(data_matrix)];
+    writecell(data, strcat(relative_save_path, "\",type,".csv" ));
 end
 
 %% EI functions 
