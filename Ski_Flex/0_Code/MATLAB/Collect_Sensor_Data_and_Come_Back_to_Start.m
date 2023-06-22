@@ -13,10 +13,10 @@ test_interval_mm = 15;       % Input the desired distance between data points in
 direction = 1;
 
 % Serial USB connections
-arudiuno_port = 'COM6';     % write in arduino port
-inclinometer_port_front = 'COM11';  % write in front inclometer port
+arudiuno_port = 'COM3';     % write in arduino port
+inclinometer_port_front = 'COM9';  % write in front inclometer port
 %inclinometer_port_back = 'COM11';  % write in back inclometer port
-force_gage1_port = 'COM10';   % write in loadcell1 port
+force_gage1_port = 'COM8';   % write in loadcell1 port
 force_gage2_port = 'COM7';   % write in loadcell2 port
 
 % % Motor build parameters don't change
