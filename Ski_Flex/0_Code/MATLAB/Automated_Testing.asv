@@ -128,7 +128,12 @@ disp(sig);
 
 
 
-%%
+%% Testing file saving
+[x_points1, ei_points] = get_EI_point(data_matrix_unloaded,data_matrix_loaded, 25.4);
+[x_points2, gj_points] = get_GJ_points(data_matrix_unloaded,data_matrix_torsion, 25.4);
+
+
+
 
 %%
 function out = clear_and_reset_serial_ports()
@@ -444,6 +449,105 @@ function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_
         plot(plotGJ);
         title('GJ');
 end
+%% Generate GJ_points
+
+function [X_points, GJ_points] = get_GJ_points(data_matrix_unloaded, data_matrix_torsion, test_interval_mm)
+        %read the profile(unweighted pitch)
+        tProf = data_matrix_unloaded(:,1);
+        %read the flex (weighted pitch)
+        rotation = data_matrix_torsion(:,1);
+        %read forces from strain guages, and subtract the "unweighted" from
+        %weighted to get a net force
+        
+        %force 1 is left, force 2 is right
+        force1 = data_matrix_torsion(:,3)-data_matrix_unloaded(:,3);
+        force2 = data_matrix_torsion(:,4)-data_matrix_unloaded(:,4);
+
+        %measurements is the number of lines measured per round, = length/4
+        measurements = length(rotation);
+        %rollermass = lass of rollers imparting force on skis in lbs
+        rollermass = 24.2;
+        %initialOffset = distance from applied load or clamp at the tip to the
+        %first measurement in inches
+        initialOffSet = 4.5;
+
+
+        %set empty string for moments
+        moment = zeros(measurements,1);
+        dTheta = zeros(measurements,1);
+
+        % Displacement
+        %displacement in radians
+        displacement = zeros(1,measurements+1)';
+        displacement(1:measurements) = deg2rad(tProf - rotation);
+
+
+
+        % Net Torque
+        %net force in lbs
+        torqueNet = abs(force1-force2)*3.75/12*1.356;
+
+        % GJ calcuation
+        GJ = zeros(measurements,1);
+        for n = 2:(measurements)
+            dTheta(n) = dirTheta(n,displacement);
+            GJ(n) = torqueNet(n)/dTheta(n);
+        end
+        GJ_points = abs(GJ(2:measurements-1));
+        X_points = linspace(0, (size(GJ_points,1)-1)*test_interval_mm, size(GJ_points,1));
+
+end
+
+
+%% Generate EI_points
+function [X_points, EI_points] = get_EI_point(data_matrix_unloaded,data_matrix_loaded, test_interval_mm)
+    %read the profile(unweighted pitch)
+        profile = data_matrix_unloaded(:,1);
+        %read the flex (weighted pitch)
+        flex = data_matrix_loaded(:,1);
+        %read forces from strain guages, and subtract the "unweighted" from
+        %weighted to get a net force
+        
+        %force 1 is left, force 2 is right
+        force1 = data_matrix_loaded(:,3)-data_matrix_unloaded(:,3);
+        force2 = data_matrix_loaded(:,4)-data_matrix_unloaded(:,4);
+        
+        % Variables to setup Manually
+        
+        %measurements is the number of lines measured per round, = length/4
+        measurements = length(flex);
+        %rollermass = lass of rollers imparting force on skis in lbs
+        rollermass = 24.2;
+        %initialOffset = distance from applied load or clamp at the tip to the
+        %first measurement in inches
+        initialOffSet = 4.5;
+        
+        
+        %set empty string for moments
+        moment = zeros(measurements,1);
+        dTheta = zeros(measurements,1);
+        
+        % Displacement
+        %displacement in radians
+        displacement = zeros(1,measurements+1)';
+        displacement(1:measurements) = deg2rad(profile - flex);
+        
+        % Net Force
+        %net force in lbs
+        forceNet = force1+force2-rollermass;
+        
+        % EI calcuation
+        EI = zeros(measurements,1);
+        for n = 2:(measurements)
+            dTheta(n) = dirTheta(n,displacement);
+            moment(n) = momentz(n-1,forceNet,initialOffSet);
+            EI(n) = moment(n)/dTheta(n);
+        end
+        EI_points = EI(3:measurements-1);
+        X_points = linspace(0, (size(EI_points,1)-1)*test_interval_mm, size(EI_points,1));
+
+
+end
 
 %%
 function ret_mm = return_to_start(s)
@@ -559,25 +663,42 @@ function saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion,
     
 end
 
-function SaveSingleTestData(data_matrix, dir_name, type)
+function temp_save_single_test(data_matrix, type)
 
-    relative_dir_path = strcat('..\..\0_Data\',dir_name);
+    relative_save_path = strcat('..\..\0_Data\Temp_Data_Folder\');
 
-    if ~exist(relative_dir_path, 'dir')
-       mkdir(relative_dir_path);
+    if ~exist(relative_save_path, 'dir')
+       mkdir(relative_save_path);
     end
-
-    S = dir(relative_dir_path);
-    N = nnz(~ismember({S.name},{'.','..'})&[S.isdir]);
-    test_dir_name = strcat(num2str(N),"_test");
-    relative_save_path = strcat(relative_dir_path,'\',test_dir_name);
-
-    mkdir(relative_save_path);
 
     column_names = {'pitch', 'roll', 'forceLeft', 'forceRight'};
     data = [column_names; num2cell(data_matrix)];
     writecell(data, strcat(relative_save_path, "\",type,".csv" ));
+
+
+    
 end
+function temp_save_plot_and_points(x_points, y_points, plot_title)
+    relative_save_path = strcat('..\..\0_Data\Temp_Data_Folder\');
+
+    if ~exist(relative_save_path, 'dir')
+       mkdir(relative_save_path);
+    end
+
+    p = plot(x_points, y_points);
+    title(plot_title);
+    xlabel('Milimeters');
+
+    points_matrix = [x_points', y_points'];
+    column_names = {'milimeters', plot_title};
+    data = [column_names; num2cell(data_matrix)];
+    writecell(data, strcat(relative_save_path, "\",plot_title,"_points.csv" ));
+
+
+
+end
+
+
 
 %% EI functions 
 % Moment about z(x)
