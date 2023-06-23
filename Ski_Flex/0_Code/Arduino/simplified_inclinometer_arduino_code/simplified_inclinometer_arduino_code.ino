@@ -116,6 +116,7 @@ const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
 const int GET_CURRENT_POSITION = 14;
 const int RE_SETUP = 16;
+const int RECONNECT_INTERUPT = 18;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
@@ -196,6 +197,11 @@ void loop() {
             {
               setup();
               send_finish_signal(RE_SETUP);
+            }
+            case RECONNECT_INTERUPT:
+            {
+              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING);
+              send_finish_signal(RECONNECT_INTERUPT);
             }
             default:
             {
