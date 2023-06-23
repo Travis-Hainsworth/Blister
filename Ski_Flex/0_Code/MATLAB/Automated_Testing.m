@@ -35,9 +35,9 @@ force_gage2_serial = serialport(force_gage2_port, 9600);
 % run unloaded test 
 clc;
 flush(arudiuno_serial);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
@@ -57,9 +57,9 @@ sig = return_to_start(arudiuno_serial);
 %arudiuno_serial = serialport('COM3', 115200);
 clc;
 flush(arudiuno_serial);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1; 
@@ -78,9 +78,9 @@ sig = return_to_start(arudiuno_serial);
 %run torsion test
 clc;
 flush(arudiuno_serial);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
@@ -93,7 +93,7 @@ pause(2);
 sig = return_to_start(arudiuno_serial); % might want to not retutn to start and just stop, change rig, then run it th opposite direction for speed (would require data collection change and possible loss of accuracy)
 %%
 % flush(arudiuno_serial);
-% clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+% clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial
 %% create full matrcies
 % test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
 % dist_between_mm = 944; %change when setup
@@ -103,14 +103,16 @@ sig = return_to_start(arudiuno_serial); % might want to not retutn to start and 
 % % data_matrix_torsion = data_merge_fill(data_matrix_front_torsion, data_matrix_back_torsion, test_interval_mm, test_distance_mm, dist_between_mm);
 % %% plot full matricies
 global ei_dtheta ei_moment ei_displacment gj_dtheta gj_moment gj_displacment;
-p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion);
+p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion,test_interval_mm);
 
 %% Save Data and Plots (DON't Exist out of plot generated out of last block) ORDER#10
 %name_brand_year_length?
-directory_name = 'aluminuim_bar2';
-
-saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, gcf, directory_name);
-
+model_name = 'sickday_94_';      % Input model name
+year = '2020_';                 % Input model year
+manufacturer = "Line_";         % Input ski Manufacturer
+model_length_cm = '186';       %   Input Length of ski in cm
+directory_name = strcat(manufacturer, model_name, year, model_length_cm);
+saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, p, directory_name);
 
 
 
@@ -144,7 +146,7 @@ disp(sig);
 %%
 %FUNCTION TO reset setup
 RE_SETUP = 16;
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig); 
 
 
@@ -357,37 +359,23 @@ end
 %% Generate PLOTS ORDER#10 (DON't close plot tab! needs to be open in order to save)
 
 function p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion, step_size_mm)
-             
+        [X_points_EI, EI_points] =  get_EI_point(data_matrix_unloaded, data_matrix_loaded, step_size_mm);
+        [X_points_GJ, GJ_points] = get_GJ_points(data_matrix_unloaded, data_matrix_torsion, step_size_mm);
         
-        [X_points, EI_points] =  get_EI_point(data_matrix_unloaded, data_matrix_loaded, step_size_mm);%EI(3:measurements-1);
-        
-        plotEI = abs(EI_points(2:measurements-1));
-
         tiledlayout(2,1);
         nexttile;
-        plot(plotEI);
-        title('EI');
-        
-        gcf
-        
-        % figure
-        % plot(displacement);
-        % figure
-        % plot(dTheta)
-        % Generate GJ plot
-        [X_points, GJ_points] = get_GJ_points(data_matrix_unloaded, data_matrix_torsion, step_size_mm);
-        
-        p = tiledlayout(2,1);
-        nexttile;
-        plot(X_points, EI_points);
+        plot(X_points_EI, EI_points);
         title('EI');
         ylabel("N*(m^2)")
         xlabel("mm")
+
         nexttile;
-        plot(X_points, GJ_points);
+        plot(X_points_GJ, GJ_points);
         title('GJ');
         ylabel("N*(m^2)")
         xlabel("mm")
+
+        p = gcf;
 end
 %% Generate GJ_points
 
@@ -445,7 +433,7 @@ end
 
 
 %% Generate EI_points
-function [X_points, EI_points] = get_EI_point(data_matrix_unloaded,data_matrix_loaded, test_interval_mm)
+function [X_points, EI_points] = get_EI_point(data_matrix_unloaded, data_matrix_loaded, test_interval_mm)
     global ei_dtheta ei_moment ei_displacment;
     step_size_m = test_interval_mm/1000;
     %read the profile(unweighted pitch)
@@ -558,7 +546,7 @@ function ret_signal = set_max_speed(max_speed,s)
     flush(s);
 end
 
-function ret_signal = reset_setup(s)
+function ret_signal = reset_arduino(s)
     RE_SETUP = 16;
     serial_string = strcat(num2str(RE_SETUP),",0,0");
     custom_write(s, serial_string);
