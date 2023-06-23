@@ -3,11 +3,11 @@
 %clear all;
 clc;
 
-% DEFINE THESE VALUES
-% model_name = 'line_92';      % Input model name
-% year = 2020;                 % Input model year
-% manufacturer = "K2";         % Input ski Manufacturer
-% model_length_cm = 197;       %   Input Length of ski in cm
+model_name = 'sickday_94_';      % Input model name
+year = '2020_';                 % Input model year
+manufacturer = "Line_";         % Input ski Manufacturer
+model_length_cm = '186';       %   Input Length of ski in cm
+directory_name = strcat(manufacturer, model_name, year, model_length_cm); 
 test_interval_mm = 15;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 
@@ -35,9 +35,9 @@ force_gage2_serial = serialport(force_gage2_port, 9600);
 % run unloaded test 
 clc;
 flush(arudiuno_serial);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
@@ -57,9 +57,9 @@ sig = return_to_start(arudiuno_serial);
 %arudiuno_serial = serialport('COM3', 115200);
 clc;
 flush(arudiuno_serial);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1; 
@@ -68,6 +68,8 @@ test_distance_mm = size(data_matrix_front_loaded,1)*test_interval_mm;
 dist_between_mm = 863; %chnage when distance between inclinomters change
 data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
 temp_save_single_test(data_matrix_loaded, "Loaded");
+[ei_x_points, ei_y_points] = get_EI_point(data_matrix_unloaded, data_matrix_unloaded, test_interval_mm);
+temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
 pause(2);
 sig = return_to_start(arudiuno_serial);
 %%
@@ -78,9 +80,9 @@ sig = return_to_start(arudiuno_serial);
 %run torsion test
 clc;
 flush(arudiuno_serial);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig);
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
@@ -89,8 +91,12 @@ test_distance_mm = size(data_matrix_front_torsion,1)*test_interval_mm;
 dist_between_mm = 863; %chnage when distance between inclinomters change
 data_matrix_torsion = data_merge_fill(data_matrix_front_torsion, data_matrix_back_torsion, test_interval_mm, test_distance_mm, dist_between_mm);
 temp_save_single_test(data_matrix_torsion, "Torsion")
+[gj_x_points, gj_y_points] = get_EI_point(data_matrix_unloaded, data_matrix_torsion, test_interval_mm);
+temp_save_plot_and_points(gj_x_points, gj_y_points, 'GJ');
 pause(2);
 sig = return_to_start(arudiuno_serial); % might want to not retutn to start and just stop, change rig, then run it th opposite direction for speed (would require data collection change and possible loss of accuracy)
+%%
+save_data_clear_temp(directory_name);
 %%
 % flush(arudiuno_serial);
 % clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
@@ -144,7 +150,7 @@ disp(sig);
 %%
 %FUNCTION TO reset setup
 RE_SETUP = 16;
-sig = reset_setup(arudiuno_serial);
+sig = reset_arduino(arudiuno_serial);
 disp(sig); 
 
 
@@ -572,7 +578,7 @@ function ret_signal = set_max_speed(max_speed,s)
     flush(s);
 end
 
-function ret_signal = reset_setup(s)
+function ret_signal = reset_arduino(s)
     RE_SETUP = 16;
     serial_string = strcat(num2str(RE_SETUP),",0,0");
     custom_write(s, serial_string);
