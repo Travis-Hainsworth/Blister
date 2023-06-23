@@ -23,13 +23,13 @@ SoftwareSerial SoftSerial(SW_RX, SW_TX);
 TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
-ezButton1 limitSwitchObj(LIMIT_SWITCH_PIN_1);
-ezButton2 limitSwitchObj(LIMIT_SWITCH_PIN_2);
+ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
+ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
 
 float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
-volatile boolean testing_state = true;
+volatile boolean testing_state;
 
 int stepper1_current_position;
 int count;
@@ -50,23 +50,30 @@ void setup() {
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing_back, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing_front, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
   stepper1_current_position = 0;
   count = 0;
+  testing_state = true;
 }
 
 const int STOP_SIGNAL = 42;
 
-void stop_testing(){
-    stepper1.stop();
-    //testing_state = false;
-    send_finish_signal(STOP_SIGNAL);
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+void stop_testing_back(){
+    //stepper1.stop();
+    testing_state = false;
+    //send_finish_signal(STOP_SIGNAL);
+    //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+}
+
+void stop_testing_front(){
+    //stepper1.stop();
+    testing_state = false;
+    //send_finish_signal(STOP_SIGNAL);
+    //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
 }
 
 /*
@@ -93,8 +100,9 @@ const int SET_MAX_SPEED = 8;
 const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
 const int GET_CURRENT_POSITION = 14;
-const int RE_SETUP = 16;
+const int RESTART_ARDUINO = 16;
 const int REATTACH_INTERUPT = 18;
+const int DEATTACH_INTERUPT = 20;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
@@ -119,7 +127,12 @@ void loop() {
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
               stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              send_finish_signal(steps);
+              if(testing_state = true){
+                send_finish_signal(steps);
+              }
+              else{
+                send_finish_signal(STOP_SIGNAL);
+              }
               break;
             }
             case MOVE_TO_START:
@@ -166,16 +179,40 @@ void loop() {
               int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
               send_finish_signal(current_position_in_mm);
             }
-            case RE_SETUP:
+            case RESTART_ARDUINO:
             {
-              setup();
-              send_finish_signal(RE_SETUP);
+              testing_state = true;
             }
             case REATTACH_INTERUPT:
             {
-              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING);
-              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
-              send_finish_signal(REATTACH_INTERUPT);
+              // 0 = back, 1 = front
+              int ls = message_arr[1];
+              // try{ 
+                  if(ls == 0){
+                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing_back, FALLING);
+                  }else{
+                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing_front, FALLING);
+                  }
+                  send_finish_signal(REATTACH_INTERUPT);
+              // }catch(String error){
+              //     send_finish_signal(-200);
+              // }
+             
+            }
+            case DEATTACH_INTERUPT:
+            {
+              // 0 = back, 1 = front
+              int ls = message_arr[1];
+              // try{
+                  if(ls == 0){
+                      detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
+                  }else{
+                      detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+                  }
+                  send_finish_signal(DEATTACH_INTERUPT);
+              // }catch(String error){
+              //     send_finish_signal(-200);
+              // }
             }
             default:
             {
@@ -213,7 +250,13 @@ void move_x_steps(long x){
   stepper1.move(x);
   //stepper1.runSpeedToPosition();
   while (stepper1.distanceToGo() != 0){
-      stepper1.run();
+      if(testing_state == true){
+        stepper1.run();
+      }
+      else{
+        stepper1.stop();
+        break;
+      }
   }
 }
 
