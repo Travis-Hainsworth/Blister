@@ -56,6 +56,7 @@ sig = return_to_start(arudiuno_serial);
 %run unloaded test
 %arudiuno_serial = serialport('COM3', 115200);
 clc;
+clf;
 flush(arudiuno_serial);
 sig = reset_arduino(arudiuno_serial);
 disp(sig);
@@ -68,7 +69,7 @@ test_distance_mm = size(data_matrix_front_loaded,1)*test_interval_mm;
 dist_between_mm = 863; %chnage when distance between inclinomters change
 data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
 temp_save_single_test(data_matrix_loaded, "Loaded");
-[ei_x_points, ei_y_points] = get_EI_point(data_matrix_unloaded, data_matrix_unloaded, test_interval_mm);
+[ei_x_points, ei_y_points] = get_EI_point(data_matrix_unloaded, data_matrix_loaded, test_interval_mm);
 temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
 pause(2);
 sig = return_to_start(arudiuno_serial);
@@ -79,6 +80,7 @@ sig = return_to_start(arudiuno_serial);
 %adjust for torsion test
 %run torsion test
 clc;
+clf;
 flush(arudiuno_serial);
 sig = reset_arduino(arudiuno_serial);
 disp(sig);
@@ -179,7 +181,7 @@ temp_save_plot_and_points(gj_x_points, gj_points, 'GJ');
 
 %%
 
-save_data_clear_temp('test1');
+save_data_clear_temp(directory_name);
 %%
 function out = clear_and_reset_serial_ports()
     global arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
