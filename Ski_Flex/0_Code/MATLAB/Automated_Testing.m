@@ -151,9 +151,21 @@ disp(sig);
 [x_points1, ei_points] = get_EI_point(data_matrix_unloaded,data_matrix_loaded, 25.4);
 [x_points2, gj_points] = get_GJ_points(data_matrix_unloaded,data_matrix_torsion, 25.4);
 
+%%
+temp_save_single_test(data_matrix_unloaded, 'unloaded');
+temp_save_single_test(data_matrix_loaded, 'loaded');
+temp_save_single_test(data_matrix_torsion, 'torsion');
 
+[ei_x_points, ei_points] = get_EI_point(data_matrix_unloaded, data_matrix_loaded, 25.4);
+[gj_x_points, gj_points] = get_GJ_points(data_matrix_unloaded, data_matrix_torsion, 25.4);
 
+temp_save_plot_and_points(ei_x_points, ei_points, 'EI');
+%%
+temp_save_plot_and_points(gj_x_points, gj_points, 'GJ');
 
+%%
+
+save_data_clear_temp('test1');
 %%
 function out = clear_and_reset_serial_ports()
     global arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
@@ -434,6 +446,7 @@ function [X_points, GJ_points] = get_GJ_points(data_matrix_unloaded, data_matrix
         gj_moment = moment;
         GJ_points = abs(GJ(2:measurements-1));
         X_points = linspace(0, (size(GJ_points,1)-1)*test_interval_mm, size(GJ_points,1));
+        GJ_points = GJ_points';
 
 end
 
@@ -472,7 +485,7 @@ function [X_points, EI_points] = get_EI_point(data_matrix_unloaded,data_matrix_l
         %displacement in radians
         displacement = zeros(1,measurements+1)';
         displacement(1:measurements) = deg2rad(profile - flex);
-        ei_displacment = displacement
+        ei_displacment = displacement;
         % Net Force
         %net force in lbs
         forceNet = force1+force2-rollermass;
@@ -488,6 +501,7 @@ function [X_points, EI_points] = get_EI_point(data_matrix_unloaded,data_matrix_l
         ei_moment = moment;
         EI_points = EI(3:measurements-1);
         X_points = linspace(0, (size(EI_points,1)-1)*test_interval_mm, size(EI_points,1));
+        EI_points = EI_points';
 
 
 end
@@ -630,16 +644,48 @@ function temp_save_plot_and_points(x_points, y_points, plot_title)
 
     p = plot(x_points, y_points);
     title(plot_title);
-    xlabel('Milimeters');
+    xlabel("Milimeters");
+    ylabel("N*(m^2)");
 
     points_matrix = [x_points', y_points'];
-    column_names = {'milimeters', plot_title};
-    data = [column_names; num2cell(data_matrix)];
+    column_names = {"milimeters", "N*(m^2)"};
+    data = [column_names; num2cell(points_matrix)];
     writecell(data, strcat(relative_save_path, "\",plot_title,"_points.csv" ));
 
-
+    saveas(p, strcat(relative_save_path, "\",plot_title,"_graph.png"));
 
 end
+
+function save_data_clear_temp(dir_name)
+
+    temp_folder_path = strcat('..\..\0_Data\Temp_Data_Folder\');
+
+    relative_dir_path = strcat('..\..\0_Data\',dir_name);
+
+    if ~exist(relative_dir_path, 'dir')
+       mkdir(relative_dir_path);
+    end
+
+    S = dir(relative_dir_path);
+    N = nnz(~ismember({S.name},{'.','..'})&[S.isdir]);
+    test_dir_name = strcat(num2str(N),"_test");
+    relative_save_path = strcat(relative_dir_path,'\',test_dir_name);
+
+    mkdir(relative_save_path);
+
+    filePattern = fullfile(temp_folder_path, '*.*');
+    copyfile(filePattern, relative_save_path);
+
+    rmdir(temp_folder_path, 's');
+
+    temp_folder_dir = strcat('..\..\0_Data\Temp_Data_Folder\');
+
+    if ~exist(temp_folder_dir, 'dir')
+       mkdir(temp_folder_dir);
+    end
+
+end
+
 
 
 
