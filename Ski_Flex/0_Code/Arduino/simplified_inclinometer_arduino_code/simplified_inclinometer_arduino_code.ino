@@ -23,7 +23,8 @@ SoftwareSerial SoftSerial(SW_RX, SW_TX);
 TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
-ezButton limitSwitchObj(LIMIT_SWITCH_PIN_1);
+ezButton1 limitSwitchObj(LIMIT_SWITCH_PIN_1);
+ezButton2 limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
 float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
@@ -35,12 +36,7 @@ int count;
 
 void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
-  //SoftSerial.begin(9600);           // initialize software serial for UART motor control
-  //TMCdriver.beginSerial(9600); // Initialize UART
-
-  //limitSwitchObj.setDebounceTime(200);
   
-
   stepper1.setMaxSpeed(1000); //pulse/steps per second
   stepper1.setAcceleration(750); //steps per second per second to accelerate
   stepper1.setCurrentPosition(0);
@@ -53,28 +49,9 @@ void setup() {
   TMCdriver.microsteps(1);            // Set microsteps to 1/2
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
-
-  //define pins as outputs/inputs
-//    pinMode(EN_PIN, OUTPUT);
-//    pinMode(STEP_PIN, OUTPUT);
-//    pinMode(DIR_PIN, OUTPUT);
-  // pinMode(cClockPed, INPUT_PULLUP);
-  // pinMode(ClockPed, INPUT_PULLUP);    
-  // pinMode(dEncdrSpdCLK, INPUT_PULLUP);
-  // pinMode(dEncdrSpdDT, INPUT_PULLUP);
-
-
-  // while(!Serial);                  // Wait for port to be ready
-
-  // TMCdriver.pdn_disable(1);              // Use PDN/UART pin for communication
-  // TMCdriver.I_scale_analog(0);           // Adjust current from the registers
-  // TMCdriver.rms_current(500);            // Set driver current 500mA
-  // TMCdriver.toff(0x2);               // Enable driver
-
-  // digitalWrite(EN_PIN, LOW);
   
   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
@@ -88,7 +65,8 @@ void stop_testing(){
     stepper1.stop();
     //testing_state = false;
     send_finish_signal(STOP_SIGNAL);
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));   
+    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
+    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
 }
 
 /*
@@ -116,13 +94,12 @@ const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
 const int GET_CURRENT_POSITION = 14;
 const int RE_SETUP = 16;
-const int RECONNECT_INTERUPT = 18;
+const int REATTACH_INTERUPT = 18;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
     if (Serial.available() > 0){
           count+=1;
-          //limitSwitchObj.loop(); // MUST call the loop() function first
 
           String message = Serial.readStringUntil("\n");
           Serial.flush();
@@ -132,10 +109,6 @@ void loop() {
           int message_arr[numValues];
           parse_serial_input(message, numValues, message_arr); 
           int command = message_arr[0];
-
-          // int message_arr[3] = {2,10,1}; // test for the testing logic procedure
-          // int message_arr[3] = {4,3200,0}; // test for the move_x logic procedure
-          //int signal = message_arr[0];//message_arr[0];
 
           switch (command) {
             case MOVE_X:
@@ -198,10 +171,11 @@ void loop() {
               setup();
               send_finish_signal(RE_SETUP);
             }
-            case RECONNECT_INTERUPT:
+            case REATTACH_INTERUPT:
             {
               attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING);
-              send_finish_signal(RECONNECT_INTERUPT);
+              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+              send_finish_signal(REATTACH_INTERUPT);
             }
             default:
             {
