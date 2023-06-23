@@ -142,7 +142,7 @@ reset_arduino(arudiuno_serial);
 
 distance_in = 19;
 distance_mm = floor(250);%floor(convlength([distance_in 0], 'in', 'm'));
-direction = 0;
+direction = 1;
 sig = move_x_mm(distance_mm, direction, arudiuno_serial);
 disp(sig);
 %%

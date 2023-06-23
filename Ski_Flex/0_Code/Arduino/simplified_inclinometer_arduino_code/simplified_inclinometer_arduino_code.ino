@@ -130,10 +130,10 @@ void loop() {
               if(testing_state = true){
                 send_finish_signal(steps);
               }
-              else{
+              if(testing_state = false){
                 send_finish_signal(STOP_SIGNAL);
               }
-              break;
+  
             }
             case MOVE_TO_START:
             {
