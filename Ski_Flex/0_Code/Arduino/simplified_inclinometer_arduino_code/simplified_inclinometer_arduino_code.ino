@@ -4,7 +4,6 @@
 #include <TMCStepper.h>
 //#include <Streaming.h>
 
-
 //#define EN_PIN         GND      // Enable - RED
 #define DIR_PIN          5      // Direction - GREEN
 #define STEP_PIN         4      // Step - BLUE
@@ -18,13 +17,12 @@
 // #define LIMIT_SWITCH_PIN_3 4
 // #define LIMIT_SWITCH_PIN_4 5
 
-
 SoftwareSerial SoftSerial(SW_RX, SW_TX);
 TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
-ezButton1 limitSwitchObj(LIMIT_SWITCH_PIN_1);
-ezButton2 limitSwitchObj(LIMIT_SWITCH_PIN_2);
+ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
+ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
 
 float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
@@ -42,7 +40,6 @@ void setup() {
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
-
   TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
   TMCdriver.toff(5);                 // Enables driver in software
   TMCdriver.rms_current(2500);       // Set motor RMS current
@@ -50,8 +47,10 @@ void setup() {
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+  limitSwitchObj1.setDebounceTime(50);
+  limitSwitchObj2.setDebounceTime(50);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
@@ -61,13 +60,13 @@ void setup() {
 
 const int STOP_SIGNAL = 42;
 
-void stop_testing(){
-    stepper1.stop();
-    //testing_state = false;
-    send_finish_signal(STOP_SIGNAL);
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-}
+// void stop_testing(){
+//     stepper1.stop();
+//     //testing_state = false;
+//     send_finish_signal(STOP_SIGNAL);
+//     detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
+//     detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+// }
 
 /*
 * ALL CODE BELLOW CONCERNS THE LOOP LOGIC OF RUNNIGN A TEST  
@@ -98,6 +97,8 @@ const int REATTACH_INTERUPT = 18;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
+    limitSwitchObj1.loop();
+    limitSwitchObj2.loop();
     if (Serial.available() > 0){
           count+=1;
 
@@ -171,12 +172,12 @@ void loop() {
               setup();
               send_finish_signal(RE_SETUP);
             }
-            case REATTACH_INTERUPT:
-            {
-              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING);
-              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
-              send_finish_signal(REATTACH_INTERUPT);
-            }
+            // case REATTACH_INTERUPT:
+            // {
+            //   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING);
+            //   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+            //   send_finish_signal(REATTACH_INTERUPT);
+            // }
             default:
             {
               //Serial.println("In default section of switch stament");
@@ -213,7 +214,14 @@ void move_x_steps(long x){
   stepper1.move(x);
   //stepper1.runSpeedToPosition();
   while (stepper1.distanceToGo() != 0){
-      stepper1.run();
+      if(limitSwitchObj1.isPressed() || limitSwitchObj2.isPressed()){
+        Serial.flush();
+        send_finish_signal(STOP_SIGNAL);
+        //testing_state = true;
+        return;
+      }else{
+        stepper1.run();
+      }
   }
 }
 
