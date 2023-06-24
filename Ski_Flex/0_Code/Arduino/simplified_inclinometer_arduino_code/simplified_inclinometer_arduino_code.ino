@@ -30,6 +30,8 @@ float stepsPerRevolution = 200*8;   // change this to fit the number of steps pe
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
+unsigned long interrupt_time;
+static unsigned long last_interrupt_time;
 
 int stepper1_current_position;
 int count;
@@ -49,24 +51,33 @@ void setup() {
   TMCdriver.microsteps(1);            // Set microsteps to 1/2
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
+  limitSwitchObj1.setDebounceTime(500);
+  limitSwitchObj2.setDebounceTime(500);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing_back, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing_front, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing_back, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing_front, RISING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
   stepper1_current_position = 0;
   count = 0;
   testing_state = true;
+  last_interrupt_time = 0;
+  
 }
 
 const int STOP_SIGNAL = 42;
 
 void stop_testing_back(){
     //stepper1.stop();
+    static unsigned long last_interrupt_time = 0;
+    interrupt_time = millis();
+    // If interrupts come faster than 200ms, assume it's a bounce and ignore
+    if (interrupt_time - last_interrupt_time > 15000) {
     testing_state = false;
+    }
+    last_interrupt_time = interrupt_time;
     //send_finish_signal(STOP_SIGNAL);
-    //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
 }
 
 void stop_testing_front(){
@@ -106,6 +117,7 @@ const int DEATTACH_INTERUPT = 20;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
+    
     if (Serial.available() > 0){
           count+=1;
 

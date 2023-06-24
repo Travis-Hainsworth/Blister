@@ -139,6 +139,7 @@ saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, p, direc
 %% these functions can be used to maniplate posotion of motor that do not align with test
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
 reset_arduino(arudiuno_serial);
+%reattach_interrupt(arudiuno_serial,0);
 
 distance_in = 19;
 distance_mm = floor(250);%floor(convlength([distance_in 0], 'in', 'm'));
