@@ -85,7 +85,18 @@ while ~(rollFront < tollerance_angel && rollFront > -tollerance_angel)
     flush(s);
     writeline(s,message);
     pause(.05);
-end 
+end   
+ %%
+function message = make_message(m, actual_force, desired_force, precision)
+    message = m;
+    if actual_force <= desired_force+precision && actual_force >= desired_force-precision % make this a fuction that takes in actual and desired, concatenates and retruns message
+          message = strcat(message,',0');
+    elseif actual_force < desired_force
+          message = strcat(message,',1'); 
+    else
+          message = strcat(message,',-1'); 
+    end 
+end
 
 
 %%
@@ -108,26 +119,6 @@ function ret_signal = move_x_mm(dis_mm, dir, s)
     serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
     ret_signal = serial_communication(s, serial_string);
     flush(s);
-end
-
-function ret_signal = move_force_gauges(dis_mm, dir, s)
-    MOVE_X = 24;
-    message = make_message(int2str(MOVE_BOTH_FORCE_GAUGES),actual_force_left, desired_force, precision);
-    message = make_message(message, actual_force_right, desired_force, message);
-    serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
-    ret_signal = serial_communication(s, serial_string);
-    flush(s);
-end
-
-function message = make_message(m, actual_force, desired_force, precision)
-    message = m;
-    if actual_force <= desired_force+precision && actual_force >= desired_force-precision % make this a fuction that takes in actual and desired, concatenates and retruns message
-          message = strcat(message,',0');
-    elseif actual_force < desired_force
-          message = strcat(message,',1'); 
-    else
-          message = strcat(message,',-1'); 
-    end 
 end
 
 function ret_mm = get_distance_from_start(s)

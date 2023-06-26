@@ -238,16 +238,6 @@ function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_
         disp(sig);
         stop_num = str2double(sig);
     end
-    % %MOVE BACK TO START
-    % pause(5);
-    % mm1 = get_distance_from_start(arudiuno_serial);
-    % % disp("mm1 START: ");
-    % % disp(mm1);
-    % sig = return_to_start(arudiuno_serial);
-    % % disp(sig);
-    % mm2 = get_distance_from_start(arudiuno_serial);
-    % % disp("mm2 END: ");
-    % % disp(mm2);
 end
 
 %% Get HWT905TTL pitch and roll data.

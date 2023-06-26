@@ -2,7 +2,6 @@
 #include <ezButton.h>
 #include <SoftwareSerial.h>
 #include <TMCStepper.h>
-//#include <Streaming.h>
 
 
 //#define EN_PIN         GND      // Enable - RED
@@ -34,7 +33,6 @@ volatile boolean testing_state;
 unsigned long interrupt_time;
 static unsigned long last_interrupt_time;
 
-int stepper1_current_position;
 int count;
 
 void setup() {
@@ -45,7 +43,6 @@ void setup() {
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
-
   TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
   TMCdriver.toff(5);                 // Enables driver in software
   TMCdriver.rms_current(2500);       // Set motor RMS current
@@ -55,15 +52,10 @@ void setup() {
   limitSwitchObj1.setDebounceTime(500);
   limitSwitchObj2.setDebounceTime(500);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
 
-
-  stepper1_current_position = 0;
   count = 0;
   testing_state = true;
-  last_interrupt_time = 0;
-  
 }
 
 const int STOP_SIGNAL = 42;
@@ -72,13 +64,6 @@ const int STOP_SIGNAL = 42;
 void stop_testing(){
     testing_state = false;
 }
-
-// void stop_testing_front(){
-//     //stepper1.stop();
-//     testing_state = false;
-//     //send_finish_signal(STOP_SIGNAL);
-//     //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-// }
 
 /*
 * ALL CODE BELLOW CONCERNS THE LOOP LOGIC OF RUNNIGN A TEST  
@@ -117,8 +102,7 @@ void loop() {
 
           String message = Serial.readStringUntil("\n");
           Serial.flush();
-          
-          //String message = "4,32000,0";
+
           int numValues = 3;
           int message_arr[numValues];
           parse_serial_input(message, numValues, message_arr); 
@@ -131,7 +115,6 @@ void loop() {
               float length_mm = (float) message_arr[1];
               long direction = get_direction(message_arr[2]);
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
-              //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
               if(testing_state == true){
                 send_finish_signal(steps);
