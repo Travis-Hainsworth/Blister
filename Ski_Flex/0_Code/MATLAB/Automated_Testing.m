@@ -80,7 +80,7 @@ back_load = flipud(back_load);
 unloaded = data_merge(front_unl, back_unl);%, test_interval_mm, test_distance_mm, dist_between_mm);
 loaded = data_merge(front_load, back_load);%, test_interval_mm, test_distance_mm, dist_between_mm);
 
-temp_save_single_test(data_matrix_loaded, "Loaded");
+temp_save_single_test(loaded, "Loaded");
 [ei_x_points, ei_y_points] = get_EI_point(unloaded, loaded, test_interval_mm);
 temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
 
@@ -159,7 +159,7 @@ end
 %%
 %reset_arduino(arudiuno_serial);
 reset_testing_state(arudiuno_serial);
-move_x_mm(5, 1, arudiuno_serial);
+move_x_mm(100, 1, arudiuno_serial);
 %disp(sig);
 %%
 %FUNCTION TO GET CURRENT POSITION

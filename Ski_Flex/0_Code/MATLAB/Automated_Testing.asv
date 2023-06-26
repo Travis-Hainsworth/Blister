@@ -159,7 +159,7 @@ end
 %%
 %reset_arduino(arudiuno_serial);
 reset_testing_state(arudiuno_serial);
-move_x_mm(300, 0, arudiuno_serial);
+move_x_mm(100, 1, arudiuno_serial);
 %disp(sig);
 %%
 %FUNCTION TO GET CURRENT POSITION
