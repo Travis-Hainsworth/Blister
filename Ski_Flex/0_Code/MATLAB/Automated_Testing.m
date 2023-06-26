@@ -8,11 +8,12 @@ year = '2020_';                 % Input model year
 manufacturer = "Line_";         % Input ski Manufacturer
 model_length_cm = '186';       %   Input Length of ski in cm
 directory_name = strcat(manufacturer, model_name, year, model_length_cm); 
-test_interval_mm = 15;       % Input the desired distance between data points in mm (multiples of 5 work best)
+%test_interval_mm = 15;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 
 global arudiuno_port inclinometer_port_front inclinometer_port_back force_gage1_port force_gage2_port;
 global arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+global ei_dtheta ei_moment ei_displacment gj_dtheta gj_moment gj_displacment;
 
 % Serial USB connections
 arudiuno_port = 'COM3';     % write in arduino port
@@ -26,59 +27,72 @@ inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
 inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 force_gage1_serial = serialport(force_gage1_port, 9600);
 force_gage2_serial = serialport(force_gage2_port, 9600);
-%%
-% arudiuno_port = 'COM3';     % write in arduino port
-% arudiuno_serial = serialport(arudiuno_port, 115200);
-
-%%
 
 %%
 % adjust for unloaded test
 % run unloaded test
+
 clc;
 flush(arudiuno_serial);
-sig = reset_arduino(arudiuno_serial);
+sig = reset_testing_state(arudiuno_serial);
 disp(sig);
-sig = reset_arduino(arudiuno_serial);
-disp(sig);
-test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
+
+test_interval_mm = 25;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
 test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
 dist_between_mm = 863; %change when distance between inclinomters change
 data_matrix_unloaded = data_merge_fill(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
 temp_save_single_test(data_matrix_unloaded, "Unloaded");
+
+sig = reset_testing_state(arudiuno_serial);
+disp(sig);
+sig = move_x_mm(5, 0, arudiuno_serial);
+disp(sig);
+%%
+% data_matrix_unloaded = csvread('C:\Users\student\Documents\Arduino\Blister\Ski_Flex\0_Data\Temp_Data_Folder\Unloaded.csv',1,0);
+% ls = 0;
+% sig = deattach_interrupt(arudiuno_serial,ls);
+% disp(sig);
 %%
 %adjust for loaded test
 %run unloaded test
-%arudiuno_serial = serialport('COM3', 115200);
+
 clc;
 clf;
-sig = reattach_interrupt(arudiuno_serial);
-disp(sig); 
-% sig = reattach_interrupt(arudiuno_serial);
-% disp(sig);
-test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
+sig = reset_testing_state(arudiuno_serial);
+disp(sig);
+
+test_interval_mm = 25;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 0; 
 [data_matrix_front_loaded,data_matrix_back_loaded] = sensor_automation(test_interval_mm, direction);
 test_distance_mm = size(data_matrix_front_loaded,1)*test_interval_mm;
 dist_between_mm = 863; %chnage when distance between inclinomters change
 data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
-%flip the data_matrix_loaded
-data_matrix_loaded = flipud(data_matrix_loaded);
+data_matrix_loaded = flipud(data_matrix_loaded);%flip the data_matrix_loaded
 temp_save_single_test(data_matrix_loaded, "Loaded");
 [ei_x_points, ei_y_points] = get_EI_point(data_matrix_unloaded, data_matrix_loaded, test_interval_mm);
 temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
+
+sig = reset_testing_state(arudiuno_serial);
+disp(sig);
+sig = move_x_mm(5, 1, arudiuno_serial);
+disp(sig);
+%%
+% data_matrix_loaded = csvread('C:\Users\student\Documents\Arduino\Blister\Ski_Flex\0_Data\Temp_Data_Folder\Loaded.csv',1,0);
+% ls = 0;
+% sig = deattach_interrupt(arudiuno_serial,ls);
+% disp(sig);
 %%
 %adjust for torsion test
 %run torsion test
+
 clc;
 clf;
-sig = reattach_interrupt(arudiuno_serial);
-disp(sig); 
-% sig = reattach_interrupt(arudiuno_serial);
-% disp(sig);
-test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
+sig = reset_testing_state(arudiuno_serial);
+disp(sig);
+
+test_interval_mm = 25;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 [data_matrix_front_torsion,data_matrix_back_torsion] = sensor_automation(test_interval_mm, direction);
 test_distance_mm = size(data_matrix_front_torsion,1)*test_interval_mm;
@@ -87,34 +101,24 @@ data_matrix_torsion = data_merge_fill(data_matrix_front_torsion, data_matrix_bac
 temp_save_single_test(data_matrix_torsion, "Torsion");
 [gj_x_points, gj_y_points] = get_EI_point(data_matrix_unloaded, data_matrix_torsion, test_interval_mm);
 temp_save_plot_and_points(gj_x_points, gj_y_points, 'GJ');
+
+sig = reset_testing_state(arudiuno_serial);
+disp(sig);
+sig = move_x_mm(5, 0, arudiuno_serial);
+disp(sig);
+%%
+% data_matrix_loaded = csvread('C:\Users\student\Documents\Arduino\Blister\Ski_Flex\0_Data\Temp_Data_Folder\Loaded.csv',1,0);
+% ls = 0;
+% sig = deattach_interrupt(arudiuno_serial,ls);
+% disp(sig);
+%%
+save_data_clear_temp(directory_name);
 %%
 pause(2);
 sig = return_to_start(arudiuno_serial); % might want to not retutn to start and just stop, change rig, then run it th opposite direction for speed (would require data collection change and possible loss of accuracy)
 disp(sig);
 %%
-save_data_clear_temp(directory_name);
-%%
-% flush(arudiuno_serial);
-% clear arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial
-%% create full matrcies
-% test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
-% dist_between_mm = 944; %change when setup
-% 
-% %data_matrix_unloaded = data_merge_fill(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
-% % data_matrix_loaded = data_merge_fill(data_matrix_front_loaded, data_matrix_back_loaded, test_interval_mm, test_distance_mm, dist_between_mm);
-% % data_matrix_torsion = data_merge_fill(data_matrix_front_torsion, data_matrix_back_torsion, test_interval_mm, test_distance_mm, dist_between_mm);
-% %% plot full matricies
-global ei_dtheta ei_moment ei_displacment gj_dtheta gj_moment gj_displacment;
-p = create_plots_for_test(data_matrix_unloaded,data_matrix_loaded,data_matrix_torsion,test_interval_mm);
-
-%% Save Data and Plots (DON't Exist out of plot generated out of last block) ORDER#10
-%name_brand_year_length?
-model_name = 'sickday_94_';      % Input model name
-year = '2020_';                 % Input model year
-manufacturer = "Line_";         % Input ski Manufacturer
-model_length_cm = '186';       %   Input Length of ski in cm
-directory_name = strcat(manufacturer, model_name, year, model_length_cm);
-saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, p, directory_name);
+clear all;
 
 
 
@@ -124,29 +128,31 @@ saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, p, direc
 
 %% these functions can be used to maniplate posotion of motor that do not align with test
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
+reset_testing_state(arudiuno_serial);
+%reattach_interrupt(arudiuno_serial,0);
 
 distance_in = 19;
-distance_mm = floor(15);%floor(convlength([distance_in 0], 'in', 'm'));
-direction = 1;
+distance_mm = floor(10);%floor(convlength([distance_in 0], 'in', 'm'));
+direction = 0;
+i = 0;
 while i ~= 42
     sig = move_x_mm(distance_mm, direction, arudiuno_serial);
     i = str2num(sig);
 end
-distance_mm = floor(5);
-direction = 0;
-move_x_mm(distance_mm, direction, arudiuno_serial);
-disp(sig);
-
 %%
-move_x_mm(200, 0, arudiuno_serial);
+reset_testing_state(arudiuno_serial);
+move_x_mm(10, 0, arudiuno_serial);
+%disp(sig);
 %%
 %FUNCTION TO GET CURRENT POSITION
 %"command,#,#"
+reset_testing_state(arudiuno_serial);
 mm = get_distance_from_start(arudiuno_serial);
 disp(mm);
 %%
 %FUNCTION TO MOVE TO START FROM CURRENT POSITION
 %"command,#,#"
+reset_testing_state(arudiuno_serial);
 sig = return_to_start(arudiuno_serial);
 disp(sig);
 %%
@@ -157,7 +163,7 @@ sig = set_current_position(position,arudiuno_serial);
 disp(sig); 
 %%
 %FUNCTION TO reset setup
-RE_SETUP = 16;
+RESET_ARDUINO = 16;
 sig = reset_arduino(arudiuno_serial);
 disp(sig); 
 
@@ -587,20 +593,38 @@ function ret_signal = set_max_speed(max_speed,s)
 end
 
 function ret_signal = reset_arduino(s)
-    RE_SETUP = 16;
-    serial_string = strcat(num2str(RE_SETUP),",0,0");
+    RESET_ARDUINO = 16;
+    serial_string = strcat(num2str(RESET_ARDUINO),",0,0");
     custom_write(s, serial_string);
     ret_signal = custom_read(s);
     flush(s);
 end
 
-function ret_signal = reattach_interrupt(arudiuno_serial)
+function ret_signal = reset_testing_state(s)
+    RESET_TESTING_STATE = 22;
+    serial_string = strcat(num2str(RESET_TESTING_STATE),",0,0");
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
+    flush(s);
+end
+
+
+function ret_signal = reattach_interrupt(s)%ls is the back or front limit switch (0 = back, 1 = front)
     REATTACH_INTERUPT = 18;
     serial_string = strcat(num2str(REATTACH_INTERUPT),",0,0");
     custom_write(s, serial_string);
     ret_signal = custom_read(s);
     flush(s);
 end
+
+function ret_signal = deattach_interrupt(s)%ls is the back or front limit switch (0 = back, 1 = front)
+    DEATTACH_INTERUPT = 20;
+    serial_string = strcat(num2str(DEATTACH_INTERUPT),",0,0");
+    custom_write(s, serial_string);
+    ret_signal = custom_read(s);
+    flush(s);
+end
+
 
 function sig = serial_communication(s, message)
     custom_write(s,message);
