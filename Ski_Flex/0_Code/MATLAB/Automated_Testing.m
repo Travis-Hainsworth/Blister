@@ -838,20 +838,20 @@ function ei_matrix = make_ei_matrix(unloaded_data, loaded_data, interval_mm)
         EI = zeros(measurements,1);
         for n = 2:(measurements)
             dTheta(n) = dirTheta(n,displacement);
-            moment(n) = momentz(n-1,forceNet,initialOffSet);
+            moment(n) = momentz(n-1,forceNet,initialOffSet,measurements);
             EI(n) = moment(n)/dTheta(n);
         end
         plotEI = EI(3:measurements-1);
 end
 
-function [moment] = momentz(n,forceNet,initialOffSet)
-    moment = (forceNet(n) * distanceFromTip(n,initialOffSet)) * 1.3558/24;
+function [moment] = momentz(n,forceNet,initialOffSet,measurements)
+    moment = (forceNet(n) * distanceFromTip(n,initialOffSet,measurements)) *4.448/2;
 end
 
 % Distance From Tip
-function [distanceFromTip] = distanceFromTip(n,initialOffSet)
+function [distanceFromTip] = distanceFromTip(n,initialOffSet,measurements)
     %the distance of the measured pitch form the applied load in inches
-    distanceFromTip = initialOffSet+n*2;
+    distanceFromTip = initialOffSet+(measurements/2-abs(n-measurements/2))*test_interval_mm/1000;
 end
 
 % Change in Theta at X
