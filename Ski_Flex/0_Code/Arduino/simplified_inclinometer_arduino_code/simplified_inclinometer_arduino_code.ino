@@ -52,11 +52,11 @@ void setup() {
   TMCdriver.microsteps(1);            // Set microsteps to 1/2
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
-  limitSwitchObj1.setDebounceTime(500);
-  limitSwitchObj2.setDebounceTime(500);
+  //limitSwitchObj1.setDebounceTime(500);
+  //limitSwitchObj2.setDebounceTime(500);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, CHANGE); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, CHANGE);
 
 
   stepper1_current_position = 0;
@@ -198,6 +198,7 @@ void loop() {
             {
               testing_state = true;
               send_finish_signal(RESET_TESTING_STATE);
+              break;
             }
             case REATTACH_INTERUPT:
             {
