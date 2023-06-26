@@ -400,36 +400,38 @@ end
 
 %%
 function output = data_merge(data_matrix_front, data_matrix_back)%, test_interval_mm, test_distance_mm, dist_between_mm)
-        % num_of_missing_points = (dist_between_mm-test_distance_mm)/test_interval_mm;
-        % front_force_data = data_matrix_front(end, 3:4);
-        % back_force_data = data_matrix_back(1, 3:4);
-        % 
-        % front_inclinometer_data = data_matrix_front(end,1:2);
-        % back_inclinometer_data = data_matrix_back(1,1:2);
-        % 
-        % pitch_front = front_inclinometer_data(1);
-        % roll_front = front_force_data(2);
-        % 
-        % pitch_back = back_inclinometer_data(1);
-        % roll_back = back_inclinometer_data(2);
-        % 
-        % force1_front = front_force_data(1);
-        % force2_front = front_force_data(2);
-        % 
-        % force1_back = back_force_data(1);
-        % force2_back = back_force_data(2);
-        % 
-        % force1_average = (force1_back+force1_front)/2;
-        % force2_average = (force2_back+force2_front)/2;
-        % 
-        % pitch_average = (pitch_front+pitch_back)/2;
-        % roll_average = (roll_front+roll_back)/2; 
-        % 
-        % missing_row_entry = [pitch_average, roll_average, force1_average, force2_average];
-        % 
-        % for i = 1:num_of_missing_points
-        %     data_matrix_front = [data_matrix_front; missing_row_entry];
-        % end
+        num_of_missing_points = (dist_between_mm-test_distance_mm)/test_interval_mm;
+        front_force_data = data_matrix_front(end, 3:4);
+        back_force_data = data_matrix_back(1, 3:4);
+        
+        front_inclinometer_data = data_matrix_front(end,1:2);
+        back_inclinometer_data = data_matrix_back(1,1:2);
+        
+        pitch_front = front_inclinometer_data(1);
+        roll_front = front_force_data(2);
+        
+        pitch_back = back_inclinometer_data(1);
+        roll_back = back_inclinometer_data(2);
+        
+        force1_front = front_force_data(1);
+        force2_front = front_force_data(2);
+        
+        force1_back = back_force_data(1);
+        force2_back = back_force_data(2);
+
+        
+        force1_slope = abs(force1_back-force1_front)/(num_of_missing_points+1);
+        force2_slope = abs(force2_back-force2_front)/(num_of_missing_points+1);
+        
+        pitch_slope = abs(pitch_front-pitch_back)/(num_of_missing_points+1);
+        roll_slope = abs(roll_front-roll_back)/(num_of_missing_points+1);
+        
+        missing_row_entry = [pitch_average, roll_average, force1_average, force2_average];
+        
+        for i = 1:num_of_missing_points
+            missing_row_entry = [pitch_front-(i*pitch_slope), roll_front-(i*roll_slope), force1_front-(i*force1_slope), force2_front-(i*force2_slope)];
+            data_matrix_front = [data_matrix_front; missing_row_entry];
+        end
 
         data_matrix = [data_matrix_front;data_matrix_back];
 
