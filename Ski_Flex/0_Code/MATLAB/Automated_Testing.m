@@ -124,11 +124,21 @@ saveData(data_matrix_unloaded, data_matrix_loaded, data_matrix_torsion, p, direc
 
 %% these functions can be used to maniplate posotion of motor that do not align with test
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
+
 distance_in = 19;
-distance_mm = floor(293);%floor(convlength([distance_in 0], 'in', 'm'));
+distance_mm = floor(15);%floor(convlength([distance_in 0], 'in', 'm'));
+direction = 1;
+while i ~= 42
+    sig = move_x_mm(distance_mm, direction, arudiuno_serial);
+    i = str2num(sig);
+end
+distance_mm = floor(5);
 direction = 0;
-sig = move_x_mm(distance_mm, direction, arudiuno_serial);
+move_x_mm(distance_mm, direction, arudiuno_serial);
 disp(sig);
+
+%%
+move_x_mm(5, 1, arudiuno_serial);
 %%
 %FUNCTION TO GET CURRENT POSITION
 %"command,#,#"

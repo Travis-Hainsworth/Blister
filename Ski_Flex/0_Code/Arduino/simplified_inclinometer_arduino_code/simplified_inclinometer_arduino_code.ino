@@ -23,8 +23,8 @@ SoftwareSerial SoftSerial(SW_RX, SW_TX);
 TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
-ezButton1 limitSwitchObj(LIMIT_SWITCH_PIN_1);
-ezButton2 limitSwitchObj(LIMIT_SWITCH_PIN_2);
+//ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_2);
+ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
 
 float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
@@ -50,8 +50,8 @@ void setup() {
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, CHANGE);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
@@ -65,8 +65,8 @@ void stop_testing(){
     stepper1.stop();
     //testing_state = false;
     send_finish_signal(STOP_SIGNAL);
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
-    detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+    // detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
+    // detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
 }
 
 /*
@@ -117,7 +117,7 @@ void loop() {
               float length_mm = (float) message_arr[1];
               long direction = get_direction(message_arr[2]);
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
-              stepper1_current_position+= (int) steps;
+              //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
               send_finish_signal(steps);
               break;
