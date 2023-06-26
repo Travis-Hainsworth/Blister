@@ -138,7 +138,7 @@ move_x_mm(distance_mm, direction, arudiuno_serial);
 disp(sig);
 
 %%
-move_x_mm(5, 1, arudiuno_serial);
+move_x_mm(200, 0, arudiuno_serial);
 %%
 %FUNCTION TO GET CURRENT POSITION
 %"command,#,#"
