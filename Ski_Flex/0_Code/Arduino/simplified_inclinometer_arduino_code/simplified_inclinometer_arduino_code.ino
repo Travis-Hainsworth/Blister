@@ -106,9 +106,10 @@ const int SET_MAX_SPEED = 8;
 const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
 const int GET_CURRENT_POSITION = 14;
-const int RESTART_ARDUINO = 16;
+const int RESET_ARDUINO = 16;
 const int REATTACH_INTERUPT = 18;
 const int DEATTACH_INTERUPT = 20;
+const int RESET_TESTING_STATE = 22;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
@@ -134,13 +135,13 @@ void loop() {
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
               stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              if(testing_state = true){
+              if(testing_state == true){
                 send_finish_signal(steps);
               }
-              if(testing_state = false){
+              else{
                 send_finish_signal(STOP_SIGNAL);
               }
-  
+              break;
             }
             case MOVE_TO_START:
             {
@@ -164,6 +165,7 @@ void loop() {
               float max_speed = (float) message_arr[1];
               stepper1.setMaxSpeed(max_speed);
               send_finish_signal(SET_MAX_SPEED);
+              break;
             }
             case SET_ACCELERATION:
             {
@@ -171,6 +173,7 @@ void loop() {
               float acceleration = (float) message_arr[1];
               stepper1.setAcceleration(acceleration);
               send_finish_signal(SET_ACCELERATION);
+              break;
             }
             case SET_STEPS_PER_REVOLUTION:
             {
@@ -178,6 +181,7 @@ void loop() {
               float steps_per_rev = (float) message_arr[1];
               stepsPerRevolution = steps_per_rev;
               send_finish_signal(SET_STEPS_PER_REVOLUTION);
+              break;
             }
             case GET_CURRENT_POSITION:
             {
@@ -185,45 +189,32 @@ void loop() {
               long current_position = stepper1.currentPosition();
               int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
               send_finish_signal(current_position_in_mm);
+              break;
             }
-            case RESTART_ARDUINO:
+            case RESET_ARDUINO:
+            {
+              setup();
+              send_finish_signal(RESET_ARDUINO);
+              break;
+            }case RESET_TESTING_STATE:
             {
               testing_state = true;
+              send_finish_signal(RESET_TESTING_STATE);
             }
             case REATTACH_INTERUPT:
             {
-              // 0 = back, 1 = front
-              int ls = message_arr[1];
-              // try{ 
-                  if(ls == 0){
-                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING);
-                  }else{
-                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
-                  }
-                  send_finish_signal(REATTACH_INTERUPT);
-              // }catch(String error){
-              //     send_finish_signal(-200);
-              // }
-             
+              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);  
+              send_finish_signal(REATTACH_INTERUPT);
+              break;
             }
             case DEATTACH_INTERUPT:
             {
-              // 0 = back, 1 = front
-              int ls = message_arr[1];
-              // try{
-                  if(ls == 0){
-                      detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1));
-                  }else{
-                      detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-                  }
-                  send_finish_signal(DEATTACH_INTERUPT);
-              // }catch(String error){
-              //     send_finish_signal(-200);
-              // }
+              detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+              send_finish_signal(DEATTACH_INTERUPT);
+              break;
             }
             default:
             {
-              //Serial.println("In default section of switch stament");
               send_finish_signal(COMMAND_NOT_RECOGNIZED);
               break;
             }
