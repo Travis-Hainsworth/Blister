@@ -139,6 +139,7 @@ void move_x_steps(int left_steps, int right_steps){
   steppers.runSpeedToPosition(); // Blocks until all are in position
   left_stepper.setCurrentPosition(0);
   right_stepper.setCurrentPosition(0);
+
 }
 
 void loop() {

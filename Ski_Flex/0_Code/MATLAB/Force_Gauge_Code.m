@@ -82,9 +82,8 @@ tollerance_angel = .1;
 while ~(rollFront < tollerance_angel && rollFront > -tollerance_angel)
     message = make_message(int2str(MOVE_BOTH_FORCE_GAUGES),actual_force_left, desired_force, precision);
     message = make_message(message, actual_force_right, desired_force, message);
-    flush(s);
-    writeline(s,message);
-    pause(.05);
+    
+    [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_front_serial);
 end 
 
 
@@ -110,20 +109,26 @@ function ret_signal = move_x_mm(dis_mm, dir, s)
     flush(s);
 end
 
-function ret_signal = move_force_gauges(dis_mm, dir, s)
-    MOVE_X = 24;
-    message = make_message(int2str(MOVE_BOTH_FORCE_GAUGES),actual_force_left, desired_force, precision);
-    message = make_message(message, actual_force_right, desired_force, message);
-    serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
+function ret_signal = move_force_gauges(left_mm, right_mm)
+    MOVE_FORCE_GAUGES = 24;
+    serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(left_mm),",",num2str(right_mm));
     ret_signal = serial_communication(s, serial_string);
     flush(s);
 end
 
-function message = make_message(m, actual_force, desired_force, precision)
+function ret_signal = level_force_gauges(actual_angle, desired_angle, precision)
+    MOVE_FORCE_GAUGES = 24;
+    message = make_message(int2str(MOVE_FORCE_GAUGES),actual_angle, desired_angle, precision);
+    message = make_message(message, actual_angle, desired_angle, message);
+    ret_signal = serial_communication(s, message);
+    flush(s);
+end
+
+function message = make_message(m, actual_angle, desired_angle, precision)
     message = m;
-    if actual_force <= desired_force+precision && actual_force >= desired_force-precision % make this a fuction that takes in actual and desired, concatenates and retruns message
+    if actual_angle <= desired_angle+precision && actual_angle >= desired_angle-precision % make this a fuction that takes in actual and desired, concatenates and retruns message
           message = strcat(message,',0');
-    elseif actual_force < desired_force
+    elseif actual_angle < desired_angle
           message = strcat(message,',1'); 
     else
           message = strcat(message,',-1'); 

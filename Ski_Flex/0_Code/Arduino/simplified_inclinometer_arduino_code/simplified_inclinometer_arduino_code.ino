@@ -17,11 +17,19 @@
 // #define LIMIT_SWITCH_PIN_3 4
 // #define LIMIT_SWITCH_PIN_4 5
 
-
 SoftwareSerial SoftSerial(SW_RX, SW_TX);
 TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
-AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
+AccelStepper inclinometer_stepper (1, STEP_PIN, DIR_PIN);
+
+AccelStepper left_stepper (AccelStepper::DRIVER, STEP_PIN_L, DIR_PIN_L);
+int left_steps;
+int unloaded_left_steps;
+AccelStepper right_stepper (AccelStepper::DRIVER, STEP_PIN_R, DIR_PIN_R);
+int right_steps; //number of steps from complete rest (might be a load downward)
+int unloaded_right_steps;//number of steps from unloaded rpofile of ski to the loaded state.
+//ezButton limitSwitchObj(LIMIT_SWITCH_PIN);
+MultiStepper steppers;
 
 ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
 ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
@@ -38,10 +46,23 @@ int count;
 void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
   
-  stepper1.setMaxSpeed(1000); //pulse/steps per second
-  stepper1.setAcceleration(750); //steps per second per second to accelerate
-  stepper1.setCurrentPosition(0);
-  stepper1.setMinPulseWidth(30);
+  inclinometer_stepper.setMaxSpeed(1000); //pulse/steps per second
+  inclinometer_stepper.setAcceleration(750); //steps per second per second to accelerate
+  inclinometer_stepper.setCurrentPosition(0);
+  inclinometer_stepper.setMinPulseWidth(30);
+
+
+  left_stepper.setMaxSpeed(1000); //pulse/steps per second
+  left_stepper.setAcceleration(500.0); //steps per second per second to accelerate
+  //stepper1.setSpeed(1000); //pulse/steps per second
+  left_stepper.setCurrentPosition(0);
+  left_stepper.setMinPulseWidth(30)
+  
+  right_stepper.setMaxSpeed(1000); //pulse/steps per second
+  right_stepper.setAcceleration(500.0); //steps per second per second to accelerate
+  //stepper1.setSpeed(1000); //pulse/steps per second
+  right_stepper.setCurrentPosition(0);
+  right_stepper.setMinPulseWidth(30)
 
   TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
   TMCdriver.toff(5);                 // Enables driver in software
@@ -49,10 +70,14 @@ void setup() {
   TMCdriver.microsteps(1);            // Set microsteps to 1/2
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
+  
   limitSwitchObj1.setDebounceTime(500);
   limitSwitchObj2.setDebounceTime(500);
   
   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
+
+  steppers.addStepper(left_stepper);
+  steppers.addStepper(right_stepper);
 
   count = 0;
   testing_state = true;
@@ -93,6 +118,7 @@ const int RESET_ARDUINO = 16;
 const int REATTACH_INTERUPT = 18;
 const int DEATTACH_INTERUPT = 20;
 const int RESET_TESTING_STATE = 22;
+const int MOVE_FORCE_GAUGES = 24;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
@@ -124,10 +150,40 @@ void loop() {
               }
               break;
             }
+            case MOVE_FORCE_GAUGES:
+            {
+              //"command,distance_mm,direction"
+              float left_sensor_move_mm = (float) message_arr[1];
+              long left_steps = convert_distance_from_mm_to_steps(stepsPerRevolution, left_sensor_move_mm, lead_distance);
+              float right_sensor_move_mm = (float) message_arr[2];
+              long right_steps = convert_distance_from_mm_to_steps(stepsPerRevolution, right_sensor_move_mm, lead_distance);
+
+              // int longest;
+              // if(abs(left_steps)>=abs(right_steps)){
+              //     while (left_stepper.distanceToGo() != 0) {
+              //           left_stepper.run();
+              //           right_stepper.run();
+              //     }
+              // }else{
+              //     while (right_stepper.distanceToGo() != 0) {
+              //           right_stepper.run();
+              //           left_stepper.run();
+              //     }
+              // }
+
+              long positions[2]; // Array of desired stepper positions
+              positions[0] = left_steps;
+              positions[1] = right_steps;
+              steppers.moveTo(positions);
+              steppers.runSpeedToPosition(); // Blocks until all are in position
+              // left_stepper.setCurrentPosition(0);
+              // right_stepper.setCurrentPosition(0);
+              send_finish_signal(MOVE_FORCE_GAUGES);
+            }
             case MOVE_TO_START:
             {
               //"command,#,#"
-              long steps_from_start = stepper1.currentPosition();
+              long steps_from_start = inclinometer_stepper.currentPosition();
               move_x_steps(-1*steps_from_start);
               send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
               break;
@@ -136,7 +192,7 @@ void loop() {
             {
               //"command,#,#" most likely = "signal,0,#"
               long position = (long) message_arr[1];
-              stepper1.setCurrentPosition(position);
+              inclinometer_stepper.setCurrentPosition(position);
               send_finish_signal(SET_CURRENT_POS);
               break;
             }
@@ -144,7 +200,7 @@ void loop() {
             {
               //"command,max_speed,#"
               float max_speed = (float) message_arr[1];
-              stepper1.setMaxSpeed(max_speed);
+              inclinometer_stepper.setMaxSpeed(max_speed);
               send_finish_signal(SET_MAX_SPEED);
               break;
             }
@@ -152,7 +208,7 @@ void loop() {
             {
               //"command,acceleration,#"
               float acceleration = (float) message_arr[1];
-              stepper1.setAcceleration(acceleration);
+              inclinometer_stepper.setAcceleration(acceleration);
               send_finish_signal(SET_ACCELERATION);
               break;
             }
@@ -167,7 +223,7 @@ void loop() {
             case GET_CURRENT_POSITION:
             {
               //"command,#,#"
-              long current_position = stepper1.currentPosition();
+              long current_position = inclinometer_stepper.currentPosition();
               int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
               send_finish_signal(current_position_in_mm);
               break;
@@ -226,14 +282,14 @@ int convert_distance_from_steps_to_mm(float spr, float length_steps, float lead_
 }
 
 void move_x_steps(long x){
-  stepper1.move(x);
-  //stepper1.runSpeedToPosition();
-  while (stepper1.distanceToGo() != 0){
+  inclinometer_stepper.move(x);
+  //inclinometer_stepper.runSpeedToPosition();
+  while (inclinometer_stepper.distanceToGo() != 0){
       if(testing_state == true){
-        stepper1.run();
+        inclinometer_stepper.run();
       }
       else{
-        stepper1.stop();
+        inclinometer_stepper.stop();
         break;
       }
   }
@@ -263,11 +319,11 @@ void stepper_status(){
       delay(10);
       Serial.println("number of rotations");
       delay(10);
-      Serial.println(abs((float) stepper1.currentPosition()/(200.0*8.0)));
+      Serial.println(abs((float) inclinometer_stepper.currentPosition()/(200.0*8.0)));
       delay(10);
       Serial.println("number of steps for test at this point");
       delay(10);
-      Serial.println(stepper1.currentPosition());
+      Serial.println(inclinometer_stepper.currentPosition());
       delay(10);
       Serial.println("\n---------------------------------------\n");
       delay(10);
