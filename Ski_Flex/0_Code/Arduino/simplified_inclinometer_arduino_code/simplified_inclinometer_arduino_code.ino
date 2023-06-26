@@ -54,8 +54,8 @@ void setup() {
   limitSwitchObj1.setDebounceTime(500);
   limitSwitchObj2.setDebounceTime(500);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing_back, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing_front, RISING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
@@ -68,24 +68,19 @@ void setup() {
 
 const int STOP_SIGNAL = 42;
 
-void stop_testing_back(){
-    //stepper1.stop();
-    static unsigned long last_interrupt_time = 0;
-    interrupt_time = millis();
-    // If interrupts come faster than 200ms, assume it's a bounce and ignore
-    if (interrupt_time - last_interrupt_time > 15000) {
-    testing_state = false;
-    }
-    last_interrupt_time = interrupt_time;
-    //send_finish_signal(STOP_SIGNAL);
-}
-
-void stop_testing_front(){
+void stop_testing(){//_back(){
     //stepper1.stop();
     testing_state = false;
     //send_finish_signal(STOP_SIGNAL);
     //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
 }
+
+// void stop_testing_front(){
+//     //stepper1.stop();
+//     testing_state = false;
+//     //send_finish_signal(STOP_SIGNAL);
+//     //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+// }
 
 /*
 * ALL CODE BELLOW CONCERNS THE LOOP LOGIC OF RUNNIGN A TEST  
@@ -201,9 +196,9 @@ void loop() {
               int ls = message_arr[1];
               // try{ 
                   if(ls == 0){
-                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing_back, FALLING);
+                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, FALLING);
                   }else{
-                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing_front, FALLING);
+                      attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
                   }
                   send_finish_signal(REATTACH_INTERUPT);
               // }catch(String error){
