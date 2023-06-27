@@ -52,6 +52,7 @@ void setup() {
   TMCdriver.microsteps(1);            // Set microsteps to 1/2
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
+  
   //limitSwitchObj1.setDebounceTime(500);
   //limitSwitchObj2.setDebounceTime(500);
   
@@ -70,7 +71,9 @@ const int STOP_SIGNAL = 42;
 
 
 void stop_testing(){
-    testing_state = false;
+    //testing_state = false;
+    stepper1.stop();
+    send_finish_signal(STOP_SIGNAL);
 }
 
 // void stop_testing_front(){
@@ -133,12 +136,12 @@ void loop() {
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
               //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              if(testing_state == true){
-                send_finish_signal(steps);
-              }
-              else{
-                send_finish_signal(STOP_SIGNAL);
-              }
+              //if(testing_state == true){
+              send_finish_signal(MOVE_X);
+              //}
+              // else{
+              //   send_finish_signal(STOP_SIGNAL);
+              // }
               break;
             }
             case MOVE_TO_START:
@@ -247,13 +250,13 @@ void move_x_steps(long x){
   stepper1.move(x);
   //stepper1.runSpeedToPosition();
   while (stepper1.distanceToGo() != 0){
-      if(testing_state == true){
+      //if(testing_state == true){
         stepper1.run();
-      }
-      else{
-        stepper1.stop();
-        break;
-      }
+     // }
+    //  else{
+    //     stepper1.stop();
+    //     break;
+    //   }
   }
 }
 
