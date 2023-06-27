@@ -62,6 +62,12 @@ def getMocapData(folder_dir):
 
     return combinedCSVs
 
+""""
+fixMocapDF takes in a pandas Data Frame and renames columns to more accuratley describe what they represent
+
+It renames the 
+
+"""
 
 def fixMocapDF(DF):
     count = 0

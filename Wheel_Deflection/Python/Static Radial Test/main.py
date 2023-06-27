@@ -38,3 +38,5 @@ def dataProcessingMain(filePathOptitrack, filePathMTS):
         plt.show()
         
     return synced_data
+
+dataProcessingMain('/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/DTS 2-10-23 Tire On/Optitrack Data', '/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/DTS 2-10-23 Tire On/MTS Data')
