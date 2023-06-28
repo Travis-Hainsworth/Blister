@@ -25,14 +25,12 @@
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
 
 //ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
-ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
+ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
 float stepsPerRevolution = 200;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
-unsigned long interrupt_time;
-static unsigned long last_interrupt_time;
 
 int stepper1_current_position;
 int count;
@@ -45,7 +43,7 @@ void setup() {
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
-
+  limitSwitchObj.setDebounceTime(200);
   // TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
   // TMCdriver.toff(5);                 // Enables driver in software
   // TMCdriver.rms_current(2500);       // Set motor RMS current
@@ -57,24 +55,22 @@ void setup() {
   //limitSwitchObj2.setDebounceTime(500);
   
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, CHANGE); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, CHANGE);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, CHANGE);
 
 
-  stepper1_current_position = 0;
+  // stepper1_current_position = 0;
   count = 0;
   testing_state = true;
-  last_interrupt_time = 0;
+
+  // last_interrupt_time = 0;
   
 }
 
-const int STOP_SIGNAL = 42;
-
-
-void stop_testing(){
-    //testing_state = false;
-    stepper1.stop();
-    send_finish_signal(STOP_SIGNAL);
-}
+// void stop_testing(){
+//     //testing_state = false;
+//     stepper1.stop();
+//     send_finish_signal(STOP_SIGNAL);
+// }
 
 // void stop_testing_front(){
 //     //stepper1.stop();
@@ -100,6 +96,7 @@ void stop_testing(){
 *
 */
 
+
 const int MOVE_TO_START = 2;
 const int MOVE_X = 4;
 const int SET_CURRENT_POS = 6;
@@ -111,13 +108,22 @@ const int RESET_ARDUINO = 16;
 const int REATTACH_INTERUPT = 18;
 const int DEATTACH_INTERUPT = 20;
 const int RESET_TESTING_STATE = 22;
+const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
-    
-    if (Serial.available() > 0){
+    limitSwitchObj.loop();
+    testing_state = limitSwitchObj.getState();
+    if(testing_state == false){
+          stepper1.stop();
+          send_finish_signal(STOP_SIGNAL);
+          long steps_from_start = stepper1.currentPosition();
+          move_x_steps(-1*steps_from_start);
+          send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
+          testing_state = true;
+          //Serial.flush();
+    }else if (Serial.available() > 0){
           count+=1;
-
           String message = Serial.readStringUntil("\n");
           Serial.flush();
           
@@ -203,18 +209,18 @@ void loop() {
               send_finish_signal(RESET_TESTING_STATE);
               break;
             }
-            case REATTACH_INTERUPT:
-            {
-              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);  
-              send_finish_signal(REATTACH_INTERUPT);
-              break;
-            }
-            case DEATTACH_INTERUPT:
-            {
-              detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-              send_finish_signal(DEATTACH_INTERUPT);
-              break;
-            }
+            // case REATTACH_INTERUPT:
+            // {
+            //   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);  
+            //   send_finish_signal(REATTACH_INTERUPT);
+            //   break;
+            // }
+            // case DEATTACH_INTERUPT:
+            // {
+            //   detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+            //   send_finish_signal(DEATTACH_INTERUPT);
+            //   break;
+            // }
             default:
             {
               send_finish_signal(COMMAND_NOT_RECOGNIZED);
