@@ -7,27 +7,46 @@
 //#define EN_PIN         GND      // Enable - RED
 #define DIR_PIN          5      // Direction - GREEN
 #define STEP_PIN         4      // Step - BLUE
-#define SW_SCK           7      // Software Slave Clock (SCK) - YELLOW
-#define SW_TX            1      // SoftwareSerial receive pin - GREY
-#define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
-#define DRIVER_ADDRESS   0b00   // TMC2209 Driver address according to MS1 and MS2
+// #define SW_SCK           7      // Software Slave Clock (SCK) - YELLOW
+// #define SW_TX            1      // SoftwareSerial receive pin - GREY
+// #define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
+
+// #define EN_PIN_R           4      // Enable
+#define DIR_PIN_R          5      // Direction
+#define STEP_PIN_R         6      // Step
+// #define SW_SCK_R           7      // Software Slave Clock (SCK)
+// #define SW_TX_R            A2      // SoftwareSerial receive pi
+// #define SW_RX_R            A3      // SoftwareSerial transmit pin
+
+// #define EN_PIN_L           8      // Enable
+#define DIR_PIN_L          9      // Direction
+#define STEP_PIN_L         10      // Step
+// #define SW_SCK_L           11     // Software Slave Clock (SCK)
+// #define SW_TX_L            A0      // SoftwareSerial receive pin
+// #define SW_RX_L            A1      // SoftwareSerial transmit pin
+
+#define DRIVER_ADDRESS_INCLINOMTER   0b00   // TMC2209 Driver address according to MS1 and MS2
+#define DRIVER_ADDRESS_R   0b01   // TMC2209 Driver address according to MS1 and MS2
+#define DRIVER_ADDRESS_L  0b10   //figure this out ?????????????????????????????????
 #define R_SENSE          0.11f  // SilentStepStick series use 0.11 ...and so does my fysetc TMC2209 (?)
+
+
 #define LIMIT_SWITCH_PIN_1 2
 #define LIMIT_SWITCH_PIN_2 3
 // #define LIMIT_SWITCH_PIN_3 4
 // #define LIMIT_SWITCH_PIN_4 5
 
-SoftwareSerial SoftSerial(SW_RX, SW_TX);
-TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
+// SoftwareSerial SoftSerial(SW_RX, SW_TX);
+// TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS_INCLINOMETER);
 
 AccelStepper inclinometer_stepper (1, STEP_PIN, DIR_PIN);
 
 AccelStepper left_stepper (AccelStepper::DRIVER, STEP_PIN_L, DIR_PIN_L);
-int left_steps;
-int unloaded_left_steps;
+// int left_steps;
+// int unloaded_left_steps;
 AccelStepper right_stepper (AccelStepper::DRIVER, STEP_PIN_R, DIR_PIN_R);
-int right_steps; //number of steps from complete rest (might be a load downward)
-int unloaded_right_steps;//number of steps from unloaded rpofile of ski to the loaded state.
+// int right_steps; //number of steps from complete rest (might be a load downward)
+// int unloaded_right_steps;//number of steps from unloaded rpofile of ski to the loaded state.
 //ezButton limitSwitchObj(LIMIT_SWITCH_PIN);
 MultiStepper steppers;
 
@@ -64,12 +83,12 @@ void setup() {
   right_stepper.setCurrentPosition(0);
   right_stepper.setMinPulseWidth(30)
 
-  TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
-  TMCdriver.toff(5);                 // Enables driver in software
-  TMCdriver.rms_current(2500);       // Set motor RMS current
-  TMCdriver.microsteps(1);            // Set microsteps to 1/2
-  TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
-  TMCdriver.en_spreadCycle(false);
+  // TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
+  // TMCdriver.toff(5);                 // Enables driver in software
+  // TMCdriver.rms_current(2500);       // Set motor RMS current
+  // TMCdriver.microsteps(1);            // Set microsteps to 1/2
+  // TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
+  // TMCdriver.en_spreadCycle(false);
   
   limitSwitchObj1.setDebounceTime(500);
   limitSwitchObj2.setDebounceTime(500);
@@ -84,7 +103,6 @@ void setup() {
 }
 
 const int STOP_SIGNAL = 42;
-
 
 void stop_testing(){
     testing_state = false;
