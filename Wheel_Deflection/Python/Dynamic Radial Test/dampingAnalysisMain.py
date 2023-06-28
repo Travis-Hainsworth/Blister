@@ -6,6 +6,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft
 
+""""
+Main function for getting, cleaning, and graphing mocap data from the
+dynamic drop test.
+
+in: filePathOptitrack -> the directory where all csvs live for one specific
+wheel's mocap data.
+
+return (tuple): (list of cleaned mocap dataframes, list of fft dataframes)
+
+graphs: two for each csv 
+1. Displacement (y) over time of the rim. Calculated between the rim top and the rim stand (could be updated)
+2. Single Sided Amplitude Spectrum of Displacement 
+
+DOES NOT CALCULATE SETTLING TIME YET
+
+"""
 def dataProcessingMain(filePathOptitrack):
 
     # Import mocap data. Make sure every file you want to look at is in the folder you input.
@@ -32,7 +48,8 @@ def dataProcessingMain(filePathOptitrack):
         plt.show()
         FFTRes = fftAnalysis(df)
         listFFTRes.append(FFTRes)
-    return (list_mocap_data, listFFTRes)
+
+    return (list_mocap_data, listFFTRes, settlingTime)
 
 def fftAnalysis(df):
     # FFT analysis, finds natural frequency of rim
@@ -73,4 +90,4 @@ def fftAnalysis(df):
     plt.show()
     return fftDF
 
-(mocap, fftData) = dataProcessingMain(r"/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/Dynamic Radial/Stans Flow 6-26-23 Tire On/Optitrack Data")
+#(mocap, fftData) = dataProcessingMain(r"/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/Dynamic Radial/Stans Flow 6-26-23 Tire On/Optitrack Data")
