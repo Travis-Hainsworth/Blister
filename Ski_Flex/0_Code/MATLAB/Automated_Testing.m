@@ -165,19 +165,20 @@ reset_testing_state(arudiuno_serial);
 %reattach_interrupt(arudiuno_serial,0);
 
 distance_in = 19;
-distance_mm = floor(15);%floor(convlength([distance_in 0], 'in', 'm'));
-direction = 0;
-i = 0;
+distance_mm = floor(50);%floor(convlength([distance_in 0], 'in', 'm'));
+direction = 1;
+i = ;
 while i ~= 42
     sig = move_x_mm(distance_mm, direction, arudiuno_serial);
     i = str2num(sig);
+    disp(i);
 end
 %%
 %reset_arduino(arudiuno_serial);
 %1 = to the force gauges
 %0 = towards us
 reset_testing_state(arudiuno_serial);
-sig = move_x_mm(10,1, arudiuno_serial);
+sig = move_x_mm(1000,0, arudiuno_serial);
 disp(sig);
 %%
 %FUNCTION TO GET CURRENT POSITION
