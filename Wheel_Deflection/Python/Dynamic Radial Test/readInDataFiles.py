@@ -30,6 +30,8 @@ def getMocapData(folder_dir):
 
         DF = DF.drop(index=2)
 
+        DF.set_index('Frame', inplace=True)
+
         combinedCSVs.append(DF)
 
     return combinedCSVs
@@ -84,7 +86,7 @@ def clean_mocap_data(list_df):
     for df in list_df:
         # Getting all of the y values of each marker and finding the max
         firstRow = df.iloc[0]
-        YVals = firstRow[3::3]
+        YVals = firstRow[2::3]
 
         maxY = max(YVals)
 
