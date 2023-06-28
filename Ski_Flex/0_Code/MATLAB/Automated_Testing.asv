@@ -161,11 +161,14 @@ clear all;
 
 %% these functions can be used to maniplate posotion of motor that do not align with test
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
-reset_testing_state(arudiuno_serial);
+%reset_testing_state(arudiuno_serial);
 %reattach_interrupt(arudiuno_serial,0);
-
+enable = true;
+sig  = set_enable_switch(arudiuno_serial,enable);
+disp(sig);
+%%
 distance_in = 19;
-distance_mm = floor(50);%floor(convlength([distance_in 0], 'in', 'm'));
+distance_mm = floor(25);%floor(convlength([distance_in 0], 'in', 'm'));
 direction = 1;
 i = 0;
 while i ~= 42
@@ -174,22 +177,26 @@ while i ~= 42
     disp(i);
 end
 %%
+enable = false;
+sig = set_enable_switch(arudiuno_serial,0);
+disp(sig);
+%%
 %reset_arduino(arudiuno_serial);
 %1 = to the force gauges
 %0 = towards us
-reset_testing_state(arudiuno_serial);
-sig = move_x_mm(1000,0, arudiuno_serial);
+%reset_testing_state(arudiuno_serial);
+sig = move_x_mm(5,0, arudiuno_serial);
 disp(sig);
 %%
 %FUNCTION TO GET CURRENT POSITION
 %"command,#,#"
-reset_testing_state(arudiuno_serial);
+%reset_testing_state(arudiuno_serial);
 mm = get_distance_from_start(arudiuno_serial);
 disp(mm);
 %%
 %FUNCTION TO MOVE TO START FROM CURRENT POSITION
 %"command,#,#"
-reset_testing_state(arudiuno_serial);
+%reset_testing_state(arudiuno_serial);
 sig = return_to_start(arudiuno_serial);
 disp(sig);
 %%
@@ -675,9 +682,10 @@ function ret_signal = reset_arduino(s)
     flush(s);
 end
 
-function ret_signal = reset_testing_state(s)
-    RESET_TESTING_STATE = 22;
-    serial_string = strcat(num2str(RESET_TESTING_STATE),",0,0");
+function ret_signal = set_enable_switch(s,enable)
+    SET_enable_switch = 22;
+    serial_string = strcat(num2str(SET_enable_switch),",",num2str(enable),",0");
+    disp(serial_string);
     custom_write(s, serial_string);
     ret_signal = custom_read(s);
     flush(s);

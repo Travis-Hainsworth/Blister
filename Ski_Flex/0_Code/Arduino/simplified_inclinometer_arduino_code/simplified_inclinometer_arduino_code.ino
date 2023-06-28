@@ -31,6 +31,7 @@ float stepsPerRevolution = 200;   // change this to fit the number of steps per 
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
+volatile boolean enable_switch;
 
 int stepper1_current_position;
 int count;
@@ -61,7 +62,7 @@ void setup() {
   // stepper1_current_position = 0;
   count = 0;
   testing_state = true;
-
+  enable_switch = false;
   // last_interrupt_time = 0;
   
 }
@@ -107,19 +108,22 @@ const int GET_CURRENT_POSITION = 14;
 const int RESET_ARDUINO = 16;
 const int REATTACH_INTERUPT = 18;
 const int DEATTACH_INTERUPT = 20;
-const int RESET_TESTING_STATE = 22;
+const int SET_ENABLE_SWITCH = 22;
 const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
     limitSwitchObj.loop();
-    testing_state = limitSwitchObj.getState();
+    if(enable_switch){
+      testing_state = limitSwitchObj.getState();
+    }
     if(testing_state == false){
           stepper1.stop();
           send_finish_signal(STOP_SIGNAL);
           long steps_from_start = stepper1.currentPosition();
           move_x_steps(-1*steps_from_start);
-          send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
+         // send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
+         send_finish_signal(STOP_SIGNAL);
           testing_state = true;
           //Serial.flush();
     }else if (Serial.available() > 0){
@@ -203,10 +207,10 @@ void loop() {
               setup();
               send_finish_signal(RESET_ARDUINO);
               break;
-            }case RESET_TESTING_STATE:
+            }case SET_ENABLE_SWITCH:
             {
-              testing_state = true;
-              send_finish_signal(RESET_TESTING_STATE);
+              enable_switch = message[1];
+              send_finish_signal(SET_ENABLE_SWITCH);
               break;
             }
             // case REATTACH_INTERUPT:
