@@ -24,17 +24,14 @@ TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
 
-ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
-ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
+ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
 float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
-volatile boolean testing_state;
-unsigned long interrupt_time;
-static unsigned long last_interrupt_time;
-
-int stepper1_current_position;
+boolean testing_state;
+long max_step_interval;
+long current_direction;
 int count;
 
 void setup() {
@@ -45,33 +42,32 @@ void setup() {
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
+  limitSwitchObj.setDebounceTime(200); //200 ms
 
-  TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
-  TMCdriver.toff(5);                 // Enables driver in software
-  TMCdriver.rms_current(2500);       // Set motor RMS current
-  TMCdriver.microsteps(1);            // Set microsteps to 1/2
-  TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
-  TMCdriver.en_spreadCycle(false);
-  limitSwitchObj1.setDebounceTime(500);
-  limitSwitchObj2.setDebounceTime(500);
-  
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
-
-
-  stepper1_current_position = 0;
-  count = 0;
   testing_state = true;
-  last_interrupt_time = 0;
+  max_step_interval = convert_distance_from_mm_to_steps(stepsPerRevolution, 2.75, lead_distance);
+  current_direction = 0;
+
+
+  // TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
+  // TMCdriver.toff(5);                 // Enables driver in software
+  // TMCdriver.rms_current(2500);       // Set motor RMS current
+  // TMCdriver.microsteps(1);            // Set microsteps to 1/2
+  // TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
+  // TMCdriver.en_spreadCycle(false);
+  // limitSwitchObj1.setDebounceTime(500);
+  // limitSwitchObj2.setDebounceTime(500);
   
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
+
 }
 
-const int STOP_SIGNAL = 42;
 
 
-void stop_testing(){
-    testing_state = false;
-}
+
+// void stop_testing(){
+//     testing_state = false;
+// }
 
 // void stop_testing_front(){
 //     //stepper1.stop();
@@ -97,6 +93,7 @@ void stop_testing(){
 *
 */
 
+
 const int MOVE_TO_START = 2;
 const int MOVE_X = 4;
 const int SET_CURRENT_POS = 6;
@@ -108,115 +105,132 @@ const int RESET_ARDUINO = 16;
 const int REATTACH_INTERUPT = 18;
 const int DEATTACH_INTERUPT = 20;
 const int RESET_TESTING_STATE = 22;
+const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;
+const int EXCEED_MAX_STEP_INTERVAL = 404;
+const int MOVED_X_AND_DID_NOT_PRESS_LIMITSWITCH = 200;
+const int OFF_SWTICH_AND_READY_FOR_NEXT_TEST = 43;
 
 void loop() {
+    limitSwitchObj.loop();
+    int limitSwitchObjState = limitSwitchObj.getState();
     
-    if (Serial.available() > 0){
-          count+=1;
+    if(limitSwitchObj.isPressed() && testing_state == true){
+        testing_state = false;
+        send_finish_signal(STOP_SIGNAL); 
+    }else if(limitSwitchObj.isPressed() && testing_state == false){
+        stepper1.move(current_direction*(-1)*max_step_interval);
+        while (stepper1.distanceToGo() != 0 || limitSwitchObj.isPressed()){
+          stepper1.run();
+        }
+        testing_state = true;
+        send_finish_signal(OFF_SWTICH_AND_READY_FOR_NEXT_TEST);
+    }else if(Serial.available() > 0){
+        count+=1;
 
-          String message = Serial.readStringUntil("\n");
-          Serial.flush();
-          
-          //String message = "4,32000,0";
-          int numValues = 3;
-          int message_arr[numValues];
-          parse_serial_input(message, numValues, message_arr); 
-          int command = message_arr[0];
+        String message = Serial.readStringUntil("\n");
+        Serial.flush();
+        
+        //String message = "4,32000,0";
+        int numValues = 3;
+        int message_arr[numValues];
+        parse_serial_input(message, numValues, message_arr); 
+        int command = message_arr[0];
 
-          switch (command) {
-            case MOVE_X:
-            {
-              //"command,distance_mm,direction"
-              float length_mm = (float) message_arr[1];
-              long direction = get_direction(message_arr[2]);
-              long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
-              //stepper1_current_position+= (int) steps;
+        switch (command) {
+          case MOVE_X:
+          {
+            //"command,distance_mm,direction"
+            float length_mm = (float) message_arr[1];
+            long direction = get_direction(message_arr[2]);
+            current_direction = direction;
+            long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
+            if(steps >= max_step_interval || steps <= (max_step_interval*(-1))){
+              send_finish_signal(EXCEED_MAX_STEP_INTERVAL);
+            }else{
               move_x_steps(steps);
-              if(testing_state == true){
-                send_finish_signal(steps);
-              }
-              else{
-                send_finish_signal(STOP_SIGNAL);
-              }
-              break;
-            }
-            case MOVE_TO_START:
-            {
-              //"command,#,#"
-              long steps_from_start = stepper1.currentPosition();
-              move_x_steps(-1*steps_from_start);
-              send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
-              break;
-            }
-            case SET_CURRENT_POS:
-            {
-              //"command,#,#" most likely = "signal,0,#"
-              long position = (long) message_arr[1];
-              stepper1.setCurrentPosition(position);
-              send_finish_signal(SET_CURRENT_POS);
-              break;
-            }
-            case SET_MAX_SPEED:
-            {
-              //"command,max_speed,#"
-              float max_speed = (float) message_arr[1];
-              stepper1.setMaxSpeed(max_speed);
-              send_finish_signal(SET_MAX_SPEED);
-              break;
-            }
-            case SET_ACCELERATION:
-            {
-              //"command,acceleration,#"
-              float acceleration = (float) message_arr[1];
-              stepper1.setAcceleration(acceleration);
-              send_finish_signal(SET_ACCELERATION);
-              break;
-            }
-            case SET_STEPS_PER_REVOLUTION:
-            {
-              //"command,max_speed,#"
-              float steps_per_rev = (float) message_arr[1];
-              stepsPerRevolution = steps_per_rev;
-              send_finish_signal(SET_STEPS_PER_REVOLUTION);
-              break;
-            }
-            case GET_CURRENT_POSITION:
-            {
-              //"command,#,#"
-              long current_position = stepper1.currentPosition();
-              int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
-              send_finish_signal(current_position_in_mm);
-              break;
-            }
-            case RESET_ARDUINO:
-            {
-              setup();
-              send_finish_signal(RESET_ARDUINO);
-              break;
-            }case RESET_TESTING_STATE:
-            {
-              testing_state = true;
-              send_finish_signal(RESET_TESTING_STATE);
-            }
-            case REATTACH_INTERUPT:
-            {
-              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);  
-              send_finish_signal(REATTACH_INTERUPT);
-              break;
-            }
-            case DEATTACH_INTERUPT:
-            {
-              detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-              send_finish_signal(DEATTACH_INTERUPT);
-              break;
-            }
-            default:
-            {
-              send_finish_signal(COMMAND_NOT_RECOGNIZED);
-              break;
-            }
-          }  
+              send_finish_signal(MOVE_X);
+            }              
+            break;
+          }
+          case MOVE_TO_START:
+          {
+            //"command,#,#"
+            long steps_from_start = stepper1.currentPosition();
+            move_x_steps(-1*steps_from_start);
+            send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
+            break;
+          }
+          case SET_CURRENT_POS:
+          {
+            //"command,#,#" most likely = "signal,0,#"
+            long position = (long) message_arr[1];
+            stepper1.setCurrentPosition(position);
+            send_finish_signal(SET_CURRENT_POS);
+            break;
+          }
+          case SET_MAX_SPEED:
+          {
+            //"command,max_speed,#"
+            float max_speed = (float) message_arr[1];
+            stepper1.setMaxSpeed(max_speed);
+            send_finish_signal(SET_MAX_SPEED);
+            break;
+          }
+          case SET_ACCELERATION:
+          {
+            //"command,acceleration,#"
+            float acceleration = (float) message_arr[1];
+            stepper1.setAcceleration(acceleration);
+            send_finish_signal(SET_ACCELERATION);
+            break;
+          }
+          case SET_STEPS_PER_REVOLUTION:
+          {
+            //"command,max_speed,#"
+            float steps_per_rev = (float) message_arr[1];
+            stepsPerRevolution = steps_per_rev;
+            send_finish_signal(SET_STEPS_PER_REVOLUTION);
+            break;
+          }
+          case GET_CURRENT_POSITION:
+          {
+            //"command,#,#"
+            long current_position = stepper1.currentPosition();
+            int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+            send_finish_signal(current_position_in_mm);
+            break;
+          }
+          case RESET_ARDUINO:
+          {
+            setup();
+            send_finish_signal(RESET_ARDUINO);
+            break;
+          }case RESET_TESTING_STATE:
+          {
+            testing_state = true;
+            send_finish_signal(RESET_TESTING_STATE);
+          }
+          // case REATTACH_INTERUPT:
+          // {
+          //   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);  
+          //   send_finish_signal(REATTACH_INTERUPT);
+          //   break;
+          // }
+          // case DEATTACH_INTERUPT:
+          // {
+          //   detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+          //   send_finish_signal(DEATTACH_INTERUPT);
+          //   break;
+          // }
+          default:
+          {
+            send_finish_signal(COMMAND_NOT_RECOGNIZED);
+            break;
+          }
+        }  
+    }else{
+        send_finish_signal(MOVED_X_AND_DID_NOT_PRESS_LIMITSWITCH);
     }
 }
 
@@ -246,13 +260,7 @@ void move_x_steps(long x){
   stepper1.move(x);
   //stepper1.runSpeedToPosition();
   while (stepper1.distanceToGo() != 0){
-      if(testing_state == true){
         stepper1.run();
-      }
-      else{
-        stepper1.stop();
-        break;
-      }
   }
 }
 

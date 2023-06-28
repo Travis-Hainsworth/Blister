@@ -542,8 +542,22 @@ end
 
 function ret_signal = move_x_mm(dis_mm, dir, s)
     MOVE_X = 4;
+    STOP_SIGNAL = 42;
+    OFF_SWTICH_AND_READY_FOR_NEXT_TEST = 43;
+    MOVED_X_AND_DID_NOT_PRESS_LIMITSWITCH = 200;
     serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
     ret_signal = serial_communication(s, serial_string);
+    % listen for stop signal and reset signal
+    waitfor(s, "NumBytesAvailable");
+    next_sig = custom_read(s);
+    if next_sig == STOP_SIGNAL
+        ret_signal = next_sig;
+        waitfor(s,"NumBytesAvailable"); 
+        reset_sig = custom_read(s);
+        assert(reset_sig == OFF_SWTICH_AND_READY_FOR_NEXT_TEST, "did not reset limti switch");
+    elseif next_sig == MOVED_X_AND_DID_NOT_PRESS_LIMITSWITCH
+        ret_signal = MOVED_X_AND_DID_NOT_PRESS_LIMITSWITCH;
+    end 
     flush(s);
 end
 
