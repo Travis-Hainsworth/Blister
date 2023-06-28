@@ -167,7 +167,7 @@ reset_testing_state(arudiuno_serial);
 distance_in = 19;
 distance_mm = floor(50);%floor(convlength([distance_in 0], 'in', 'm'));
 direction = 1;
-i = ;
+i = 0;
 while i ~= 42
     sig = move_x_mm(distance_mm, direction, arudiuno_serial);
     i = str2num(sig);

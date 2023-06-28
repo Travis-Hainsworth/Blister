@@ -41,7 +41,7 @@ void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
   
   stepper1.setMaxSpeed(1000); //pulse/steps per second
-  stepper1.setAcceleration(1000); //steps per second per second to accelerate
+  stepper1.setAcceleration(750); //steps per second per second to accelerate
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
