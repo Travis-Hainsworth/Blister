@@ -6,8 +6,8 @@
 
 
 //#define EN_PIN         GND      // Enable - RED
-#define DIR_PIN          5      // Direction - GREEN
-#define STEP_PIN         4      // Step - BLUE
+#define DIR_PIN          4      // Direction - GREEN
+#define STEP_PIN         5      // Step - BLUE
 #define SW_SCK           7      // Software Slave Clock (SCK) - YELLOW
 #define SW_TX            1      // SoftwareSerial receive pin - GREY
 #define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
@@ -23,15 +23,14 @@ SoftwareSerial SoftSerial(SW_RX, SW_TX);
 TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
 
 AccelStepper stepper1 (1, STEP_PIN, DIR_PIN);
-ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
+// ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
 ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
 
-float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
+float stepsPerRevolution = 200;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
-unsigned long interrupt_time;
-static unsigned long last_interrupt_time;
+volatile boolean primary;
 
 int stepper1_current_position;
 int count;
@@ -40,7 +39,7 @@ void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
   
   stepper1.setMaxSpeed(1000); //pulse/steps per second
-  stepper1.setAcceleration(750); //steps per second per second to accelerate
+  stepper1.setAcceleration(1000); //steps per second per second to accelerate
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
@@ -51,28 +50,34 @@ void setup() {
   TMCdriver.microsteps(1);            // Set microsteps to 1/2
   TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   TMCdriver.en_spreadCycle(false);
-  limitSwitchObj1.setDebounceTime(500);
+  // limitSwitchObj1.setDebounceTime(500);
   limitSwitchObj2.setDebounceTime(500);
   
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
+  //pinMode(LIMIT_SWITCH_PIN_2, OUTPUT);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_3), stop_testing, FALLING);
   // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_4), stop_testing, FALLING);
 
   stepper1_current_position = 0;
   count = 0;
   testing_state = true;
-  last_interrupt_time = 0;
+  //last_interrupt_time = 0;
   
 }
 
 const int STOP_SIGNAL = 42;
+unsigned long debounceDelay = 100;//ms
+volatile unsigned long lastDebounceTime;
 
 void stop_testing(){//_back(){
-    //stepper1.stop();
-    testing_state = false;
-    //send_finish_signal(STOP_SIGNAL);
-    //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
+    delayMicroseconds(20000);
+    int buttonState = digitalRead(LIMIT_SWITCH_PIN_2);
+    if (buttonState == LOW) {
+      stepper1.stop();
+      testing_state = false;
+      send_finish_signal(STOP_SIGNAL);
+    }
 }
 
 // void stop_testing_front(){
@@ -113,6 +118,8 @@ const int RESET_TESTING_STATE = 22;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
+
+
     
     if (Serial.available() > 0){
           count+=1;
@@ -135,12 +142,9 @@ void loop() {
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
               stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              if(testing_state == true){
-                send_finish_signal(steps);
-              }
-              else{
-                send_finish_signal(STOP_SIGNAL);
-              }
+              
+                send_finish_signal(MOVE_X);
+              
               break;
             }
             case MOVE_TO_START:
@@ -248,13 +252,9 @@ void move_x_steps(long x){
   stepper1.move(x);
   //stepper1.runSpeedToPosition();
   while (stepper1.distanceToGo() != 0){
-      if(testing_state == true){
+      
         stepper1.run();
-      }
-      else{
-        stepper1.stop();
-        break;
-      }
+    
   }
 }
 
