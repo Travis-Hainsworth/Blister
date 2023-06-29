@@ -163,7 +163,7 @@ clear all;
 %FUNCTION TO MOVE SENSORS TO A SPECIFIC DISTANCE THAT IS MEASURED IN MM, COULD PAIR WELL WITH GET CURRENT POSTIION FUNCTION 
 %reset_testing_state(arudiuno_serial);
 %reattach_interrupt(arudiuno_serial,0);
-enable = true;
+enable = 1;
 sig  = set_enable_switch(arudiuno_serial,enable);
 disp(sig);
 %%
@@ -174,19 +174,26 @@ i = 0;
 while i ~= 42
     sig = move_x_mm(distance_mm, direction, arudiuno_serial);
     i = str2num(sig);
+    disp("move x ret: ");
     disp(i);
+    disp("switch enabled: ");
+    switch_state = get_state_of_switch(arudiuno_serial);
+    disp(switch_state);
+    disp("testing state: ");
+    testing_state = get_testing_state(arudiuno_serial);
+    disp(testing_state);
 end
 %%
-enable = false;
-sig = set_enable_switch(arudiuno_serial,0);
+enable = 0;
+sig = set_enable_switch(arudiuno_serial,enable);
 disp(sig);
 %%
 %reset_arduino(arudiuno_serial);
 %1 = to the force gauges
 %0 = towards us
 %reset_testing_state(arudiuno_serial);
-sig = move_x_mm(500,0, arudiuno_serial);
-disp(sig);
+sig = move_x_mm(150,0, arudiuno_serial);
+disp(sig); 
 %%
 %FUNCTION TO GET CURRENT POSITION
 %"command,#,#"
@@ -211,13 +218,21 @@ RESET_ARDUINO = 16;
 sig = reset_arduino(arudiuno_serial);
 disp(sig); 
 
+%%
+disp("switch enabled: ");
+switch_state = get_state_of_switch(arudiuno_serial);
+disp(switch_state);
+disp("testing state: ");
+testing_state = get_testing_state(arudiuno_serial);
+disp(testing_state);
 
 
 
 
 
 
-% %% Testing file saving
+
+%% Testing file saving
 % [x_points1, ei_points] = get_EI_point(data_matrix_unloaded,data_matrix_loaded, 25.4);
 % [x_points2, gj_points] = get_GJ_points(data_matrix_unloaded,data_matrix_torsion, 25.4);
 % 
@@ -625,6 +640,7 @@ end
 function ret_signal = move_x_mm(dis_mm, dir, s)
     MOVE_X = 4;
     serial_string = strcat(num2str(MOVE_X),",",num2str(dis_mm),",",num2str(dir));
+    disp(serial_string);
     ret_signal = serial_communication(s, serial_string);
     flush(s);
 end
@@ -635,6 +651,24 @@ function ret_mm = get_distance_from_start(s)
     %ret_mm = serial_communication(s, serial_string);
     custom_write(s, serial_string);
     ret_mm = custom_read(s);
+    flush(s);
+end 
+
+function ret_state = get_state_of_switch(s)
+    GET_ENABLE_SWITCH = 24;
+    serial_string = strcat(num2str(GET_ENABLE_SWITCH),",0,1");
+    %ret_mm = serial_communication(s, serial_string);
+    custom_write(s, serial_string);
+    ret_state = custom_read(s);
+    flush(s);
+end 
+
+function ret_state = get_testing_state(s)
+    GET_TESTING_STATE = 26;
+    serial_string = strcat(num2str(GET_TESTING_STATE),",0,1");
+    %ret_mm = serial_communication(s, serial_string);
+    custom_write(s, serial_string);
+    ret_state = custom_read(s);
     flush(s);
 end 
 

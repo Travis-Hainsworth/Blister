@@ -30,8 +30,8 @@ ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 float stepsPerRevolution = 200;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
-volatile boolean testing_state;
-volatile boolean enable_switch;
+bool testing_state;
+bool enable_switch;
 
 int stepper1_current_position;
 int count;
@@ -62,23 +62,10 @@ void setup() {
   // stepper1_current_position = 0;
   count = 0;
   testing_state = true;
-  enable_switch = false;
+  enable_switch = true;//false;//
   // last_interrupt_time = 0;
   
 }
-
-// void stop_testing(){
-//     //testing_state = false;
-//     stepper1.stop();
-//     send_finish_signal(STOP_SIGNAL);
-// }
-
-// void stop_testing_front(){
-//     //stepper1.stop();
-//     testing_state = false;
-//     //send_finish_signal(STOP_SIGNAL);
-//     //detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-// }
 
 /*
 * ALL CODE BELLOW CONCERNS THE LOOP LOGIC OF RUNNIGN A TEST  
@@ -97,6 +84,11 @@ void setup() {
 *
 */
 
+void types(String a) { Serial.println("it's a String"); }
+void types(int a) { Serial.println("it's an int"); }
+void types(char *a) { Serial.println("it's a char*"); }
+void types(float a) { Serial.println("it's a float"); }
+void types(bool a) { Serial.println("it's a bool"); }
 
 const int MOVE_TO_START = 2;
 const int MOVE_X = 4;
@@ -106,32 +98,47 @@ const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
 const int GET_CURRENT_POSITION = 14;
 const int RESET_ARDUINO = 16;
-const int REATTACH_INTERUPT = 18;
-const int DEATTACH_INTERUPT = 20;
+// const int REATTACH_INTERUPT = 18;
+// const int DEATTACH_INTERUPT = 20;
 const int SET_ENABLE_SWITCH = 22;
+const int GET_ENABLE_SWITCH = 24;
+const int GET_TESTING_STATE = 26;
 const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
+
 void loop() {
+
     limitSwitchObj.loop();
-    if(enable_switch){
+    if(enable_switch == true){
       testing_state = limitSwitchObj.getState();
+      Serial.print("current testing state: ");
+      Serial.println(testing_state);
     }
-    if(testing_state == false){
+    if(enable_switch == true && testing_state == false){
+          Serial.println("switch enabled, and testing state is false so on limit switch");
           stepper1.stop();
+          Serial.print("stop sig returned: ");
           send_finish_signal(STOP_SIGNAL);
-          long steps_from_start = stepper1.currentPosition();
-          move_x_steps(-1*steps_from_start);
-         // send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
-         send_finish_signal(STOP_SIGNAL);
+          //long steps_from_start = stepper1.currentPosition();
+          //move_x_steps(-1*steps_from_start);
+          // send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
+          //  rsend_finish_signal(STOP_SIGNAL);
+          enable_switch = false;
           testing_state = true;
+          delay(1000);
+          exit(1);
           //Serial.flush();
-    }else if (Serial.available() > 0){
+    }else {//if (Serial.available() > 0){
           count+=1;
-          String message = Serial.readStringUntil("\n");
-          Serial.flush();
+          //String message = Serial.readStringUntil("\n");
+          //Serial.flush();
           
-          //String message = "4,32000,0";
+          // String message = "10,750,0"; // working
+          // String message = "24,0,0"; //  working
+          // String message = "22,1,0"; // working
+          String message = "4,25,0"; // working
+          // Serial.println(message);
           int numValues = 3;
           int message_arr[numValues];
           parse_serial_input(message, numValues, message_arr); 
@@ -142,8 +149,11 @@ void loop() {
             {
               //"command,distance_mm,direction"
               float length_mm = (float) message_arr[1];
+              // Serial.println(length_mm);
               long direction = get_direction(message_arr[2]);
+              // Serial.println(direction);
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
+
               //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
               //if(testing_state == true){
@@ -181,6 +191,10 @@ void loop() {
             case SET_ACCELERATION:
             {
               //"command,acceleration,#"
+              // Serial.println("set acceleration");
+              // Serial.println(message_arr[0]);
+              // Serial.println(message_arr[1]);
+              // Serial.println(message_arr[2]);
               float acceleration = (float) message_arr[1];
               stepper1.setAcceleration(acceleration);
               send_finish_signal(SET_ACCELERATION);
@@ -202,6 +216,22 @@ void loop() {
               send_finish_signal(current_position_in_mm);
               break;
             }
+            case GET_ENABLE_SWITCH:
+            {
+              //"command,#,#"
+              // Serial.println(message_arr[1]);
+              // Serial.println(message_arr[2]);
+              send_finish_signal(enable_switch);
+              break;
+            }
+            case GET_TESTING_STATE:
+            {
+              //"command,#,#"
+              // long current_position = stepper1.currentPosition();
+              // int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+              send_finish_signal(testing_state);
+              break;
+            }
             case RESET_ARDUINO:
             {
               setup();
@@ -209,8 +239,15 @@ void loop() {
               break;
             }case SET_ENABLE_SWITCH:
             {
-              enable_switch = message[1];
-              send_finish_signal(SET_ENABLE_SWITCH);
+              // Serial.println(message_arr[1]);
+              // types(message_arr[1]);
+              int state = message_arr[1];
+              if(state == 0){
+                enable_switch = false;
+              }else if(state == 1){
+                enable_switch = true;
+              }
+              send_finish_signal(state);//SET_ENABLE_SWITCH);
               break;
             }
             // case REATTACH_INTERUPT:
@@ -232,10 +269,11 @@ void loop() {
             }
           }  
     }
+    Serial.println("====================================");
 }
 
 void send_finish_signal(int sig){
-    Serial.flush();
+    //Serial.flush();
     Serial.println(sig);
 }
 
@@ -257,16 +295,21 @@ int convert_distance_from_steps_to_mm(float spr, float length_steps, float lead_
 }
 
 void move_x_steps(long x){
+  if(enable_switch == true){
+      testing_state = limitSwitchObj.getState();
+      Serial.println('move x checking testing state')
+      Serial.print("current testing state: ");
+      Serial.println(testing_state);
+  }
   stepper1.move(x);
-  //stepper1.runSpeedToPosition();
   while (stepper1.distanceToGo() != 0){
-      //if(testing_state == true){
-        stepper1.run();
-     // }
-    //  else{
-    //     stepper1.stop();
-    //     break;
-    //   }
+    if(enable_switch == true && testing_state == false){
+      Serial.print("IN MOVE X AND SHOULD STOP, current testing state: ");
+      Serial.println(testing_state);
+      stepper1.stop();
+      break;
+    }
+    stepper1.run();
   }
 }
 
