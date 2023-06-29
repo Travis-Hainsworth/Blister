@@ -1,4 +1,3 @@
-from scipy import interpolate
 import pandas as pd
 import numpy as np
 from os import listdir
@@ -18,11 +17,11 @@ def getMocapData(folder_dir):
     combinedCSVs = []
     files = listdir(folder_dir)
     files.sort()
-
+    weight = []
     for file in files:
         path = folder_dir + "/" + file.title()
         DF = pd.read_csv(path, header=2, low_memory=False)
-
+        weight.append(str(path).split('_')[5].split('Klbf')[0][-4:])
         DF = DF.drop(index=0)
         DF = DF.drop(index=1)
 
@@ -34,7 +33,7 @@ def getMocapData(folder_dir):
 
         combinedCSVs.append(DF)
 
-    return combinedCSVs
+    return combinedCSVs, weight
 
 
 def fixMocapDF(DF):
@@ -64,9 +63,8 @@ def fixMocapDF(DF):
     return DF
 
 
-
 """"
-Mocap data processsing function
+Mocap data processing function
 
 Input:
 file_path = the path to the .csv file containing the data collected by the mocap system
@@ -84,7 +82,7 @@ def clean_mocap_data(list_df):
     clean_list_df = []
     # Find the MTS head column
     for df in list_df:
-        # Getting all of the y values of each marker and finding the max
+        # Getting all the y values of each marker and finding the max
         firstRow = df.iloc[0]
         YVals = firstRow[2::3]
 

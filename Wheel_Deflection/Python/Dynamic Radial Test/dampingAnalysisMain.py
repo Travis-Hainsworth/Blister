@@ -1,55 +1,55 @@
 from math import ceil
-
 from readInDataFiles import *
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft
 
-""""
-Main function for getting, cleaning, and graphing mocap data from the
-dynamic drop test.
 
-in: filePathOptitrack -> the directory where all csvs live for one specific
-wheel's mocap data.
-
-return (tuple): (list of cleaned mocap dataframes, list of fft dataframes)
-
-graphs: two for each csv 
-1. Displacement (y) over time of the rim. Calculated between the rim top and the rim stand (could be updated)
-2. Single Sided Amplitude Spectrum of Displacement 
-
-DOES NOT CALCULATE SETTLING TIME YET
-
-"""
-def dataProcessingMain(filePathOptitrack):
-
+def dataProcessingMain(file_path, plot=False):
     # Import mocap data. Make sure every file you want to look at is in the folder you input.
     # Don't remove the "r" before the file path.
-    list_mocap_data = getMocapData(filePathOptitrack)
+
+    list_mocap_data, weight = getMocapData(file_path)
     list_mocap_data = clean_mocap_data(list_mocap_data)
-
     listFFTRes = []
+    max_defs = []
+    # fig, axs = plt.subplots(len(list_mocap_data), 2, figsize=(16, 8 * len(list_mocap_data)))
 
-    for df in list_mocap_data:
+    for i, df in enumerate(list_mocap_data):
         # Plot Y displacement over time
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(df['Time (sec)'], df['Displacementy'])
+        # axs[i, 0].plot(df['Time (sec)'], df['Displacementy'])
         indexOfMaxDef = df['Displacementy'].argmax()
         timeStamp = df['Time (sec)'][indexOfMaxDef]
         maxDef = df['Displacementy'][indexOfMaxDef]
         maxDef = round(maxDef, 4)
         dispString = "Max Deflection = " + str(maxDef)
-        plt.text(timeStamp, maxDef, dispString)
-        plt.ylabel('Displacement (mm)')
-        plt.xlabel('Time (sec)')
-        plt.title('Dynamic Drop Displacement Over Time')
-        ax.set_xticks(np.linspace(0, max(df['Time (sec)']), 10))
-        plt.show()
+        # axs[i, 0].text(timeStamp, maxDef, dispString)
+        # axs[i, 0].scatter(timeStamp, maxDef, color='red', label=str(maxDef))
+        # axs[i, 0].set_ylabel('Displacement (mm)')
+        # axs[i, 0].set_xlabel('Time (sec)')
+        # axs[i, 0].set_title('Dynamic Drop Displacement Over Time')
+        # axs[i, 0].set_xticks(np.linspace(0, max(df['Time (sec)']), 10))
+        # axs[i, 0].legend()
+
         FFTRes = fftAnalysis(df)
         listFFTRes.append(FFTRes)
+        max_defs.append(maxDef)
 
-    return (list_mocap_data, listFFTRes, settlingTime)
+        # Plot FFT analysis
+        # axs[i, 1].plot(FFTRes['Frequency (Hz)'], FFTRes['|P1(f)|'])
+        # axs[i, 1].set_title('Single-Sided Amplitude Spectrum of Displacement(t)')
+        # axs[i, 1].set_xlabel('f (Hz)')
+        # axs[i, 1].set_ylabel('|P1(f)|')
+
+    # plt.tight_layout()
+    # plt.subplots_adjust(wspace=.3, hspace=.5)
+    # if plot:
+    #     plt.show()
+    # plt.clf()
+
+    return list_mocap_data, listFFTRes, max_defs, weight
+
 
 def fftAnalysis(df):
     # FFT analysis, finds natural frequency of rim
@@ -60,34 +60,27 @@ def fftAnalysis(df):
     lenData = len(disp)
     L = lenData - k + 1
 
-    # fft(realDisp(k+1:end,2))
     fftArr = np.array(disp[k + 1:])
     Y = fft(fftArr)
 
-    # P1 = P2(1:L/2+1);
     P2 = abs(Y / L)
     P1end = ceil(((L / 2) + 1))
     P1 = P2[0:P1end]
     P1[2:(P1end - 1)] = 2 * P1[2:(P1end - 1)]
 
-    # f = Fs*(0:(L/2))/L;
-    fArr = list(range(0, (ceil(L / 2)+1)))
+    fArr = list(range(0, (ceil(L / 2) + 1)))
     fArr = fArr / L
     fArr = fArr * 500
     fArr = fArr[1:]
     P1 = P1[1:]
-    print(len(P1))
-    print(len(fArr))
+
     fftDF = pd.DataFrame()
     fftDF['|P1(f)|'] = P1
     fftDF['Frequency (Hz)'] = fArr
 
-    plt.clf()
-    plt.plot(fArr, P1)
-    plt.title('Single-Sided Amplitude Spectrum of Displacement(t)')
-    plt.xlabel('f (Hz)')
-    plt.ylabel('|P1(f)|')
-    plt.show()
     return fftDF
 
-#(mocap, fftData) = dataProcessingMain(r"/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/Dynamic Radial/Stans Flow 6-26-23 Tire On/Optitrack Data")
+
+def onclick(event):
+    x, y = event.xdata, event.ydata
+    print(f"Clicked at ({x}, {y})")
