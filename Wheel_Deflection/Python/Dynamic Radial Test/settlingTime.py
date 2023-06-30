@@ -1,14 +1,21 @@
-def find_settling_time(fftData, threshold):
-    settling_times = []
-    counter = 0
+from matplotlib import pyplot as plt
+from scipy import signal
 
-    for df in fftData:
-        counter += 1
-        # Find the frequency at which the amplitude drops below the threshold
-        settling_freq = df.loc[df['|P1(f)|'] < threshold, 'Frequency (Hz)'].iloc[0]
 
-        # Calculate the settling time as the inverse of the settling frequency
-        settling_time = 1 / settling_freq
-        settling_times.append((counter, settling_time/2))
+def find_settling_time(fftData):
+    for fft in fftData:
+        fig, ax = plt.subplots(figsize=(12, 6))
+        plt.subplot(121)
+        plt.plot(fft['Frequency (Hz)'], fft['|P1(f)|'])
+        plt.xlabel('f (Hz)')
+        plt.ylabel('|P1(f)|')
+        plt.title('Not Welch')
 
-    return settling_times
+        plt.subplot(122)
+        plt.title('Welch')
+        f, Pxx_den = signal.welch(fft['|P1(f)|'], fs=512, nperseg=256)
+        plt.semilogy(f, Pxx_den)
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('|P1(f)|')
+        plt.show()
+

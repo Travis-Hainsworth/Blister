@@ -21,7 +21,7 @@ def getMocapData(folder_dir):
     for file in files:
         path = folder_dir + "/" + file.title()
         DF = pd.read_csv(path, header=2, low_memory=False)
-        weight.append(str(path).split('_')[5].split('Klbf')[0][-4:])
+        weight.append(str(path).split('_')[7].split('Klbf')[0][-4:])
         DF = DF.drop(index=0)
         DF = DF.drop(index=1)
 
@@ -32,7 +32,6 @@ def getMocapData(folder_dir):
         DF.set_index('Frame', inplace=True)
 
         combinedCSVs.append(DF)
-
     return combinedCSVs, weight
 
 
@@ -84,7 +83,7 @@ def clean_mocap_data(list_df):
     for df in list_df:
         # Getting all the y values of each marker and finding the max
         firstRow = df.iloc[0]
-        YVals = firstRow[2::3]
+        YVals = firstRow[2::3].astype(float)
 
         maxY = max(YVals)
 
