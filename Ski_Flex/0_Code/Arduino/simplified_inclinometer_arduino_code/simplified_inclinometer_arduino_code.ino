@@ -13,24 +13,23 @@
 // #define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
 
 // #define EN_PIN_R           4      // Enable
-#define DIR_PIN_R          5      // Direction
-#define STEP_PIN_R         6      // Step
+#define DIR_PIN_R          8      // Direction
+#define STEP_PIN_R         9      // Step
 // #define SW_SCK_R           7      // Software Slave Clock (SCK)
 // #define SW_TX_R            A2      // SoftwareSerial receive pi
 // #define SW_RX_R            A3      // SoftwareSerial transmit pin
 
 // #define EN_PIN_L           8      // Enable
-#define DIR_PIN_L          9      // Direction
-#define STEP_PIN_L         10      // Step
+#define DIR_PIN_L         11      // Direction
+#define STEP_PIN_L         12      // Step
 // #define SW_SCK_L           11     // Software Slave Clock (SCK)
 // #define SW_TX_L            A0      // SoftwareSerial receive pin
 // #define SW_RX_L            A1      // SoftwareSerial transmit pin
 
-#define DRIVER_ADDRESS_INCLINOMTER   0b00   // TMC2209 Driver address according to MS1 and MS2
-#define DRIVER_ADDRESS_R   0b01   // TMC2209 Driver address according to MS1 and MS2
-#define DRIVER_ADDRESS_L  0b10   //figure this out ?????????????????????????????????
-#define R_SENSE          0.11f  // SilentStepStick series use 0.11 ...and so does my fysetc TMC2209 (?)
-
+// #define DRIVER_ADDRESS_INCLINOMTER   0b00   // TMC2209 Driver address according to MS1 and MS2
+// #define DRIVER_ADDRESS_R   0b01   // TMC2209 Driver address according to MS1 and MS2
+// #define DRIVER_ADDRESS_L  0b10   //figure this out ?????????????????????????????????
+// #define R_SENSE          0.11f  // SilentStepStick series use 0.11 ...and so does my fysetc TMC2209 (?)
 
 // #define LIMIT_SWITCH_PIN_1 2
 #define LIMIT_SWITCH_PIN_2 3
@@ -38,10 +37,10 @@
 // SoftwareSerial SoftSerial(SW_RX, SW_TX);
 // TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS_INCLINOMETER);
 
-AccelStepper inclinometer_stepper (1, STEP_PIN, DIR_PIN);
+AccelStepper inclinometer_stepper (AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 AccelStepper left_stepper (AccelStepper::DRIVER, STEP_PIN_L, DIR_PIN_L);
 AccelStepper right_stepper (AccelStepper::DRIVER, STEP_PIN_R, DIR_PIN_R);
-MultiStepper steppers;
+MultiStepper steppers; 
 
 ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
@@ -142,6 +141,7 @@ const int RESET_ARDUINO = 16;
 // const int DEATTACH_INTERUPT = 20;
 // const int SET_ENABLE_SWITCH = 22;
 // const int GET_ENABLE_SWITCH = 24;
+const int MOVE_FORCE_GAUGES = 24;
 const int GET_TESTING_STATE = 26;
 const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;

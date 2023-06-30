@@ -1,4 +1,4 @@
-%%BELLOW
+ %%BELLOW
 %THE CODE BELOW IS TO TEST THAT SERIAL COMMUNCATION BETWEEN MATLAB AND
 %ARDUINO WILL WORK WITH THE LONGER MESAAGES THAT NEED TO BE PARSED
 % /*
@@ -77,7 +77,7 @@ force_gage1_serial = serialport(force_gage1_port, 9600);
 force_gage2_serial = serialport(force_gage2_port, 9600);
 
 [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_front_serial);
-tollerance_angel = .1;
+tollerance_angel = .01;
 
 while ~(rollFront < tollerance_angel && rollFront > -tollerance_angel)
     message = make_message(int2str(MOVE_BOTH_FORCE_GAUGES),actual_force_left, desired_force, precision);
