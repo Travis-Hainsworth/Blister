@@ -47,7 +47,7 @@ temp_save_single_test(data_matrix_unloaded, "Unloaded");
 %%
 sig = reset_testing_state(arudiuno_serial);
 disp(sig);
-sig = return_to_start(arudiuno_serial);
+sig = return_to_start(arudiuno_serial); 
 disp(sig);
 %%
 %in case return to stat fails
