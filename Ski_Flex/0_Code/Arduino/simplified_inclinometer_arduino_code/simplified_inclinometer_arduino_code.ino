@@ -13,11 +13,8 @@
 // #define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
 #define DRIVER_ADDRESS   0b00   // TMC2209 Driver address according to MS1 and MS2
 #define R_SENSE          0.11f  // SilentStepStick series use 0.11 ...and so does my fysetc TMC2209 (?)
-#define LIMIT_SWITCH_PIN_1 2
+// #define LIMIT_SWITCH_PIN_1 2
 #define LIMIT_SWITCH_PIN_2 3
-// #define LIMIT_SWITCH_PIN_3 4
-// #define LIMIT_SWITCH_PIN_4 5
-
 
 // SoftwareSerial SoftSerial(SW_RX, SW_TX);
 // TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS);
@@ -30,17 +27,14 @@ ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 float stepsPerRevolution = 200;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
-bool testing_state;
-bool enable_switch;
-
-int stepper1_current_position;
+volatile bool testing_state;
 int count;
 
 void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
   
   stepper1.setMaxSpeed(1000); //pulse/steps per second
-  stepper1.setAcceleration(750); //steps per second per second to accelerate
+  stepper1.setAcceleration(1000); //steps per second per second to accelerate
   stepper1.setCurrentPosition(0);
   stepper1.setMinPulseWidth(30);
 
@@ -51,22 +45,25 @@ void setup() {
   // TMCdriver.microsteps(1);            // Set microsteps to 1/2
   // TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   // TMCdriver.en_spreadCycle(false);
-  
-  //limitSwitchObj1.setDebounceTime(500);
-  //limitSwitchObj2.setDebounceTime(500);
-  
-  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, CHANGE); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
-  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, CHANGE);
 
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), stop_testing, RISING); //digitalPinToInterrupt(LIMIT_SWITCH_PIN)
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
 
-  // stepper1_current_position = 0;
   count = 0;
   testing_state = true;
-  enable_switch = true;//false;//
-  // last_interrupt_time = 0;
-  
 }
 
+const int STOP_SIGNAL = 42;
+
+void stop_testing(){
+    delayMicroseconds(20000);
+    int buttonState = digitalRead(LIMIT_SWITCH_PIN_2);
+    if (buttonState == LOW) {
+      stepper1.stop();
+      //testing_state = false;
+      send_finish_signal(STOP_SIGNAL);
+    }
+}
 /*
 * ALL CODE BELLOW CONCERNS THE LOOP LOGIC OF RUNNIGN A TEST  
 * ALSO THIS HAS SOME COMMANDS AND CAN EXPAND NEW COMMANDS FOR OTHER PROCEDURES
@@ -106,39 +103,18 @@ const int GET_TESTING_STATE = 26;
 const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
-
 void loop() {
-
     limitSwitchObj.loop();
-    if(enable_switch == true){
-      testing_state = limitSwitchObj.getState();
-      Serial.print("current testing state: ");
-      Serial.println(testing_state);
-    }
-    if(enable_switch == true && testing_state == false){
-          Serial.println("switch enabled, and testing state is false so on limit switch");
-          stepper1.stop();
-          Serial.print("stop sig returned: ");
-          send_finish_signal(STOP_SIGNAL);
-          //long steps_from_start = stepper1.currentPosition();
-          //move_x_steps(-1*steps_from_start);
-          // send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
-          //  rsend_finish_signal(STOP_SIGNAL);
-          enable_switch = false;
-          testing_state = true;
-          delay(1000);
-          exit(1);
-          //Serial.flush();
-    }else {//if (Serial.available() > 0){
+    if (Serial.available() > 0){
           count+=1;
-          //String message = Serial.readStringUntil("\n");
-          //Serial.flush();
+          String message = Serial.readStringUntil("\n");
+          Serial.flush();
           
           // String message = "10,750,0"; // working
           // String message = "24,0,0"; //  working
           // String message = "22,1,0"; // working
-          String message = "4,25,0"; // working
-          // Serial.println(message);
+          // String message = "4,25,0"; // working
+          
           int numValues = 3;
           int message_arr[numValues];
           parse_serial_input(message, numValues, message_arr); 
@@ -156,12 +132,7 @@ void loop() {
 
               //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              //if(testing_state == true){
               send_finish_signal(MOVE_X);
-              //}
-              // else{
-              //   send_finish_signal(STOP_SIGNAL);
-              // }
               break;
             }
             case MOVE_TO_START:
@@ -250,18 +221,6 @@ void loop() {
               send_finish_signal(state);//SET_ENABLE_SWITCH);
               break;
             }
-            // case REATTACH_INTERUPT:
-            // {
-            //   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);  
-            //   send_finish_signal(REATTACH_INTERUPT);
-            //   break;
-            // }
-            // case DEATTACH_INTERUPT:
-            // {
-            //   detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-            //   send_finish_signal(DEATTACH_INTERUPT);
-            //   break;
-            // }
             default:
             {
               send_finish_signal(COMMAND_NOT_RECOGNIZED);
@@ -269,11 +228,10 @@ void loop() {
             }
           }  
     }
-    Serial.println("====================================");
 }
 
 void send_finish_signal(int sig){
-    //Serial.flush();
+    Serial.flush();
     Serial.println(sig);
 }
 
@@ -303,13 +261,7 @@ void move_x_steps(long x){
   }
   stepper1.move(x);
   while (stepper1.distanceToGo() != 0){
-    if(enable_switch == true && testing_state == false){
-      Serial.print("IN MOVE X AND SHOULD STOP, current testing state: ");
-      Serial.println(testing_state);
-      stepper1.stop();
-      break;
-    }
-    stepper1.run();
+        stepper1.run();
   }
 }
 
