@@ -1,12 +1,13 @@
 #include <AccelStepper.h>
+#include <MultiStepper.h>
 #include <ezButton.h>
 #include <SoftwareSerial.h>
 #include <TMCStepper.h>
 
 
 //#define EN_PIN         GND      // Enable - RED
-#define DIR_PIN          5      // Direction - GREEN
-#define STEP_PIN         4      // Step - BLUE
+#define DIR_PIN          4      // Direction - GREEN
+#define STEP_PIN         5      // Step - BLUE
 // #define SW_SCK           7      // Software Slave Clock (SCK) - YELLOW
 // #define SW_TX            1      // SoftwareSerial receive pin - GREY
 // #define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
@@ -31,45 +32,40 @@
 #define R_SENSE          0.11f  // SilentStepStick series use 0.11 ...and so does my fysetc TMC2209 (?)
 
 
-#define LIMIT_SWITCH_PIN_1 2
+// #define LIMIT_SWITCH_PIN_1 2
 #define LIMIT_SWITCH_PIN_2 3
-// #define LIMIT_SWITCH_PIN_3 4
-// #define LIMIT_SWITCH_PIN_4 5
 
 // SoftwareSerial SoftSerial(SW_RX, SW_TX);
 // TMC2209Stepper TMCdriver(&SoftSerial, R_SENSE, DRIVER_ADDRESS_INCLINOMETER);
 
 AccelStepper inclinometer_stepper (1, STEP_PIN, DIR_PIN);
-
 AccelStepper left_stepper (AccelStepper::DRIVER, STEP_PIN_L, DIR_PIN_L);
-// int left_steps;
-// int unloaded_left_steps;
 AccelStepper right_stepper (AccelStepper::DRIVER, STEP_PIN_R, DIR_PIN_R);
-// int right_steps; //number of steps from complete rest (might be a load downward)
-// int unloaded_right_steps;//number of steps from unloaded rpofile of ski to the loaded state.
-//ezButton limitSwitchObj(LIMIT_SWITCH_PIN);
 MultiStepper steppers;
 
-ezButton limitSwitchObj1(LIMIT_SWITCH_PIN_1);
-ezButton limitSwitchObj2(LIMIT_SWITCH_PIN_2);
+ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
-float stepsPerRevolution = 200*8;   // change this to fit the number of steps per revolution
+float stepsPerRevolution = 200;   // change this to fit the number of steps per revolution
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
-unsigned long interrupt_time;
-static unsigned long last_interrupt_time;
-
 int count;
 
 void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
-  
+
   inclinometer_stepper.setMaxSpeed(1000); //pulse/steps per second
-  inclinometer_stepper.setAcceleration(750); //steps per second per second to accelerate
+  inclinometer_stepper.setAcceleration(1000); //steps per second per second to accelerate
   inclinometer_stepper.setCurrentPosition(0);
   inclinometer_stepper.setMinPulseWidth(30);
 
+  limitSwitchObj.setDebounceTime(200);
+  // TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
+  // TMCdriver.toff(5);                 // Enables driver in software
+  // TMCdriver.rms_current(2500);       // Set motor RMS current
+  // TMCdriver.microsteps(1);            // Set microsteps to 1/2
+  // TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
+  // TMCdriver.en_spreadCycle(false);
 
   left_stepper.setMaxSpeed(1000); //pulse/steps per second
   left_stepper.setAcceleration(500.0); //steps per second per second to accelerate
@@ -90,10 +86,7 @@ void setup() {
   // TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   // TMCdriver.en_spreadCycle(false);
   
-  limitSwitchObj1.setDebounceTime(500);
-  limitSwitchObj2.setDebounceTime(500);
-  
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, RISING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
 
   steppers.addStepper(left_stepper);
   steppers.addStepper(right_stepper);
@@ -105,7 +98,13 @@ void setup() {
 const int STOP_SIGNAL = 42;
 
 void stop_testing(){
-    testing_state = false;
+    delayMicroseconds(20000);
+    int buttonState = digitalRead(LIMIT_SWITCH_PIN_2);
+    if (buttonState == LOW) {
+      stepper1.stop();
+      //testing_state = false;
+      send_finish_signal(STOP_SIGNAL);
+    }
 }
 
 /*
@@ -125,6 +124,12 @@ void stop_testing(){
 *
 */
 
+void types(String a) { Serial.println("it's a String"); }
+void types(int a) { Serial.println("it's an int"); }
+void types(char *a) { Serial.println("it's a char*"); }
+void types(float a) { Serial.println("it's a float"); }
+void types(bool a) { Serial.println("it's a bool"); }
+
 const int MOVE_TO_START = 2;
 const int MOVE_X = 4;
 const int SET_CURRENT_POS = 6;
@@ -133,19 +138,25 @@ const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
 const int GET_CURRENT_POSITION = 14;
 const int RESET_ARDUINO = 16;
-const int REATTACH_INTERUPT = 18;
-const int DEATTACH_INTERUPT = 20;
-const int RESET_TESTING_STATE = 22;
-const int MOVE_FORCE_GAUGES = 24;
+// const int REATTACH_INTERUPT = 18;
+// const int DEATTACH_INTERUPT = 20;
+// const int SET_ENABLE_SWITCH = 22;
+// const int GET_ENABLE_SWITCH = 24;
+const int GET_TESTING_STATE = 26;
+const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
-    
+    limitSwitchObj.loop();
     if (Serial.available() > 0){
           count+=1;
-
           String message = Serial.readStringUntil("\n");
           Serial.flush();
+          
+          // String message = "10,750,0"; // working
+          // String message = "24,0,0"; //  working
+          // String message = "22,1,0"; // working
+          // String message = "4,25,0"; // working
 
           int numValues = 3;
           int message_arr[numValues];
@@ -157,15 +168,13 @@ void loop() {
             {
               //"command,distance_mm,direction"
               float length_mm = (float) message_arr[1];
+              // Serial.println(length_mm);
               long direction = get_direction(message_arr[2]);
+              // Serial.println(direction);
               long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
+              //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              if(testing_state == true){
-                send_finish_signal(steps);
-              }
-              else{
-                send_finish_signal(STOP_SIGNAL);
-              }
+              send_finish_signal(MOVE_X);
               break;
             }
             case MOVE_FORCE_GAUGES:
@@ -225,6 +234,10 @@ void loop() {
             case SET_ACCELERATION:
             {
               //"command,acceleration,#"
+              // Serial.println("set acceleration");
+              // Serial.println(message_arr[0]);
+              // Serial.println(message_arr[1]);
+              // Serial.println(message_arr[2]);
               float acceleration = (float) message_arr[1];
               inclinometer_stepper.setAcceleration(acceleration);
               send_finish_signal(SET_ACCELERATION);
@@ -246,26 +259,18 @@ void loop() {
               send_finish_signal(current_position_in_mm);
               break;
             }
+            case GET_TESTING_STATE:
+            {
+              //"command,#,#"
+              // long current_position = stepper1.currentPosition();
+              // int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+              send_finish_signal(testing_state);
+              break;
+            }
             case RESET_ARDUINO:
             {
               setup();
               send_finish_signal(RESET_ARDUINO);
-              break;
-            }case RESET_TESTING_STATE:
-            {
-              testing_state = true;
-              send_finish_signal(RESET_TESTING_STATE);
-            }
-            case REATTACH_INTERUPT:
-            {
-              attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);  
-              send_finish_signal(REATTACH_INTERUPT);
-              break;
-            }
-            case DEATTACH_INTERUPT:
-            {
-              detachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2));
-              send_finish_signal(DEATTACH_INTERUPT);
               break;
             }
             default:
@@ -300,16 +305,9 @@ int convert_distance_from_steps_to_mm(float spr, float length_steps, float lead_
 }
 
 void move_x_steps(long x){
-  inclinometer_stepper.move(x);
-  //inclinometer_stepper.runSpeedToPosition();
-  while (inclinometer_stepper.distanceToGo() != 0){
-      if(testing_state == true){
-        inclinometer_stepper.run();
-      }
-      else{
-        inclinometer_stepper.stop();
-        break;
-      }
+  stepper1.move(x);
+  while (stepper1.distanceToGo() != 0){
+        stepper1.run();
   }
 }
 
