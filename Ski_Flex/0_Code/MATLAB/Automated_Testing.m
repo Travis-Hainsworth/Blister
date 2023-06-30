@@ -11,24 +11,25 @@ directory_name = strcat(manufacturer, model_name, year, model_length_cm);
 test_interval_mm = 50;       % Input the desired distance between data points in mm (multiples of 5 work best)
 direction = 1;
 
-global arudiuno_port inclinometer_port_front inclinometer_port_back force_gage1_port force_gage2_port;
-global arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+global ardiuno_port inclinometer_port_front inclinometer_port_back force_gage1_port force_gage2_port;
+global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
 global ei_dtheta ei_moment ei_displacment gj_dtheta gj_moment gj_displacment ei_distance_from_tip;
 
 % Serial USB connections
-arudiuno_port = 'COM3';     % write in arduino port
+ardiuno_port = 'COM16';     % write in arduino port
 inclinometer_port_front = 'COM9';  % write in front inclometer port
 inclinometer_port_back = 'COM14';  % write in back inclometer port
 force_gage1_port = 'COM8';   % write in loadcell1 port
 force_gage2_port = 'COM7';   % write in loadcell2 port
 
-arudiuno_serial = serialport(arudiuno_port, 115200);
+ardiuno_serial = serialport(ardiuno_port, 115200);
+%%
 inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
 inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 force_gage1_serial = serialport(force_gage1_port, 9600);
 force_gage2_serial = serialport(force_gage2_port, 9600);
 %%
-arudiuno_serial = serialport(arudiuno_port, 115200);
+ardiuno_serial = serialport(ardiuno_port, 115200);
 %%
 % adjust for unloaded test
 % run unloaded test
@@ -146,8 +147,9 @@ disp(sig);
 %%
 %in case return to stat fails
 %reset_testing_state(arudiuno_serial);
-sig = move_x_mm(500,0, arudiuno_serial);
+sig = move_x_mm(500,1, ardiuno_serial);
 disp(sig);
+%%
 reset_testing_state(arudiuno_serial);
 position = 0;
 sig = set_current_position(position,arudiuno_serial);
@@ -198,29 +200,61 @@ clear all;
 distance_in = 19;
 distance_mm = floor(25);%floor(convlength([distance_in 0], 'in', 'm'));
 direction = 1; 
-for j = 0:10
+% for j = 0:10
     i = 0;
     while i ~= 42
-        sig = move_x_mm(distance_mm, direction, arudiuno_serial);
+        sig = move_x_mm(distance_mm, direction, ardiuno_serial);
         i = str2num(sig);
         disp(i);
     end
-    pause(1);
-    disp("==========================");
-    disp(j); 
-    disp("==========================");
-    if direction == 0
-        direction = 1;
-    else
-        direction = 0;
+    pause(2);
+    sig = return_to_start(ardiuno_serial);
+    disp(sig);
+    pause(2);
+    signal = move_force_gauges(ardiuno_serial, 40, 40);
+    disp(signal);
+    pause(2);
+    i = 0;
+    while i ~= 42
+        sig = move_x_mm(distance_mm, direction, ardiuno_serial);
+        i = str2num(sig);
+        disp(i);
     end
-end
+    pause(2);
+    sig = return_to_start(ardiuno_serial);
+    disp(sig);
+    pause(2);
+    signal = move_force_gauges(ardiuno_serial, -25, 0);
+    disp(signal);
+    pause(2);
+    i = 0;
+    while i ~= 42
+        sig = move_x_mm(distance_mm, direction, ardiuno_serial);
+        i = str2num(sig);
+        disp(i);
+    end
+    pause(2);
+    sig = return_to_start(ardiuno_serial);
+    disp(sig);
+    pause(2);
+    signal = move_force_gauges(ardiuno_serial, -15, -40);
+    disp(signal);
+    % pause(1);
+    % disp("==========================");
+    % disp(j); 
+    % disp("==========================");
+    % if direction == 0
+    %     direction = 1;
+    % else
+    %     direction = 0;
+    % end
+% end
 %%
 %reset_testing_state(arudiuno_serial);
-sig = move_x_mm(500,0, arudiuno_serial);
+sig = move_x_mm(200,0, ardiuno_serial);
 disp(sig);
-reset_testing_state(arudiuno_serial);
-sig = return_to_start(arudiuno_serial);
+%%
+sig = return_to_start(ardiuno_serial);
 disp(sig);
 %%
 %FUNCTION TO GET CURRENT POSITION
@@ -263,9 +297,14 @@ disp(testing_state);
 
 
 %% FORCE GUAGE AUTOMATE FUNCTIONS TO TEST
+clear all;
+clc;
+pause(1);
+ardiuno_p = 'COM16';     % write in arduino port
+ardiuno_serial = serialport(ardiuno_p, 115200);
 %% this function should move the force gauges by the disired number of millimeters
-
-
+signal = move_force_gauges(ardiuno_serial, 25, 0);
+disp(signal);
 %% this function will be used to level force gauges based the inclinometers level
 
 
@@ -687,14 +726,14 @@ function ret_signal = move_x_mm(dis_mm, dir, s)
     flush(s);
 end
 
-function ret_signal = move_force_gauges(left_mm, right_mm)
+function ret_signal = move_force_gauges(s, left_mm, right_mm)
     MOVE_FORCE_GAUGES = 24;
     serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(left_mm),",",num2str(right_mm));
     ret_signal = serial_communication(s, serial_string);
     flush(s);
 end
 
-function ret_signal = move_force_gauges_until_desired_force(force_gauge_left, force_gauge_right, desired_force, step_size)
+function ret_signal = move_force_gauges_until_desired_force(s, force_gauge_left, force_gauge_right, desired_force, step_size)
     MOVE_FORCE_GAUGES = 24;
     write(force_gauge_left,'?','string');        %queries serial port (required to obtain data)
     force_left = read(force_gauge_left,5,"string");    %reads data point
@@ -705,11 +744,11 @@ function ret_signal = move_force_gauges_until_desired_force(force_gauge_left, fo
         serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(step_size),",",num2str(step_size));
         ret_signal = serial_communication(s, serial_string);
     end
-    
+
     flush(s);
 end
 
-function ret_signal = level_force_gauges(desired_angle, precision, inclinometer, step_size)
+function ret_signal = level_force_gauges(s, desired_angle, precision, inclinometer, step_size)
     MOVE_FORCE_GAUGES = 24;
     [pitch, roll] = get_HWT905TTL_data(inclinometer);
     

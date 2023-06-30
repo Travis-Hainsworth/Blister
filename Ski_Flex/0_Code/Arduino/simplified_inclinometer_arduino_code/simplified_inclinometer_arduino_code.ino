@@ -6,8 +6,8 @@
 
 
 //#define EN_PIN         GND      // Enable - RED
-#define DIR_PIN          4      // Direction - GREEN
-#define STEP_PIN         5      // Step - BLUE
+#define DIR_PIN          11      // Direction - GREEN
+#define STEP_PIN         12      // Step - BLUE
 // #define SW_SCK           7      // Software Slave Clock (SCK) - YELLOW
 // #define SW_TX            1      // SoftwareSerial receive pin - GREY
 // #define SW_RX            0      // SoftwareSerial transmit pin - ORANGE
@@ -20,8 +20,8 @@
 // #define SW_RX_R            A3      // SoftwareSerial transmit pin
 
 // #define EN_PIN_L           8      // Enable
-#define DIR_PIN_L         11      // Direction
-#define STEP_PIN_L         12      // Step
+#define DIR_PIN_L         4      // Direction
+#define STEP_PIN_L         5      // Step
 // #define SW_SCK_L           11     // Software Slave Clock (SCK)
 // #define SW_TX_L            A0      // SoftwareSerial receive pin
 // #define SW_RX_L            A1      // SoftwareSerial transmit pin
@@ -44,7 +44,8 @@ MultiStepper steppers;
 
 ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
-float stepsPerRevolution = 200;   // change this to fit the number of steps per revolution
+float stepsPerRevolution_inclinometer = 200;   // change this to fit the number of steps per revolution
+float stepsPerRevolution_force_guages = 200*8;
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
@@ -66,17 +67,19 @@ void setup() {
   // TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   // TMCdriver.en_spreadCycle(false);
 
-  left_stepper.setMaxSpeed(1000); //pulse/steps per second
-  left_stepper.setAcceleration(500.0); //steps per second per second to accelerate
+  int force_guage_maxV_and_accel = 500;
+
+  left_stepper.setMaxSpeed(force_guage_maxV_and_accel); //pulse/steps per second
+  left_stepper.setAcceleration(force_guage_maxV_and_accel); //steps per second per second to accelerate
   //stepper1.setSpeed(1000); //pulse/steps per second
   left_stepper.setCurrentPosition(0);
-  left_stepper.setMinPulseWidth(30)
+  left_stepper.setMinPulseWidth(30);
   
-  right_stepper.setMaxSpeed(1000); //pulse/steps per second
-  right_stepper.setAcceleration(500.0); //steps per second per second to accelerate
+  right_stepper.setMaxSpeed(force_guage_maxV_and_accel); //pulse/steps per second
+  right_stepper.setAcceleration(force_guage_maxV_and_accel); //steps per second per second to accelerate
   //stepper1.setSpeed(1000); //pulse/steps per second
   right_stepper.setCurrentPosition(0);
-  right_stepper.setMinPulseWidth(30)
+  right_stepper.setMinPulseWidth(30);
 
   // TMCdriver.begin();                                                                                                                                                                                                                                                                                                                            // UART: Init SW UART (if selected) with default 115200 baudrate
   // TMCdriver.toff(5);                 // Enables driver in software
@@ -100,7 +103,7 @@ void stop_testing(){
     delayMicroseconds(20000);
     int buttonState = digitalRead(LIMIT_SWITCH_PIN_2);
     if (buttonState == LOW) {
-      stepper1.stop();
+      inclinometer_stepper.stop();
       //testing_state = false;
       send_finish_signal(STOP_SIGNAL);
     }
@@ -143,7 +146,7 @@ const int RESET_ARDUINO = 16;
 // const int GET_ENABLE_SWITCH = 24;
 const int MOVE_FORCE_GAUGES = 24;
 const int GET_TESTING_STATE = 26;
-const int STOP_SIGNAL = 42;
+// const int STOP_SIGNAL = 42;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
@@ -157,6 +160,8 @@ void loop() {
           // String message = "24,0,0"; //  working
           // String message = "22,1,0"; // working
           // String message = "4,25,0"; // working
+          // delay(1000);
+          // String message = "24,100,100"; // working
 
           int numValues = 3;
           int message_arr[numValues];
@@ -171,7 +176,7 @@ void loop() {
               // Serial.println(length_mm);
               long direction = get_direction(message_arr[2]);
               // Serial.println(direction);
-              long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution, length_mm, lead_distance));
+              long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution_inclinometer, length_mm, lead_distance));
               //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
               send_finish_signal(MOVE_X);
@@ -179,40 +184,44 @@ void loop() {
             }
             case MOVE_FORCE_GAUGES:
             {
+              delay(2000);
               //"command,distance_mm,direction"
               float left_sensor_move_mm = (float) message_arr[1];
-              long left_steps = convert_distance_from_mm_to_steps(stepsPerRevolution, left_sensor_move_mm, lead_distance);
+              long left_steps = convert_distance_from_mm_to_steps(stepsPerRevolution_force_guages, left_sensor_move_mm, lead_distance);
               float right_sensor_move_mm = (float) message_arr[2];
-              long right_steps = convert_distance_from_mm_to_steps(stepsPerRevolution, right_sensor_move_mm, lead_distance);
+              long right_steps = convert_distance_from_mm_to_steps(stepsPerRevolution_force_guages, right_sensor_move_mm, lead_distance);
 
-              // int longest;
-              // if(abs(left_steps)>=abs(right_steps)){
-              //     while (left_stepper.distanceToGo() != 0) {
-              //           left_stepper.run();
-              //           right_stepper.run();
-              //     }
-              // }else{
-              //     while (right_stepper.distanceToGo() != 0) {
-              //           right_stepper.run();
-              //           left_stepper.run();
-              //     }
-              // }
+              int longest;
+              left_stepper.move(left_steps);
+              right_stepper.move(right_steps);
+              if(abs(left_steps)>=abs(right_steps)){
+                  while (left_stepper.distanceToGo() != 0) {
+                        left_stepper.run();
+                        right_stepper.run();
+                  }
+              }else{
+                  while (right_stepper.distanceToGo() != 0) {
+                        right_stepper.run();
+                        left_stepper.run();
+                  }
+              }
 
-              long positions[2]; // Array of desired stepper positions
-              positions[0] = left_steps;
-              positions[1] = right_steps;
-              steppers.moveTo(positions);
-              steppers.runSpeedToPosition(); // Blocks until all are in position
+              // long positions[2]; // Array of desired stepper positions
+              // positions[0] = left_steps;
+              // positions[1] = right_steps;
+              // steppers.moveTo(positions); //////////////////////////////////////// ONLY HAS MOVETO SO WOULD NEED TO RESET CURRENT POSITION TO 0 AFTER EACH MOVE THEN COUNT NUMBER OF STEPS WITH A COUNTER TO USE RETRUN TO START
+              // steppers.runSpeedToPosition(); // Blocks until all are in position
               // left_stepper.setCurrentPosition(0);
               // right_stepper.setCurrentPosition(0);
               send_finish_signal(MOVE_FORCE_GAUGES);
+              break;
             }
             case MOVE_TO_START:
             {
               //"command,#,#"
               long steps_from_start = inclinometer_stepper.currentPosition();
               move_x_steps(-1*steps_from_start);
-              send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution, steps_from_start, lead_distance));
+              send_finish_signal(convert_distance_from_steps_to_mm(stepsPerRevolution_inclinometer, steps_from_start, lead_distance));
               break;
             }
             case SET_CURRENT_POS:
@@ -247,7 +256,7 @@ void loop() {
             {
               //"command,max_speed,#"
               float steps_per_rev = (float) message_arr[1];
-              stepsPerRevolution = steps_per_rev;
+              stepsPerRevolution_inclinometer = steps_per_rev;
               send_finish_signal(SET_STEPS_PER_REVOLUTION);
               break;
             }
@@ -255,7 +264,7 @@ void loop() {
             {
               //"command,#,#"
               long current_position = inclinometer_stepper.currentPosition();
-              int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+              int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution_inclinometer, current_position, lead_distance);
               send_finish_signal(current_position_in_mm);
               break;
             }
@@ -263,7 +272,7 @@ void loop() {
             {
               //"command,#,#"
               // long current_position = stepper1.currentPosition();
-              // int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution, current_position, lead_distance);
+              // int current_position_in_mm = convert_distance_from_steps_to_mm(stepsPerRevolution_inclinometer, current_position, lead_distance);
               send_finish_signal(testing_state);
               break;
             }
@@ -305,9 +314,9 @@ int convert_distance_from_steps_to_mm(float spr, float length_steps, float lead_
 }
 
 void move_x_steps(long x){
-  stepper1.move(x);
-  while (stepper1.distanceToGo() != 0){
-        stepper1.run();
+  inclinometer_stepper.move(x);
+  while (inclinometer_stepper.distanceToGo() != 0){
+       inclinometer_stepper.run();
   }
 }
 
