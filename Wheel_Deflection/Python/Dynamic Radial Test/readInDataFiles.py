@@ -24,7 +24,7 @@ def getMocapData(folder_dir):
         DF = pd.read_csv(path, header=2, low_memory=False)
 
         weight.append(str(path).split('_')[7].split('Klbf')[0][-4:])
-        height.append(str(path).split('_')[5][len("Height"):])
+        height.append(str(path).split('_')[6][:].split("Height")[1])
 
         DF = DF.drop(index=0)
         DF = DF.drop(index=1)
@@ -33,7 +33,7 @@ def getMocapData(folder_dir):
         DF = DF.drop(index=2)
 
         DF.set_index('Frame', inplace=True)
-
+        print(height)
         combinedCSVs.append(DF)
     return combinedCSVs, weight, height
 

@@ -2,8 +2,8 @@ import numpy as np
 from dampingAnalysisMain import dataProcessingMain
 import plotly.graph_objects as go
 
-mocap, fftData, max_defs, _, height = dataProcessingMain(r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Testing 6-29-23", axis='y')
-mocap_lat, fftData_lat, max_defs_lat, _, height_lat = dataProcessingMain(r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Testing 6-29-23", axis='z')
+mocap, fftData, max_defs, _, height = dataProcessingMain(r"C:\Users\ethan\Downloads\OneDrive_1_7-5-2023", axis='y')
+mocap_lat, fftData_lat, max_defs_lat, _, height_lat = dataProcessingMain(r"C:\Users\ethan\Downloads\OneDrive_1_7-5-2023", axis='z')
 
 max_def_inches = [i * .0393701 for i in max_defs]
 max_def_inches_lat = [i * .0393701 for i in max_defs_lat]
