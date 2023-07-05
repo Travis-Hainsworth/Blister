@@ -30,6 +30,7 @@ regression_curve = np.polyval(regression_coefficients, sorted_weight)
 
 regression_coefficients_flat = np.polyfit(sorted_weight_flat, sorted_max_def_inches_flat, 1)
 regression_curve_flat = np.polyval(regression_coefficients_flat, sorted_weight_flat)
+print(regression_coefficients_flat)
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=sorted_weight, y=sorted_max_def_inches, mode='markers', marker=dict(size=8), name='Drop Height Fake Rock'))
@@ -37,6 +38,7 @@ fig.add_trace(go.Scatter(x=sorted_weight, y=regression_curve, mode='lines', name
 
 fig.add_trace(go.Scatter(x=sorted_weight_flat, y=sorted_max_def_inches_flat, mode='markers', marker=dict(size=8), name='Drop Height Flat Head'))
 fig.add_trace(go.Scatter(x=sorted_weight_flat, y=regression_curve_flat, mode='lines', name='Degree 1 Regression Curve Flat Head'))
+fig.add_trace(go.Scatter(x=sorted_weight, y=sorted_weight*-3.7e-05+.00123, mode='lines', name='Static Testing Regression'))
 
 fig.update_layout(
     title='Max Deformation per Trial',
