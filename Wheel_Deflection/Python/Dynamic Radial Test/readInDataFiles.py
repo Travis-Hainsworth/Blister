@@ -18,21 +18,24 @@ def getMocapData(folder_dir):
     files = listdir(folder_dir)
     files.sort()
     weight = []
+    height = []
     for file in files:
         path = folder_dir + "/" + file.title()
         DF = pd.read_csv(path, header=2, low_memory=False)
+
         weight.append(str(path).split('_')[7].split('Klbf')[0][-4:])
+        height.append(str(path).split('_')[5][len("Height"):])
+
         DF = DF.drop(index=0)
         DF = DF.drop(index=1)
 
         DF = fixMocapDF(DF)
-
         DF = DF.drop(index=2)
 
         DF.set_index('Frame', inplace=True)
 
         combinedCSVs.append(DF)
-    return combinedCSVs, weight
+    return combinedCSVs, weight, height
 
 
 def fixMocapDF(DF):
