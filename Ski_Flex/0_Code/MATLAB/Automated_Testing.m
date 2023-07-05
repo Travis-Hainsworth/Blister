@@ -38,7 +38,7 @@ data_matrix_unloaded = data_merge(data_matrix_front_unloaded, data_matrix_back_u
 temp_save_single_test(data_matrix_unloaded, "Unloaded");
 sig = return_to_start(ardiuno_serial);
 
-sig = move_force_gauges(ardiuno_serial, 30, 30);
+sig = move_force_gauges(ardiuno_serial, 45, 45);
 
 sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 3);
 
@@ -65,8 +65,11 @@ temp_save_single_test(torsion, "Torsion");
 temp_save_plot_and_points(gj_x_points, gj_y_points, 'GJ');
 sig = return_to_start(ardiuno_serial);
 
-sig = move_force_gauges(arduino_serial, -20, 0);
+sig = move_force_gauges(ardiuno_serial, -20, 0);
 
+sig = move_force_gauges(ardiuno_serial, -30, -30);
+
+save_data_clear_temp(directory_name);
 %%
 % adjust for unloaded test
 % run unloaded test
@@ -589,7 +592,7 @@ function output = data_merge(data_matrix_front, data_matrix_back, test_interval_
         for i = 1:num_of_missing_points
             disp(roll_front);
             disp(pitch_slope);
-            missing_row_entry = [pitch_front-(i*pitch_slope), roll_front-(i*roll_slope), force1_front-(i*force1_slope), force2_front-(i*force2_slope)];
+            missing_row_entry = [pitch_front+(i*pitch_slope), roll_front+(i*roll_slope), force1_front-(i*force1_slope), force2_front-(i*force2_slope)];
             data_matrix_front = [data_matrix_front; missing_row_entry];
         end
 
