@@ -25,6 +25,7 @@ def getMocapData(folder_dir):
 
         weight.append(str(path).split('_')[7].split('Klbf')[0][-4:])
         height.append(str(path).split('_')[5][:].split("Height")[1])
+        rim = str(path).split('_')[3]
 
         DF = DF.drop(index=0)
         DF = DF.drop(index=1)
@@ -34,7 +35,7 @@ def getMocapData(folder_dir):
 
         DF.set_index('Frame', inplace=True)
         combinedCSVs.append(DF)
-    return combinedCSVs, weight, height
+    return combinedCSVs, weight, height, rim
 
 
 def fixMocapDF(DF):

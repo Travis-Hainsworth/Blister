@@ -7,7 +7,7 @@ from scipy.fft import fft
 
 def dataProcessingMain(file_path, axis):
 
-    list_mocap_data, weight, height = getMocapData(file_path)
+    list_mocap_data, weight, height, rim = getMocapData(file_path)
     list_mocap_data = clean_mocap_data(list_mocap_data)
     listFFTRes = []
     max_defs = []
@@ -34,7 +34,7 @@ def dataProcessingMain(file_path, axis):
 
             max_defs.append(maxDef)
 
-    return list_mocap_data, listFFTRes, max_defs, weight, height
+    return list_mocap_data, listFFTRes, max_defs, weight, height, rim
 
 
 def fftAnalysis(df):

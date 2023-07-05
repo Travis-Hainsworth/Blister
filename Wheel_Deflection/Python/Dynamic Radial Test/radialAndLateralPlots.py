@@ -4,8 +4,8 @@ import plotly.graph_objects as go
 
 
 def radial_and_lateral_plots(file_path):
-    mocap, fftData, max_defs, weight, _ = dataProcessingMain(file_path, axis='y')
-    mocap_lat, fftData_lat, max_defs_lat, weight_lat, _ = dataProcessingMain(file_path, axis='z')
+    mocap, fftData, max_defs, weight, _, rim = dataProcessingMain(file_path, axis='y')
+    mocap_lat, fftData_lat, max_defs_lat, weight_lat, _, _ = dataProcessingMain(file_path, axis='z')
 
     max_def_inches = [i * .0393701 for i in max_defs]
     max_def_inches_lat = [i * .0393701 for i in max_defs_lat]
@@ -40,7 +40,7 @@ def radial_and_lateral_plots(file_path):
     fig.add_trace(go.Scatter(x=sorted_weight_lat, y=regression_curve_lat, mode='lines', name='Degree 2 Regression Curve Lateral'))
 
     fig.update_layout(
-        title='Max Deformation per Trial',
+        title='Max Deformation per Trial ' + rim,
         xaxis=dict(title='Force (klbf)'),
         yaxis=dict(title='Compression (in)'),
         showlegend=True

@@ -1,3 +1,4 @@
+from comparisonGraphing import comparison_plot
 from dropHeights import radial_and_lateral_drop_height_plot
 from radialAndLateralPlots import radial_and_lateral_plots
 
@@ -5,5 +6,10 @@ from radialAndLateralPlots import radial_and_lateral_plots
 radial_and_lateral_plots(r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Testing 6-29-23")
 
 # x-axis is drop height
-radial_and_lateral_drop_height_plot(r"C:\Users\ethan\Test\drop_height\stans")
+# radial_and_lateral_drop_height_plot(r"C:\Users\ethan\Test\drop_height\stans")
 
+# comparison plot
+# comparison_plot([
+#     r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Testing 6-29-23",
+#     r"C:\Users\ethan\Test\Dynamic_Testing\Stans"
+# ])
