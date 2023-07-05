@@ -31,6 +31,10 @@ force_gage2_serial = serialport(force_gage2_port, 9600);
 
 direction = 1;
 [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
+
+temp_save_single_test(data_matrix_front_unloaded, "data_matrix_front_unloaded");
+temp_save_single_test(data_matrix_back_unloaded, "data_matrix_back_unloaded");
+
 test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
 dist_between_mm = 863; %change when distance between inclinomters change
 test_distance_mm = size(data_matrix_front_unloaded,1) * test_interval_mm;
@@ -43,6 +47,10 @@ sig = move_force_gauges(ardiuno_serial, 45, 45);
 sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 3);
 
 [data_matrix_front_loaded,data_matrix_back_loaded] = sensor_automation(test_interval_mm, direction);
+
+temp_save_single_test(data_matrix_front_loaded, "data_matrix_front_loaded");
+temp_save_single_test(data_matrix_back_loaded, "data_matrix_back_loaded");
+
 [front_unl, front_load] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_loaded);%, truncate_from_bottom);
 [back_unl, back_load] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_loaded);%, truncate_from_top);
 unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
@@ -55,6 +63,10 @@ sig = return_to_start(ardiuno_serial);
 sig = move_force_gauges(ardiuno_serial, 0, -20);
 
 [data_matrix_front_torsion,data_matrix_back_torsion] = sensor_automation(test_interval_mm, direction);
+
+temp_save_single_test(data_matrix_front_torsion, "data_matrix_front_torsion");
+temp_save_single_test(data_matrix_back_torsion, "data_matrix_back_torsion");
+
 [front_unl, front_tor] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_torsion);%, truncate_from_bottom);
 [back_unl, back_tor] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_torsion);%, truncate_from_top);
 unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
