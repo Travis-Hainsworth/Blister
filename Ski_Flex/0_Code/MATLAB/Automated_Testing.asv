@@ -23,13 +23,50 @@ force_gage1_port = 'COM8';   % write in loadcell1 port
 force_gage2_port = 'COM7';   % write in loadcell2 port
 
 ardiuno_serial = serialport(ardiuno_port, 115200);
-%%
 inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
 inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 force_gage1_serial = serialport(force_gage1_port, 9600);
 force_gage2_serial = serialport(force_gage2_port, 9600);
+%% Run Full test
+
+direction = 1;
+[data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
+test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
+dist_between_mm = 863; %change when distance between inclinomters change
+test_distance_mm = size(data_matrix_front_unloaded,1) * test_interval_mm;
+data_matrix_unloaded = data_merge(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
+temp_save_single_test(data_matrix_unloaded, "Unloaded");
+sig = return_to_start(ardiuno_serial);
+
+sig = move_force_gauges(ardiuno_serial, 30, 30);
+
+sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 3);
 %%
-ardiuno_serial = serialport(ardiuno_port, 115200);
+[data_matrix_front_loaded,data_matrix_back_loaded] = sensor_automation(test_interval_mm, direction);
+[front_unl, front_load] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_loaded);%, truncate_from_bottom);
+[back_unl, back_load] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_loaded);%, truncate_from_top);
+unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
+loaded = data_merge(front_load, back_load, test_interval_mm, test_distance_mm, dist_between_mm);
+temp_save_single_test(loaded, "Loaded");
+[ei_x_points, ei_y_points] = get_EI_point(unloaded, loaded, test_interval_mm);
+temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
+sig = return_to_start(ardiuno_serial);
+
+sig = move_force_gauges(ardiuno_serial, 0, -20);
+
+[data_matrix_front_torsion,data_matrix_back_torsion] = sensor_automation(test_interval_mm, direction);
+[front_unl, front_tor] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_torsion);%, truncate_from_bottom);
+[back_unl, back_tor] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_torsion);%, truncate_from_top);
+unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
+torsion = data_merge(front_tor, back_tor, test_interval_mm, test_distance_mm, dist_between_mm);
+data_matrix_torsion = data_merge(unloaded, torsion, test_interval_mm, test_distance_mm, dist_between_mm);
+temp_save_single_test(torsion, "Torsion");
+[gj_x_points, gj_y_points] = get_EI_point(unloaded, torsion, test_interval_mm);
+temp_save_plot_and_points(gj_x_points, gj_y_points, 'GJ');
+sig = return_to_start(ardiuno_serial);
+
+sig = move_force_gauges(arduino_serial, -25, 0);
+
 %%
 % adjust for unloaded test
 % run unloaded test
@@ -147,7 +184,7 @@ disp(sig);
 %%
 %in case return to stat fails
 %reset_testing_state(arudiuno_serial);
-sig = move_x_mm(500,1, ardiuno_serial);
+sig = move_x_mm(200,0, ardiuno_serial);
 disp(sig);
 %%
 reset_testing_state(arudiuno_serial);
@@ -251,7 +288,7 @@ direction = 1;
 % end
 %%
 %reset_testing_state(arudiuno_serial);
-sig = move_x_mm(200,1, ardiuno_serial);
+sig = move_x_mm(200,0, ardiuno_serial);
 disp(sig);
 %%
 sig = return_to_start(ardiuno_serial);
@@ -303,7 +340,7 @@ pause(1);
 ardiuno_p = 'COM16';     % write in arduino port
 ardiuno_serial = serialport(ardiuno_p, 115200);
 %% this function should move the force gauges by the disired number of millimeters
-signal = move_force_gauges(ardiuno_serial, 25, 0);
+signal = move_force_gauges(ardiuno_serial, -2, -2);
 disp(signal);
 %% this function will be used to level force gauges based the inclinometers level
 
@@ -393,7 +430,7 @@ end
 
 %%
 function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_mm, direction) %inclinometer_front_serial
-    global arudiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
     data_matrix_front = zeros(0, 4);
     data_matrix_back = zeros(0, 4);
     stop_num=0;
@@ -416,7 +453,7 @@ function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_
         disp(data_matrix_back);
         
         %MOVE SENSOR
-        sig = move_x_mm(test_interval_mm, direction, arudiuno_serial);
+        sig = move_x_mm(test_interval_mm, direction, ardiuno_serial);
         disp(sig);
         stop_num = str2double(sig);
     end
@@ -755,21 +792,20 @@ function ret_signal = level_force_gauges(s, desired_angle, precision, inclinomet
     while ~(roll < (desired_angle + precision) && roll > ((-desired_angle) + (-precision)))
         % step_size = gradient descent step size adjustment(roll, desired_angle, step_size)
         message = make_message(int2str(MOVE_FORCE_GAUGES),roll, desired_angle, precision, step_size);
-        message = make_message(message, roll, desired_angle, precision, step_size);
         ret_signal = serial_communication(s, message);
         [pitch, roll] = get_HWT905TTL_data(inclinometer);
     end
     flush(s);
 end
 
-function message = make_message(m, actual_angle, desired_angle, precision)
+function message = make_message(m, actual_angle, desired_angle, precision, step_size)
     message = m;
     if actual_angle <= desired_angle+precision && actual_angle >= desired_angle-precision % make this a fuction that takes in actual and desired, concatenates and retruns message
-          message = strcat(message,',0');
+          message = strcat(message,',0',',0');
     elseif actual_angle < desired_angle
-          message = strcat(message,',1'); 
+          message = strcat(message,',0',',1'); 
     else
-          message = strcat(message,',-1'); 
+          message = strcat(message,',1',',0'); 
     end 
 end
 
