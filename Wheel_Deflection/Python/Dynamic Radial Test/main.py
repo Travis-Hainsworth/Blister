@@ -1,15 +1,17 @@
-from comparisonGraphing import comparison_plot
-from dropHeights import radial_and_lateral_drop_height_plot
-from radialAndLateralPlots import radial_and_lateral_plots
+from graphingFunctions import *
 
-# x-axis is force
-radial_and_lateral_plots(r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Testing 6-29-23")
+# x-axis is force. If you want the lateral plot then change do_you_want_lateral to 'yes'
+radial_and_lateral_plots(r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Round 2",
+                         do_you_want_lateral='no')
 
-# x-axis is drop height
-# radial_and_lateral_drop_height_plot(r"C:\Users\ethan\Test\drop_height\stans")
+# x-axis is drop height. If you want the lateral plot then change do_you_want_lateral to 'yes'
+# radial_and_lateral_drop_height_plot(r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Round 2",
+#                                     do_you_want_lateral='no')
 
 # comparison plot
 # comparison_plot([
-#     r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Testing 6-29-23",
-#     r"C:\Users\ethan\Test\Dynamic_Testing\Stans"
-# ])
+#     r"C:\Users\ethan\Test\Dynamic_Testing\Stans",
+#     r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Round 2"
+#
+# ],
+#     do_you_want_lateral='no')
