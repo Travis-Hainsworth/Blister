@@ -1,7 +1,7 @@
 from graphingFunctions import *
 
 # x-axis is force. If you want the lateral plot then change do_you_want_lateral to 'yes'
-radial_and_lateral_plots(r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Round 2",
+radial_and_lateral_plots(r"C:\Users\ethan\Test\Dynamic_Testing\Light\Test_7-5_Rock",
                          do_you_want_lateral='no')
 
 # x-axis is drop height. If you want the lateral plot then change do_you_want_lateral to 'yes'
@@ -10,8 +10,9 @@ radial_and_lateral_plots(r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Rou
 
 # comparison plot
 # comparison_plot([
-#     r"C:\Users\ethan\Test\Dynamic_Testing\Stans",
-#     r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Round 2"
+#     r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Test_6-29_Rock",
+#     r"C:\Users\ethan\Test\Dynamic_Testing\Light\Test_7-5_Rock",
+#     r"C:\Users\ethan\Test\Dynamic_Testing\Stans\Test_7-5_Rock"
 #
 # ],
 #     do_you_want_lateral='no')

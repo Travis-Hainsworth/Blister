@@ -6,7 +6,7 @@ from scipy.fft import fft
 
 
 def dataProcessingMain(file_path, axis):
-    list_mocap_data, weight, height, rim = get_mocap_data(file_path)
+    list_mocap_data, weight, height, rim, head = get_mocap_data(file_path)
     list_mocap_data = clean_mocap_data(list_mocap_data)
     max_defs = []
 
@@ -32,7 +32,7 @@ def dataProcessingMain(file_path, axis):
 
             max_defs.append(max_def)
 
-    return list_mocap_data, max_defs, weight, height, rim
+    return list_mocap_data, max_defs, weight, height, rim, head
 
 
 def calc_r2(y_axis, regression_curve):

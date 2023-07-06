@@ -6,16 +6,17 @@ from os import listdir
 def get_mocap_data(folder_dir):
     combined_csvs = []
     files = sorted(listdir(folder_dir))
-    weight = []
-    height = []
+    weight, height = [], []
+    rim, head = '', ''
 
     for file in files:
         path = f"{folder_dir}/{file.title()}"
         df = pd.read_csv(path, header=2, low_memory=False)
 
-        weight.append(str(path).split('_')[7].split('Klbf')[0][-4:])
-        height.append(str(path).split('_')[5].split("Height")[1])
-        rim = str(path).split('_')[3]
+        weight.append(str(path).split('_')[9].split('Klbf')[0][-4:])
+        height.append(str(path).split('_')[7].split("Height")[1])
+        rim = str(path).split('_')[5]
+        head = str(path).split('_')[3][:4]
 
         df = df.drop(index=[0, 1])
         df = fix_mocap_df(df)
@@ -24,7 +25,7 @@ def get_mocap_data(folder_dir):
 
         combined_csvs.append(df)
 
-    return combined_csvs, weight, height, rim
+    return combined_csvs, weight, height, rim, head
 
 
 def fix_mocap_df(df):
