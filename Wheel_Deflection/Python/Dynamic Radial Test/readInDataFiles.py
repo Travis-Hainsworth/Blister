@@ -1,35 +1,48 @@
 import pandas as pd
-import numpy as np
-from os import listdir
+import os
+import concurrent.futures
+
+
+def process_file(folder_dir, file):
+    path = os.path.join(folder_dir, file.title())
+    df = pd.read_csv(path, header=2, low_memory=False)
+
+    file_parts = str(path).split('_')
+    weight = file_parts[9].split('Lbf')[0][-4:]
+    height = file_parts[7].split("Height")[1]
+    rim = file_parts[5]
+    head = file_parts[3][:4]
+
+    df = df.drop(index=[0, 1])
+    df = fix_mocap_df(df)
+    df = df.drop(index=2)
+    df.set_index('Frame', inplace=True)
+
+    return df, weight, height, rim, head
 
 
 def get_mocap_data(folder_dir):
-    files = sorted(listdir(folder_dir))
+    files = sorted(os.listdir(folder_dir))
     combined_csvs, weight, height = [], [], []
     rim, head = '', ''
 
-    for file in files:
-        path = f"{folder_dir}/{file.title()}"
-        df = pd.read_csv(path, header=2, low_memory=False)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process_file, folder_dir, file) for file in files]
 
-        weight.append(str(path).split('_')[9].split('Lbf')[0][-4:])
-        height.append(str(path).split('_')[7].split("Height")[1])
-        rim = str(path).split('_')[5]
-        head = str(path).split('_')[3][:4]
-
-        df = df.drop(index=[0, 1])
-        df = fix_mocap_df(df)
-        df = df.drop(index=2)
-        df.set_index('Frame', inplace=True)
-
-        combined_csvs.append(df)
+        for future in concurrent.futures.as_completed(futures):
+            df, w, hei, r, h = future.result()
+            combined_csvs.append(df)
+            weight.append(w)
+            height.append(hei)
+            rim = r
+            head = h
 
     return combined_csvs, weight, height, rim, head
 
 
 def fix_mocap_df(df):
     new_cols = {'Unnamed: 0': 'Frame', 'Name': 'Time (sec)'}
-    first_row = np.array(df.iloc[0])
+    first_row = df.iloc[0]
     marker_name = ""
 
     for count, col in enumerate(df.columns):
@@ -104,16 +117,14 @@ def clean_mocap_data(list_df):
         df['Time (sec)'] = pd.to_numeric(df['Time (sec)'], errors='coerce')
 
         """"
-        first finds the distance between the stand and rim for each point in time
-        and subtracts the original distance to filter out noise from the stand
-        moving due to the carrige and piston catch
-        """
+            first finds the distance between the stand and rim for each point in time
+            and subtracts the original distance to filter out noise from the stand
+            moving due to the carrige and piston catch
+            """
 
         df['Displacementx'] = rim_to_stand["x"] - (df['rim_top_x'] - df['stand_x'])
         df['Displacementy'] = rim_to_stand["y"] - (df['rim_top_y'] - df['stand_y'])
         df['Displacementz'] = rim_to_stand["z"] - (df['rim_top_z'] - df['stand_z'])
 
         clean_list_df.append(df)
-
     return clean_list_df
-

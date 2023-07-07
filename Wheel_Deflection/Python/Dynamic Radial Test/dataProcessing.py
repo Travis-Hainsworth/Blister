@@ -73,4 +73,3 @@ def fft_analysis(df):
     fft_df['Frequency (Hz)'] = f_arr
 
     return fft_df
-

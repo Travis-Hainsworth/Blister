@@ -108,7 +108,8 @@ def comparison_plot_mean(file_paths):
 
         if head == 'Flat':
             fig.add_trace(go.Scatter(x=np.unique(sorted_height), y=regression_curve,
-                                     mode='lines', line=dict(dash='dash', color=colors[counter - 1]),
+                                     mode='lines', marker=dict(symbol='x'),
+                                     line=dict(dash='dash', color=colors[counter - 1]),
                                      name=f'Regression Curve Lateral {rim} {head}<br>r2 = {r2: .4f}'))
         elif head == 'Rock':
             fig.add_trace(go.Scatter(x=np.unique(sorted_height), y=regression_curve,
@@ -171,3 +172,4 @@ def lateral_plot_height(file_path, fig):
                              name=f'Test {head}'))
     fig.add_trace(go.Scatter(x=sorted_height_lat, y=regression_curve_lat, mode='lines',
                              name=f'Degree 2 Regression Curve Lateral {head}<br>r2 = {r2_lat: .4f}'))
+
