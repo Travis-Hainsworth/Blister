@@ -1,12 +1,10 @@
 from graphingFunctions import *
 
 # x-axis is force. If you want the lateral plot then change do_you_want_lateral to 'yes'
-# radial_and_lateral_plots(r"C:\Users\ethan\Test\Dynamic_Testing\Stans\Test_7-5_Flat",
-#                          do_you_want_lateral='no')
+# radial_plot_weight(r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Test_6-29_Rock")
 
 # x-axis is drop height. If you want the lateral plot then change do_you_want_lateral to 'yes'
-# radial_and_lateral_drop_height_plot(r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Round 2",
-#                                     do_you_want_lateral='no')
+# radial_plot_height(r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Test_6-29_Rock")
 
 deformations, weights, heights, rims, heads = processor([
         r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Test_6-29_Rock",
@@ -17,8 +15,8 @@ deformations, weights, heights, rims, heads = processor([
         r"C:\Users\ethan\Test\Dynamic_Testing\Light\Test_7-5_Flat",
         r"C:\Users\ethan\Test\Dynamic_Testing\R30\Test_7-6_Rock",
         r"C:\Users\ethan\Test\Dynamic_Testing\R30\Test_7-6_Flat",
-        r"C:\Users\ethan\Test\Dynamic_Testing\Enve\Test_7-6_Rock",
-        r"C:\Users\ethan\Test\Dynamic_Testing\Enve\Test_7-6_Flat"
+        # r"C:\Users\ethan\Test\Dynamic_Testing\Enve\Test_7-6_Rock",
+        # r"C:\Users\ethan\Test\Dynamic_Testing\Enve\Test_7-6_Flat"
 ])
 
 # comparison plot height on the x_axis
@@ -29,6 +27,4 @@ comparison_plot_mean_weight(deformations, weights, rims, heads)
 
 # comparison plot between carbon and alloy rims height on the x_axis
 carbon_vs_alloy_plot(deformations, heights, rims, heads)
-
-
 
