@@ -46,6 +46,38 @@ def calc_r2(y_axis, regression_curve):
     return r2
 
 
+# Used for graphing
+def regression_helper(x_axis, y_axis, degree):
+    regression_coefficients = np.polyfit(np.unique(x_axis), y_axis, degree)
+    regression_curve = np.polyval(regression_coefficients, np.unique(x_axis))
+
+    r2 = calc_r2(y_axis, regression_curve)
+
+    return regression_curve, r2
+
+
+# Used for graphing
+def array_means(data):
+    data = np.array(data)
+    mean = np.mean(data, axis=0)
+
+    return mean
+
+
+def index_filtering(deformation, x_axis):
+    max_def_inches = [i * .0393701 for i in deformation]
+
+    x_axis = np.array(x_axis).astype(float)
+    max_def_inches = np.negative(max_def_inches)
+
+    # Sort the data based on x_axis values
+    sorted_indices = np.argsort(x_axis)
+    sorted_x_axis = x_axis[sorted_indices]
+    sorted_deformation = max_def_inches[sorted_indices]
+
+    return sorted_deformation, sorted_x_axis
+
+
 def fft_analysis(df):
     # FFT analysis, finds natural frequency of rim
 
