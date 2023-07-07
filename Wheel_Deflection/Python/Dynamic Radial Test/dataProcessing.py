@@ -32,7 +32,7 @@ def dataProcessingMain(file_path, axis):
 
             max_defs.append(max_def)
 
-    return list_mocap_data, max_defs, weight, height, rim, head
+    return max_defs, weight, height, rim, head
 
 
 def calc_r2(y_axis, regression_curve):
@@ -76,6 +76,19 @@ def index_filtering(deformation, x_axis):
     sorted_deformation = max_def_inches[sorted_indices]
 
     return sorted_deformation, sorted_x_axis
+
+
+def processor(filepaths):
+    deformations, weights, heights, rims, heads = [], [], [], [], []
+    for filepath in filepaths:
+        max_defs, weight, height, rim, head = dataProcessingMain(filepath, axis = 'y')
+        deformations.append(max_defs)
+        weights.append(weight)
+        heights.append(height)
+        rims.append(rim)
+        heads.append(head)
+
+    return deformations, weights, heights, rims, heads
 
 
 def fft_analysis(df):

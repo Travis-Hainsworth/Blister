@@ -8,7 +8,7 @@ def process_file(folder_dir, file):
     df = pd.read_csv(path, header=2, low_memory=False)
 
     file_parts = str(path).split('_')
-    weight = file_parts[9].split('Lbf')[0][-4:]
+    weight = file_parts[9].split('Klbf')[0][-4:]
     height = file_parts[7].split("Height")[1]
     rim = file_parts[5]
     head = file_parts[3][:4]

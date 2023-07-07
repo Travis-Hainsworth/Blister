@@ -80,29 +80,27 @@ def radial_and_lateral_drop_height_plot(file_path, do_you_want_lateral):
     fig.show()
 
 
-def comparison_plot_mean(file_paths):
+def comparison_plot_mean(max_defs, heights, rims, heads):
     counter = 0
     fig = go.Figure()
     colors = ['Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Black', 'Orange', 'Pink', 'aqua']
 
-    for file_path in file_paths:
-        mocap, max_defs, _, height, rim, head = dataProcessingMain(file_path, axis='y')
-
-        sorted_max_def_inches, sorted_height = index_filtering(max_defs, height)
+    for i in range(len(max_defs)):
+        sorted_max_def_inches, sorted_height = index_filtering(max_defs[i], heights[i])
 
         mean_values = [np.mean(sorted_max_def_inches[sorted_height == value]) for value in np.unique(sorted_height)]
 
         regression_curve, r2 = regression_helper(sorted_height, mean_values, 3)
 
-        if head == 'Flat':
+        if heads[i] == 'Flat':
             fig.add_trace(go.Scatter(x=np.unique(sorted_height), y=regression_curve,
                                      mode='lines', marker=dict(symbol='x'),
                                      line=dict(dash='dash', color=colors[counter - 1]),
-                                     name=f'Regression Curve Radial {rim} {head}<br>r2 = {r2: .4f}'))
-        elif head == 'Rock':
+                                     name=f'Regression Curve Radial {rims[i]} {heads[i]}<br>r2 = {r2: .4f}'))
+        elif heads[i] == 'Rock':
             fig.add_trace(go.Scatter(x=np.unique(sorted_height), y=regression_curve,
                                      mode='lines', line=dict(color=colors[counter]),
-                                     name=f'Regression Curve Radial {rim} {head}<br>r2 = {r2: .4f}'))
+                                     name=f'Regression Curve Radial {rims[i]} {heads[i]}<br>r2 = {r2: .4f}'))
 
         fig.update_layout(
             title='Max Deformation per Trial',
@@ -115,29 +113,27 @@ def comparison_plot_mean(file_paths):
     fig.show()
 
 
-def comparison_plot_mean_weight(file_paths):
+def comparison_plot_mean_weight(max_defs, weights, rims, heads):
     counter = 0
     fig = go.Figure()
     colors = ['Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Black', 'Orange', 'Pink', 'aqua']
 
-    for file_path in file_paths:
-        mocap, max_defs, weight, _, rim, head = dataProcessingMain(file_path, axis='y')
-
-        sorted_max_def_inches, sorted_weight = index_filtering(max_defs, weight)
+    for i in range(len(max_defs)):
+        sorted_max_def_inches, sorted_weight = index_filtering(max_defs[i], weights[i])
 
         mean_values = [np.mean(sorted_max_def_inches[sorted_weight == value]) for value in np.unique(sorted_weight)]
 
         regression_curve, r2 = regression_helper(sorted_weight, mean_values, 3)
 
-        if head == 'Flat':
+        if heads[i] == 'Flat':
             fig.add_trace(go.Scatter(x=np.unique(sorted_weight), y=regression_curve,
                                      mode='lines', marker=dict(symbol='x'),
                                      line=dict(dash='dash', color=colors[counter - 1]),
-                                     name=f'Regression Curve Radial {rim} {head}<br>r2 = {r2: .4f}'))
-        elif head == 'Rock':
+                                     name=f'Regression Curve Radial {rims[i]} {heads[i]}<br>r2 = {r2: .4f}'))
+        elif heads[i] == 'Rock':
             fig.add_trace(go.Scatter(x=np.unique(sorted_weight), y=regression_curve,
                                      mode='lines', line=dict(color=colors[counter]),
-                                     name=f'Regression Curve Radial {rim} {head}<br>r2 = {r2: .4f}'))
+                                     name=f'Regression Curve Radial {rims[i]} {heads[i]}<br>r2 = {r2: .4f}'))
 
         fig.update_layout(
             title='Max Deformation per Trial',
@@ -197,23 +193,21 @@ def lateral_plot_height(file_path, fig):
                              name=f'Degree 2 Regression Curve Lateral {head}<br>r2 = {r2_lat: .4f}'))
 
 
-def carbon_vs_alloy_plot(file_paths):
+def carbon_vs_alloy_plot(max_defs, heights, rims, heads):
     fig = go.Figure()
     alloy_flat_means, alloy_rock_means, carbon_flat_means, carbon_rock_means = [], [], [], []
 
-    for file_path in file_paths:
-        mocap, max_defs, _, height, rim, head = dataProcessingMain(file_path, axis='y')
-
-        sorted_max_def_inches, sorted_height = index_filtering(max_defs, height)
+    for i in range(len(max_defs)):
+        sorted_max_def_inches, sorted_height = index_filtering(max_defs[i], heights[i])
 
         mean_values = [np.mean(sorted_max_def_inches[sorted_height == value]) for value in np.unique(sorted_height)]
 
-        if rim == 'Stansflowmk4' or rim == 'DTS':
-            if head == 'Flat':
+        if rims[i] == 'Stansflowmk4' or rims[i] == 'DTS':
+            if heads[i] == 'Flat':
                 alloy_flat_means.append(mean_values)
             else:
                 alloy_rock_means.append(mean_values)
-        elif head == 'Flat':
+        elif heads[i] == 'Flat':
             carbon_flat_means.append(mean_values)
         else:
             carbon_rock_means.append(mean_values)

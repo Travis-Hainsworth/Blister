@@ -8,8 +8,7 @@ from graphingFunctions import *
 # radial_and_lateral_drop_height_plot(r"C:\Users\ethan\Test\Dynamic_Testing\Light\Testing Round 2",
 #                                     do_you_want_lateral='no')
 
-# comparison plot
-comparison_plot_mean([
+deformations, weights, heights, rims, heads = processor([
         r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Test_6-29_Rock",
         r"C:\Users\ethan\Test\Dynamic_Testing\WAOU\Test_6-29_Flat",
         r"C:\Users\ethan\Test\Dynamic_Testing\Stans\Test_7-5_Rock",
@@ -17,7 +16,19 @@ comparison_plot_mean([
         r"C:\Users\ethan\Test\Dynamic_Testing\Light\Test_7-5_Rock",
         r"C:\Users\ethan\Test\Dynamic_Testing\Light\Test_7-5_Flat",
         r"C:\Users\ethan\Test\Dynamic_Testing\R30\Test_7-6_Rock",
-        r"C:\Users\ethan\Test\Dynamic_Testing\R30\Test_7-6_Flat"
-
+        r"C:\Users\ethan\Test\Dynamic_Testing\R30\Test_7-6_Flat",
+        r"C:\Users\ethan\Test\Dynamic_Testing\Enve\Test_7-6_Rock",
+        r"C:\Users\ethan\Test\Dynamic_Testing\Enve\Test_7-6_Flat"
 ])
+
+# comparison plot height on the x_axis
+comparison_plot_mean(deformations, heights, rims, heads)
+
+# comparison plot weight on the x_axis
+comparison_plot_mean_weight(deformations, weights, rims, heads)
+
+# comparison plot between carbon and alloy rims height on the x_axis
+carbon_vs_alloy_plot(deformations, heights, rims, heads)
+
+
 
