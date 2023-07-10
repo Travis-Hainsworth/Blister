@@ -84,10 +84,10 @@ sig = move_force_gauges(ardiuno_serial, 0, 20);
 sig = move_force_gauges(ardiuno_serial, -80, -80);
 save_data_clear_temp(directory_name);
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, -2, -0);
+sig = move_force_gauges(ardiuno_serial, -2, -2);
 disp(sig);
 %% Manually move inclinometer motor
-sig = move_x_mm(300,0, ardiuno_serial);
+sig = move_x_mm(800,0, ardiuno_serial);
 disp(sig);
 %% Return inclinometer motor back to start
 sig = return_to_start(ardiuno_serial);
@@ -98,6 +98,17 @@ function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_
     data_matrix_front = zeros(0, 4);
     data_matrix_back = zeros(0, 4);
     stop_num=0;
+
+    flush(inclinometer_front_serial);
+
+    [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_front_serial);
+
+    flush(inclinometer_back_serial);
+
+    [pitchBack_temp, rollBack_temp] = get_HWT905TTL_data(inclinometer_back_serial);
+
+    
+
     while stop_num~=42
         %collect data
         pause(.125); 
@@ -532,8 +543,8 @@ function [X_points, EI_points] = get_EI_point(data_matrix_unloaded, data_matrix_
         rollermass = 31;
 
         %initialOffset = distance from applied load or clamp at the tip to the
-        %first measurement in inches
-        initialOffSet = 0;
+        %first measurement in meters
+        initialOffSet = .165;
         
         %set empty string for moments
         moment = zeros(measurements,1);
@@ -588,8 +599,8 @@ function [X_points, GJ_points] = get_GJ_points(data_matrix_unloaded, data_matrix
         rollermass = 31;
 
         %initialOffset = distance from applied load or clamp at the tip to the
-        %first measurement in inches
-        initialOffSet = 0;
+        %first measurement in meters
+        initialOffSet = .165;
 
 
         %set empty string for moments
@@ -645,8 +656,8 @@ function ei_matrix = make_ei_matrix(unloaded_data, loaded_data, interval_mm)
         %rollermass = lass of rollers imparting force on skis in lbs
         rollermass = 31;
         %initialOffset = distance from applied load or clamp at the tip to the
-        %first measurement in inches
-        initialOffSet = 0;
+        %first measurement in meters
+        initialOffSet = .165;
         
         %set empty string for moments
         moment = zeros(measurements,1);
@@ -681,7 +692,7 @@ end
 function [distanceFromTip] = distanceFromTip(n,initialOffSet,measurements,test_interval_mm)
     %the distance of the measured pitch form the applied load in inches
     global ei_distance_from_tip;
-    distanceFromTip = initialOffSet+(measurements/2-abs(n-measurements/2))*test_interval_mm/1000;
+    distanceFromTip = (measurements/2-abs(n-measurements/2))*test_interval_mm/1000-initialOffSet;
     ei_distance_from_tip(end+1) = distanceFromTip;
 end
 
