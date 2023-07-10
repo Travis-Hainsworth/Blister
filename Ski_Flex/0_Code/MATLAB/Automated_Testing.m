@@ -243,10 +243,19 @@ function ret_signal = move_force_gauges_until_desired_force(s, force_gauge_left,
     force_left = read(force_gauge_left,5,"string");         %reads data point
     write(force_gauge_right,'?','string');                  %queries serial port (required to obtain data)
     force_right = read(force_gauge_right,5,"string");       %reads data point
-    while force_left < desired_force || force_right < desired_force
-        serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(step_size),",",num2str(step_size));
-        ret_signal = serial_communication(s, serial_string);
+
+    if force_right < desired_force && force_left < desired_force
+        while force_left < desired_force || force_right < desired_force
+            serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(step_size),",",num2str(step_size));
+            ret_signal = serial_communication(s, serial_string);
+        end
+    else
+        while force_left > desired_force || force_right > desired_force
+            serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(-1*step_size),",",num2str(-1*step_size));
+            ret_signal = serial_communication(s, serial_string);
+        end
     end
+    
     flush(s);
 end
 
