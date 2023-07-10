@@ -28,63 +28,70 @@ inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 force_gage1_serial = serialport(force_gage1_port, 9600);
 force_gage2_serial = serialport(force_gage2_port, 9600);
 %% Run Full test
-[data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
-pause(2);
+%num_of_test = 10;
+%while num_of_test ~= 0
+    [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
+    pause(2);
+    
+    temp_save_single_test(data_matrix_front_unloaded, "data_matrix_front_unloaded");
+    temp_save_single_test(data_matrix_back_unloaded, "data_matrix_back_unloaded");
+    test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
+    dist_between_mm = 863; %change when distance between inclinomters change
+    test_distance_mm = size(data_matrix_front_unloaded,1) * test_interval_mm;
+    data_matrix_unloaded = data_merge(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
+    temp_save_single_test(data_matrix_unloaded, "Unloaded");
+    
+    
+    sig = return_to_start(ardiuno_serial);
+    
+    sig = move_force_gauges(ardiuno_serial, 80, 80);
 
-temp_save_single_test(data_matrix_front_unloaded, "data_matrix_front_unloaded");
-temp_save_single_test(data_matrix_back_unloaded, "data_matrix_back_unloaded");
-test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
-dist_between_mm = 863; %change when distance between inclinomters change
-test_distance_mm = size(data_matrix_front_unloaded,1) * test_interval_mm;
-data_matrix_unloaded = data_merge(data_matrix_front_unloaded, data_matrix_back_unloaded, test_interval_mm, test_distance_mm, dist_between_mm);
-temp_save_single_test(data_matrix_unloaded, "Unloaded");
+    pause(1);
+    
+    sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 1);
+    
+    [data_matrix_front_loaded,data_matrix_back_loaded] = sensor_automation(test_interval_mm, direction);
+    pause(2);
+    
+    temp_save_single_test(data_matrix_front_loaded, "data_matrix_front_loaded");
+    temp_save_single_test(data_matrix_back_loaded, "data_matrix_back_loaded");
+    [front_unl, front_load] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_loaded);%, truncate_from_bottom);
+    [back_unl, back_load] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_loaded);%, truncate_from_top);
+    unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
+    loaded = data_merge(front_load, back_load, test_interval_mm, test_distance_mm, dist_between_mm);
+    temp_save_single_test(loaded, "Loaded");
+    [ei_x_points, ei_y_points] = get_EI_point(unloaded, loaded, test_interval_mm);
+    temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
+    
+    sig = return_to_start(ardiuno_serial);
+    sig = move_force_gauges(ardiuno_serial, 0, -20);
+    
+    [data_matrix_front_torsion,data_matrix_back_torsion] = sensor_automation(test_interval_mm, direction);
+    pause(2);
+    
+    temp_save_single_test(data_matrix_front_torsion, "data_matrix_front_torsion");
+    temp_save_single_test(data_matrix_back_torsion, "data_matrix_back_torsion");
+    [front_unl, front_tor] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_torsion);%, truncate_from_bottom);
+    [back_unl, back_tor] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_torsion);%, truncate_from_top);
+    unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
+    torsion = data_merge(front_tor, back_tor, test_interval_mm, test_distance_mm, dist_between_mm);
+    data_matrix_torsion = data_merge(unloaded, torsion, test_interval_mm, test_distance_mm, dist_between_mm);
+    temp_save_single_test(torsion, "Torsion");
+    [gj_x_points, gj_y_points] = get_EI_point(unloaded, torsion, test_interval_mm);
+    temp_save_plot_and_points(gj_x_points, gj_y_points, 'GJ');
+    
+    sig = return_to_start(ardiuno_serial);
+    sig = move_force_gauges(ardiuno_serial, 0, 20);
+    sig = move_force_gauges(ardiuno_serial, -80, -80);
+   
+    move_force_gauges_until_desired_force(ardiuno_serial, force_gage1_serial, force_gage2_serial, 0, 5);
+    
+    save_data_clear_temp(directory_name);
+    %num_of_test = num_of_test -1;
 
-
-sig = return_to_start(ardiuno_serial);
-sig = move_force_gauges(ardiuno_serial, 80, 80);
-
-
-
-sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 1);
-
-
-
-[data_matrix_front_loaded,data_matrix_back_loaded] = sensor_automation(test_interval_mm, direction);
-pause(2);
-
-temp_save_single_test(data_matrix_front_loaded, "data_matrix_front_loaded");
-temp_save_single_test(data_matrix_back_loaded, "data_matrix_back_loaded");
-[front_unl, front_load] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_loaded);%, truncate_from_bottom);
-[back_unl, back_load] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_loaded);%, truncate_from_top);
-unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
-loaded = data_merge(front_load, back_load, test_interval_mm, test_distance_mm, dist_between_mm);
-temp_save_single_test(loaded, "Loaded");
-[ei_x_points, ei_y_points] = get_EI_point(unloaded, loaded, test_interval_mm);
-temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
-
-sig = return_to_start(ardiuno_serial);
-sig = move_force_gauges(ardiuno_serial, 0, -20);
-
-[data_matrix_front_torsion,data_matrix_back_torsion] = sensor_automation(test_interval_mm, direction);
-pause(2);
-
-temp_save_single_test(data_matrix_front_torsion, "data_matrix_front_torsion");
-temp_save_single_test(data_matrix_back_torsion, "data_matrix_back_torsion");
-[front_unl, front_tor] = check_and_adjust_size(data_matrix_front_unloaded, data_matrix_front_torsion);%, truncate_from_bottom);
-[back_unl, back_tor] = check_and_adjust_size(data_matrix_back_unloaded, data_matrix_back_torsion);%, truncate_from_top);
-unloaded = data_merge(front_unl, back_unl, test_interval_mm, test_distance_mm, dist_between_mm);
-torsion = data_merge(front_tor, back_tor, test_interval_mm, test_distance_mm, dist_between_mm);
-data_matrix_torsion = data_merge(unloaded, torsion, test_interval_mm, test_distance_mm, dist_between_mm);
-temp_save_single_test(torsion, "Torsion");
-[gj_x_points, gj_y_points] = get_EI_point(unloaded, torsion, test_interval_mm);
-temp_save_plot_and_points(gj_x_points, gj_y_points, 'GJ');
-
-sig = return_to_start(ardiuno_serial);
-sig = move_force_gauges(ardiuno_serial, 0, 20);
-sig = move_force_gauges(ardiuno_serial, -80, -80);
-save_data_clear_temp(directory_name);
+%end
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, 80, 80);
+sig = move_force_gauges(ardiuno_serial, 5, 5);
 disp(sig);
 %% Manually move inclinometer motor
 sig = move_x_mm(800,0, ardiuno_serial);
@@ -101,7 +108,7 @@ function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_
 
     flush(inclinometer_front_serial);
 
-    [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_front_serial);
+    [pitchFront_temp, rollFront_temp] = get_HWT905TTL_data(inclinometer_front_serial);
 
     flush(inclinometer_back_serial);
 
@@ -133,6 +140,16 @@ function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_
         disp(sig);
         stop_num = str2double(sig);
     end
+
+    flush(inclinometer_front_serial);
+
+    [pitchFront_temp, rollFront_temp] = get_HWT905TTL_data(inclinometer_front_serial);
+
+    flush(inclinometer_back_serial);
+
+    [pitchBack_temp, rollBack_temp] = get_HWT905TTL_data(inclinometer_back_serial);
+
+
 end
 %% Sensor Functions
 function [pitch, roll] = get_HWT905TTL_data(port)
@@ -176,10 +193,6 @@ function [pitch, roll] = get_HWT905TTL_data(port)
             end    
         end
     end
-    disp("pitch: ");
-    disp(pitch);
-    disp("roll: ");
-    disp(roll);
     flush(port);
 end
 
@@ -258,20 +271,19 @@ end
 
 function ret_signal = move_force_gauges_until_desired_force(s, force_gauge_left, force_gauge_right, desired_force, step_size)
     MOVE_FORCE_GAUGES = 24;
-    write(force_gauge_left,'?','string');                   %queries serial port (required to obtain data)
-    force_left = read(force_gauge_left,5,"string");         %reads data point
-    write(force_gauge_right,'?','string');                  %queries serial port (required to obtain data)
-    force_right = read(force_gauge_right,5,"string");       %reads data point
+    [force_left, force_right]=force_average(force_gauge_left, force_gauge_right, 1);
 
     if force_right < desired_force && force_left < desired_force
         while force_left < desired_force || force_right < desired_force
             serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(step_size),",",num2str(step_size));
             ret_signal = serial_communication(s, serial_string);
+            [force_left, force_right]=force_average(force_gauge_left, force_gauge_right, 1);
         end
     else
         while force_left > desired_force || force_right > desired_force
             serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(-1*step_size),",",num2str(-1*step_size));
             ret_signal = serial_communication(s, serial_string);
+            [force_left, force_right]=force_average(force_gauge_left, force_gauge_right, 1);
         end
     end
     
@@ -281,12 +293,16 @@ end
 function ret_signal = level_force_gauges(s, desired_angle, precision, inclinometer, step_size)
     MOVE_FORCE_GAUGES = 24;
     [pitch, roll] = get_HWT905TTL_data(inclinometer);
+    disp(strcat("pitch: ", num2str(pitch)));
+    disp(strcat("roll: ", num2str(roll)));
     ret_signal = 24;
     while ~(roll < (desired_angle + precision) && roll > ((-desired_angle) + (-precision)))
         % step_size = gradient descent step size adjustment(roll, desired_angle, step_size)
         message = make_message(int2str(MOVE_FORCE_GAUGES),roll, desired_angle, precision, step_size);
         ret_signal = serial_communication(s, message);
         [pitch, roll] = get_HWT905TTL_data(inclinometer);
+        disp(strcat("pitch: ", num2str(pitch)));
+        disp(strcat("roll: ", num2str(roll)));
     end
     flush(s);
 end
@@ -425,10 +441,7 @@ function output = data_merge(data_matrix_front, data_matrix_back, test_interval_
         force2_slope = abs(force2_back-force2_front)/(num_of_missing_points+1);
         pitch_slope = (pitch_front-pitch_back)/(num_of_missing_points+1);
         roll_slope = (roll_front-roll_back)/(num_of_missing_points+1);
-        disp(strcat("pitch slope: ", num2str(pitch_slope)));
         for i = 1:num_of_missing_points
-            disp(roll_front);
-            disp(pitch_slope);
             missing_row_entry = [pitch_front-(i*pitch_slope), roll_front-(i*roll_slope), force1_front-(i*force1_slope), force2_front-(i*force2_slope)];
             data_matrix_front = [data_matrix_front; missing_row_entry];
         end
@@ -517,7 +530,6 @@ function truncated = truncate_matrix(matrix, num_rows)%, truncate_location)
     % truncate_from_bottom = 0;
     % trauncate_from_top = 1;
     % if truncate_location == truncate_from_bottom
-    disp(num_rows);
     for i = size(matrix,1):-1:size(matrix,1)-num_rows+1
         matrix(i, :) = [];
     end
@@ -701,7 +713,7 @@ end
 function [distanceFromTip] = distanceFromTip(n,initialOffSet,measurements,test_interval_mm)
     %the distance of the measured pitch form the applied load in inches
     global ei_distance_from_tip;
-    distanceFromTip = (measurements/2-abs(n-measurements/2))*test_interval_mm/1000+initialOffSet;
+    distanceFromTip = (measurements/2 -abs(n-measurements/2))*test_interval_mm/1000+initialOffSet;
     ei_distance_from_tip(end+1) = distanceFromTip;
 end
 
