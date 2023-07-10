@@ -43,7 +43,7 @@ temp_save_single_test(data_matrix_unloaded, "Unloaded");
 sig = return_to_start(ardiuno_serial);
 sig = move_force_gauges(ardiuno_serial, 80, 80);
 
-
+%%
 
 sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 1);
 
@@ -84,7 +84,7 @@ sig = move_force_gauges(ardiuno_serial, 0, 20);
 sig = move_force_gauges(ardiuno_serial, -80, -80);
 save_data_clear_temp(directory_name);
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, -2, -2);
+sig = move_force_gauges(ardiuno_serial, 80, 80);
 disp(sig);
 %% Manually move inclinometer motor
 sig = move_x_mm(800,0, ardiuno_serial);
@@ -553,7 +553,7 @@ function [X_points, EI_points] = get_EI_point(data_matrix_unloaded, data_matrix_
 
         %initialOffset = distance from applied load or clamp at the tip to the
         %first measurement in meters
-        initialOffSet = .165;
+        initialOffSet = .14;
         
         %set empty string for moments
         moment = zeros(measurements,1);
@@ -609,7 +609,7 @@ function [X_points, GJ_points] = get_GJ_points(data_matrix_unloaded, data_matrix
 
         %initialOffset = distance from applied load or clamp at the tip to the
         %first measurement in meters
-        initialOffSet = .165;
+        initialOffSet = .14;
 
 
         %set empty string for moments
@@ -666,7 +666,7 @@ function ei_matrix = make_ei_matrix(unloaded_data, loaded_data, interval_mm)
         rollermass = 31;
         %initialOffset = distance from applied load or clamp at the tip to the
         %first measurement in meters
-        initialOffSet = .165;
+        initialOffSet = .14;
         
         %set empty string for moments
         moment = zeros(measurements,1);
@@ -701,7 +701,7 @@ end
 function [distanceFromTip] = distanceFromTip(n,initialOffSet,measurements,test_interval_mm)
     %the distance of the measured pitch form the applied load in inches
     global ei_distance_from_tip;
-    distanceFromTip = (measurements/2-abs(n-measurements/2))*test_interval_mm/1000-initialOffSet;
+    distanceFromTip = (measurements/2-abs(n-measurements/2))*test_interval_mm/1000+initialOffSet;
     ei_distance_from_tip(end+1) = distanceFromTip;
 end
 

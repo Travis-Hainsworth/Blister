@@ -43,7 +43,7 @@ temp_save_single_test(data_matrix_unloaded, "Unloaded");
 sig = return_to_start(ardiuno_serial);
 sig = move_force_gauges(ardiuno_serial, 80, 80);
 
-
+%%
 
 sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 1);
 
@@ -262,14 +262,19 @@ function ret_signal = move_force_gauges_until_desired_force(s, force_gauge_left,
     force_left = read(force_gauge_left,5,"string");         %reads data point
     write(force_gauge_right,'?','string');                  %queries serial port (required to obtain data)
     force_right = read(force_gauge_right,5,"string");       %reads data point
-    move_up = 1;
-    if force_right > desired_force && force_left > desired_force
-        move_up = -1;
+
+    if force_right < desired_force && force_left < desired_force
+        while force_left < desired_force || force_right < desired_force
+            serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(step_size),",",num2str(step_size));
+            ret_signal = serial_communication(s, serial_string);
+        end
+    else
+        while force_left > desired_force || force_right > desired_force
+            serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(-1*step_size),",",num2str(-1*step_size));
+            ret_signal = serial_communication(s, serial_string);
+        end
     end
-    while force_left < desired_force || force_right < desired_force
-        serial_string = strcat(num2str(MOVE_FORCE_GAUGES),",",num2str(step_size),",",num2str(step_size));
-        ret_signal = serial_communication(s, serial_string);
-    end
+    
     flush(s);
 end
 
@@ -548,7 +553,7 @@ function [X_points, EI_points] = get_EI_point(data_matrix_unloaded, data_matrix_
 
         %initialOffset = distance from applied load or clamp at the tip to the
         %first measurement in meters
-        initialOffSet = .165;
+        initialOffSet = .14;
         
         %set empty string for moments
         moment = zeros(measurements,1);
@@ -604,7 +609,7 @@ function [X_points, GJ_points] = get_GJ_points(data_matrix_unloaded, data_matrix
 
         %initialOffset = distance from applied load or clamp at the tip to the
         %first measurement in meters
-        initialOffSet = .165;
+        initialOffSet = .14;
 
 
         %set empty string for moments
@@ -661,7 +666,7 @@ function ei_matrix = make_ei_matrix(unloaded_data, loaded_data, interval_mm)
         rollermass = 31;
         %initialOffset = distance from applied load or clamp at the tip to the
         %first measurement in meters
-        initialOffSet = .165;
+        initialOffSet = .14;
         
         %set empty string for moments
         moment = zeros(measurements,1);
@@ -696,7 +701,7 @@ end
 function [distanceFromTip] = distanceFromTip(n,initialOffSet,measurements,test_interval_mm)
     %the distance of the measured pitch form the applied load in inches
     global ei_distance_from_tip;
-    distanceFromTip = (measurements/2-abs(n-measurements/2))*test_interval_mm/1000-initialOffSet;
+    distanceFromTip = (measurements/2-abs(n-measurements/2))*test_interval_mm/1000+initialOffSet;
     ei_distance_from_tip(end+1) = distanceFromTip;
 end
 
