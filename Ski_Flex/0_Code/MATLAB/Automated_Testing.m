@@ -2,10 +2,10 @@
 clear all;
 clc;
 
-model_name = 'sickday_94_';                   % Input model name
-year = '2020_';                               % Input model year
-manufacturer = "Line_";                       % Input ski Manufacturer
-model_length_cm = '186';                      % Input Length of ski in cm
+model_name = 'Ripstick';                   % Input model name
+year = '_';                               % Input model year
+manufacturer = "ELAN_";                       % Input ski Manufacturer
+model_length_cm = '188';                      % Input Length of ski in cm
 directory_name = strcat(manufacturer, model_name, year, model_length_cm); 
 %directory_name = "aluminumn_bar";
 test_interval_mm = 50;                        % Input the desired distance between data points in mm (multiples of 5 work best)
@@ -43,7 +43,11 @@ temp_save_single_test(data_matrix_unloaded, "Unloaded");
 sig = return_to_start(ardiuno_serial);
 sig = move_force_gauges(ardiuno_serial, 80, 80);
 
+
+
 sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 1);
+
+
 
 [data_matrix_front_loaded,data_matrix_back_loaded] = sensor_automation(test_interval_mm, direction);
 pause(2);
@@ -80,7 +84,7 @@ sig = move_force_gauges(ardiuno_serial, 0, 20);
 sig = move_force_gauges(ardiuno_serial, -80, -80);
 save_data_clear_temp(directory_name);
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, -2.5, 0);
+sig = move_force_gauges(ardiuno_serial, -2, -0);
 disp(sig);
 %% Manually move inclinometer motor
 sig = move_x_mm(300,0, ardiuno_serial);
