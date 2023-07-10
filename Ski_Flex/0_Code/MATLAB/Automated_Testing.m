@@ -12,7 +12,7 @@ test_interval_mm = 50;                        % Input the desired distance betwe
 direction = 1;                                % Initial Direction
 
 global ardiuno_port inclinometer_port_front inclinometer_port_back force_gage1_port force_gage2_port;
-global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage_left_serial force_gage_right_serial;
 global ei_dtheta ei_moment ei_displacment gj_dtheta gj_moment gj_displacment ei_distance_from_tip;
 
 % Serial USB connections
@@ -25,8 +25,8 @@ force_gage2_port = 'COM7';                    % write in loadcell2 port
 ardiuno_serial = serialport(ardiuno_port, 115200);
 inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
 inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
-force_gage1_serial = serialport(force_gage1_port, 9600);
-force_gage2_serial = serialport(force_gage2_port, 9600);
+force_gage_left_serial = serialport(force_gage1_port, 9600);
+force_gage_right_serial = serialport(force_gage2_port, 9600);
 %% Run Full test
 [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
 pause(2);
@@ -88,7 +88,7 @@ sig = return_to_start(ardiuno_serial);
 disp(sig)
 %% Automated Data Collection Function
 function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_mm, direction) %inclinometer_front_serial
-    global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage_left_serial force_gage_right_serial;
     data_matrix_front = zeros(0, 4);
     data_matrix_back = zeros(0, 4);
     stop_num=0;
@@ -97,7 +97,7 @@ function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_
         pause(.125); 
         [pitchFront, rollFront] = get_HWT905TTL_data(inclinometer_front_serial);
         [pitchBack, rollBack] = get_HWT905TTL_data(inclinometer_back_serial);
-        [force1, force2]=force_average(force_gage1_serial, force_gage2_serial, 1);
+        [force1, force2]=force_average(force_gage_left_serial, force_gage_right_serial, 1);
 
         row_entry_front = [pitchFront, rollFront, force1, force2];
         row_entry_back = [pitchBack, rollBack, force1, force2];
@@ -201,18 +201,18 @@ end
 
 %% Matlab Arduino Functions using serial communication
 function out = clear_and_reset_serial_ports()
-    global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+    global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage_left_serial force_gage_right_serial;
     global ardiuno_port inclinometer_port_front inclinometer_port_back force_gage1_port force_gage2_port;
     try 
-        clear ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
+        clear ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage_left_serial force_gage_right_serial;
     catch
         disp("Serials are not connected yet.");
     end
     ardiuno_serial = serialport(ardiuno_port, 115200);
     inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
     inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
-    force_gage1_serial = serialport(force_gage1_port, 9600);
-    force_gage2_serial = serialport(force_gage2_port, 9600);
+    force_gage_left_serial = serialport(force_gage1_port, 9600);
+    force_gage_right_serial = serialport(force_gage2_port, 9600);
 end
 
 function ret_mm = return_to_start(s)
