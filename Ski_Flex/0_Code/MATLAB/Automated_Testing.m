@@ -43,7 +43,7 @@ temp_save_single_test(data_matrix_unloaded, "Unloaded");
 sig = return_to_start(ardiuno_serial);
 sig = move_force_gauges(ardiuno_serial, 80, 80);
 
-%%
+
 
 sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 1);
 

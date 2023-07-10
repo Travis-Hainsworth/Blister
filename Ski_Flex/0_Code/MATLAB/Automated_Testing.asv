@@ -43,7 +43,7 @@ temp_save_single_test(data_matrix_unloaded, "Unloaded");
 sig = return_to_start(ardiuno_serial);
 sig = move_force_gauges(ardiuno_serial, 80, 80);
 
-%%
+
 
 sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_back_serial, 1);
 
@@ -84,7 +84,7 @@ sig = move_force_gauges(ardiuno_serial, 0, 20);
 sig = move_force_gauges(ardiuno_serial, -80, -80);
 save_data_clear_temp(directory_name);
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, -2, -2);
+sig = move_force_gauges(ardiuno_serial, 80, 80);
 disp(sig);
 %% Manually move inclinometer motor
 sig = move_x_mm(800,0, ardiuno_serial);
