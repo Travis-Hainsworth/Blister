@@ -268,9 +268,9 @@ function message = make_message(m, actual_angle, desired_angle, precision, step_
     if actual_angle <= desired_angle+precision && actual_angle >= desired_angle-precision % make this a fuction that takes in actual and desired, concatenates and retruns message
           message = strcat(message,',0',',0');
     elseif actual_angle < desired_angle
-          message = strcat(message,',0',',1'); 
+          message = strcat(message,',0',',',num2str(step_size)); 
     else
-          message = strcat(message,',1',',0'); 
+          message = strcat(message,',',num2str(step_size),',0'); 
     end 
 end
 
