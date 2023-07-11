@@ -2,10 +2,10 @@
 clear all;
 clc;
 
-model_name = 'Ripstick';                   % Input model name
-year = '_';                               % Input model year
-manufacturer = "ELAN_";                       % Input ski Manufacturer
-model_length_cm = '188';                      % Input Length of ski in cm
+model_name = 'Sickday_94_';                   % Input model name
+year = '2020_';                               % Input model year
+manufacturer = "Line_";                       % Input ski Manufacturer
+model_length_cm = '186';                      % Input Length of ski in cm
 directory_name = strcat(manufacturer, model_name, year, model_length_cm); 
 %directory_name = "aluminumn_bar";
 test_interval_mm = 50;                        % Input the desired distance between data points in mm (multiples of 5 work best)
