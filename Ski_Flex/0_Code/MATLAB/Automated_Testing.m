@@ -99,6 +99,8 @@ disp(sig);
 %% Return inclinometer motor back to start
 sig = return_to_start(ardiuno_serial);
 disp(sig)
+%% Data save to drive test
+save_data_clear_temp_drive("test111");
 %% Automated Data Collection Function
 function [data_matrix_front,data_matrix_back] = sensor_automation(test_interval_mm, direction) %inclinometer_front_serial
     global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_gage1_serial force_gage2_serial;
@@ -512,6 +514,28 @@ function save_data_clear_temp(dir_name)
     if ~exist(temp_folder_dir, 'dir')
        mkdir(temp_folder_dir);
     end
+end
+
+function save_data_clear_temp_drive(dir_name)
+    temp_folder_path = strcat('..\..\0_Data\Temp_Data_Folder\');
+    relative_dir_path = strcat("G:\.shortcut-targets-by-id\1jaXuO8culNZtbUZ1rrY8TEjG_TDjo2f5\Blister Labs Ski Flex\Ski_Data\",dir_name);
+    if ~exist(relative_dir_path, 'dir')
+       mkdir(relative_dir_path);
+    end
+    S = dir(relative_dir_path);
+    N = nnz(~ismember({S.name},{'.','..'})&[S.isdir]);
+    test_dir_name = strcat(num2str(N),"_test");
+    relative_save_path = strcat(relative_dir_path,'\',test_dir_name);
+    mkdir(relative_save_path);
+    filePattern = strcat(temp_folder_path, '*.*');
+    copyfile(filePattern, relative_save_path);
+    temp_folder_dir = strcat('..\..\0_Data\Temp_Data_Folder\');
+    rmdir(temp_folder_path, 's');
+    if ~exist(temp_folder_dir, 'dir')
+       mkdir(temp_folder_dir);
+    end
+
+
 end
 
 function [m1, m2] = check_and_adjust_size(matrix1, matrix2)%, truncate_location)
