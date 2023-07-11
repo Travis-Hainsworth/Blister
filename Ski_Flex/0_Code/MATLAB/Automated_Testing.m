@@ -2,7 +2,7 @@
 clear all;
 clc;
 
-model_name = 'aluminum bar';                   % Input model name
+model_name = 'Black Crow_';                   % Input model name
 year = '_';                               % Input model year
 manufacturer = "_";                       % Input ski Manufacturer
 model_length_cm = '';                      % Input Length of ski in cm
@@ -82,6 +82,7 @@ while num_of_test ~= 0
     
     sig = return_to_start(ardiuno_serial);
     sig = move_force_gauges(ardiuno_serial, 0, 20);
+    %%
     sig = move_force_gauges(ardiuno_serial, -80, -80);
    
     move_force_gauges_until_desired_force(ardiuno_serial, force_gage1_serial, force_gage2_serial, 0, 5);
@@ -91,7 +92,7 @@ while num_of_test ~= 0
 
 end
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, 5, 5);
+sig = move_force_gauges(ardiuno_serial, -10, -10);
 disp(sig);
 %% Manually move inclinometer motor
 sig = move_x_mm(800,0, ardiuno_serial);
