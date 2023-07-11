@@ -171,12 +171,13 @@ void loop() {
           switch (command) {
             case MOVE_X:
             {
-              //"command,distance_mm,direction"
+              //"command,distance_mm,#" negative distance means go towards back, and postive ditance is move towards front
               float length_mm = (float) message_arr[1];
               // Serial.println(length_mm);
-              long direction = get_direction(message_arr[2]);
+              //long direction = get_direction(message_arr[2]);
               // Serial.println(direction);
-              long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution_inclinometer, length_mm, lead_distance));
+              //long steps = direction*abs(convert_distance_from_mm_to_steps(stepsPerRevolution_inclinometer, length_mm, lead_distance));
+              long steps = convert_distance_from_mm_to_steps(stepsPerRevolution_inclinometer, length_mm, lead_distance);
               //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
               send_finish_signal(MOVE_X);

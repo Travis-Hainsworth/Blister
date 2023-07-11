@@ -693,3 +693,4 @@ function [dTheta] = dirTheta(n,displacement, step_size_m)
     theta = abs(displacement(n-1)-displacement(n))+abs(displacement(n)-displacement(n+1));
     dTheta = theta/(2*step_size_m);%*39.37/4; %in radians/meter
 end
+
