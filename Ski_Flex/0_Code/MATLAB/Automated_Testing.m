@@ -30,7 +30,7 @@ force_gage_right_serial = serialport(force_gage2_port, 9600);
 %% Run Full test
 [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
 pause(2);
-
+f
 temp_save_single_test(data_matrix_front_unloaded, "data_matrix_front_unloaded");
 temp_save_single_test(data_matrix_back_unloaded, "data_matrix_back_unloaded");
 test_distance_mm = size(data_matrix_front_unloaded,1)*test_interval_mm;
