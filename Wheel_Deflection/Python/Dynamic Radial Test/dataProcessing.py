@@ -47,11 +47,15 @@ def calc_r2(y_axis, regression_curve):
 
 
 # Used for graphing
-def regression_helper(x_axis, y_axis, degree):
-    regression_coefficients = np.polyfit(np.unique(x_axis), y_axis, degree)
-    regression_curve = np.polyval(regression_coefficients, np.unique(x_axis))
-
-    r2 = calc_r2(y_axis, regression_curve)
+def regression_helper(x_axis, y_axis, degree, unique):
+    if unique:
+        regression_coefficients = np.polyfit(np.unique(x_axis), y_axis, degree)
+        regression_curve = np.polyval(regression_coefficients, np.unique(x_axis))
+        r2 = calc_r2(y_axis, regression_curve)
+    else:
+        regression_coefficients = np.polyfit(x_axis, y_axis, degree)
+        regression_curve = np.polyval(regression_coefficients, x_axis)
+        r2 = calc_r2(y_axis, regression_curve)
 
     return regression_curve, r2
 
@@ -81,7 +85,7 @@ def index_filtering(deformation, x_axis):
 def processor(filepaths):
     deformations, weights, heights, rims, heads = [], [], [], [], []
     for filepath in filepaths:
-        max_defs, weight, height, rim, head = dataProcessingMain(filepath, axis = 'y')
+        max_defs, weight, height, rim, head = dataProcessingMain(filepath, axis='y')
         deformations.append(max_defs)
         weights.append(weight)
         heights.append(height)
@@ -91,11 +95,12 @@ def processor(filepaths):
     return deformations, weights, heights, rims, heads
 
 
-def fft_analysis(df):
+def fft_analysis(file_path):
     # FFT analysis, finds natural frequency of rim
+    df = pd.read_csv(file_path)
 
     # Find the index of the maximum y displacement (k)
-    disp = df['Displacementy']
+    disp = df.iloc[1]
     k = disp.argmax()
     L = len(disp) - k + 1
 
