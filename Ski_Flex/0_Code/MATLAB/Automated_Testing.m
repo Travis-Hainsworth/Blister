@@ -2,10 +2,10 @@
 clear all;
 clc;
 
-model_name = 'Sickday_94_';                   % Input model name
-year = '2020_';                               % Input model year
-manufacturer = "Line_";                       % Input ski Manufacturer
-model_length_cm = '186';                      % Input Length of ski in cm
+model_name = 'aluminum bar';                   % Input model name
+year = '_';                               % Input model year
+manufacturer = "_";                       % Input ski Manufacturer
+model_length_cm = '';                      % Input Length of ski in cm
 directory_name = strcat(manufacturer, model_name, year, model_length_cm); 
 %directory_name = "aluminumn_bar";
 test_interval_mm = 50;                        % Input the desired distance between data points in mm (multiples of 5 work best)
@@ -28,8 +28,8 @@ inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 force_gage1_serial = serialport(force_gage1_port, 9600);
 force_gage2_serial = serialport(force_gage2_port, 9600);
 %% Run Full test
-%num_of_test = 10;
-%while num_of_test ~= 0
+num_of_test = 10;
+while num_of_test ~= 0
     [data_matrix_front_unloaded, data_matrix_back_unloaded] = sensor_automation(test_interval_mm, direction);
     pause(2);
     
@@ -87,9 +87,9 @@ force_gage2_serial = serialport(force_gage2_port, 9600);
     move_force_gauges_until_desired_force(ardiuno_serial, force_gage1_serial, force_gage2_serial, 0, 5);
     
     save_data_clear_temp(directory_name);
-    %num_of_test = num_of_test -1;
+    num_of_test = num_of_test -1;
 
-%end
+end
 %% Manually move force motors
 sig = move_force_gauges(ardiuno_serial, 5, 5);
 disp(sig);
