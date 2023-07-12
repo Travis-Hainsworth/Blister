@@ -180,7 +180,7 @@ void loop() {
               long steps = convert_distance_from_mm_to_steps(stepsPerRevolution_inclinometer, length_mm, lead_distance);
               //stepper1_current_position+= (int) steps;
               move_x_steps(steps);
-              send_finish_signal(MOVE_X);
+              send_finish_signal(steps);
               break;
             }
             case MOVE_FORCE_GAUGES:
@@ -256,9 +256,9 @@ void loop() {
             case SET_STEPS_PER_REVOLUTION:
             {
               //"command,max_speed,#"
-              float steps_per_rev = (float) message_arr[1];
-              stepsPerRevolution_inclinometer = steps_per_rev;
-              send_finish_signal(SET_STEPS_PER_REVOLUTION);
+              float steps_size = (float) message_arr[1];
+              stepsPerRevolution_inclinometer = steps_size*200;
+              send_finish_signal(stepsPerRevolution_inclinometer);//SET_STEPS_PER_REVOLUTION);
               break;
             }
             case GET_CURRENT_POSITION:
