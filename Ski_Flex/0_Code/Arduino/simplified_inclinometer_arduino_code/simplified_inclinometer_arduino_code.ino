@@ -45,7 +45,7 @@ MultiStepper steppers;
 ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
 float stepsPerRevolution_inclinometer = 200;   // change this to fit the number of steps per revolution
-float stepsPerRevolution_force_guages = 200*8;
+float stepsPerRevolution_force_guages = 200;
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
