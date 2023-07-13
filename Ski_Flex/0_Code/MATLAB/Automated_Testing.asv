@@ -9,20 +9,20 @@ model_length_cm = '';                      % Input Length of ski in cm
 directory_name = strcat(manufacturer, model_name, year, model_length_cm); 
 %directory_name = "aluminumn_bar";
 test_interval_mm = 50;                        % Input the desired distance between data points in mm (multiples of 5 work best)
-direction = 1;                                % Initial Direction
+direction = 0;                                % Initial Direction
 
-global ardiuno_port inclinometer_port force_gage1_port force_gage2_port; %inclinometer_port_back
-global ardiuno_serial inclinometer_serial force_gage1_serial force_gage2_serial; %inclinometer_back_serial
+global arduino_port inclinometer_port force_gage1_port force_gage2_port; %inclinometer_port_back
+global arduino_serial inclinometer_serial force_gage1_serial force_gage2_serial; %inclinometer_back_serial
 global ei_dtheta ei_moment ei_displacment gj_dtheta gj_moment gj_displacment ei_distance_from_tip;
 
 % Serial USB connections
-ardiuno_port = 'COM16';                       % write in arduino port
-inclinometer_port = 'COM11';            % write in front inclometer port
+arduino_port = 'COM16';                       % write in arduino port
+inclinometer_port = 'COM12';            % write in front inclometer port
 %inclinometer_port_back = 'COM12';             % write in back inclometer port
 force_gage1_port = 'COM8';                    % write in loadcell1 port
 force_gage2_port = 'COM7';                    % write in loadcell2 port
 
-ardiuno_serial = serialport(ardiuno_port, 115200);
+arduino_serial = serialport(arduino_port, 115200);
 inclinometer_serial = serialport(inclinometer_port, 9600);
 %inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
 force_gage1_serial = serialport(force_gage1_port, 9600);
@@ -42,16 +42,18 @@ while num_of_test ~= 0
     temp_save_single_test(data_matrix_unloaded, "Unloaded");
     
     
-    sig = return_to_start(ardiuno_serial);
-    
-    sig = move_force_gauges(ardiuno_serial, 80, 80);
-
+    sig = return_to_start(arduino_serial);
+    %%
+    sig = move_force_gauges(arduino_serial, 100, 100);
+%%
     pause(1);
-    %%%% HAVE TO MOVE THE INCLINOMETER TO THE MIDDLE TO LEVEL %%%
-    sig = level_force_gauges(ardiuno_serial, 0, .05, inclinometer_serial, 1);
-    %%% HAVE TO MOVE THE INCLINOMETER TO THE START TO START THE LOADED TEST %%%
-    sig = return_to_start(ardiuno_serial);
+
     
+    %%%% HAVE TO MOVE THE INCLINOMETER TO THE MIDDLE TO LEVEL %%%
+    sig = level_force_gauges(arduino_serial, 0, .05, inclinometer_serial, 1);
+    %%% HAVE TO MOVE THE INCLINOMETER TO THE START TO START THE LOADED TEST %%%
+    sig = return_to_start(arduino_serial);
+    %%
     data_matrix_loaded = sensor_automation(test_interval_mm, direction);
     pause(2);
     
@@ -65,8 +67,9 @@ while num_of_test ~= 0
     [ei_x_points, ei_y_points] = get_EI_points(unloaded, loaded, test_interval_mm);
     temp_save_plot_and_points(ei_x_points, ei_y_points, 'EI');
     
-    sig = return_to_start(ardiuno_serial);
-    sig = move_force_gauges(ardiuno_serial, 0, -20);
+    sig = return_to_start(arduino_serial);
+    %%
+    sig = move_force_gauges(arduino_serial, 0, -20);
     
     data_matrix_torsion = sensor_automation(test_interval_mm, direction);
     pause(2);
@@ -83,30 +86,30 @@ while num_of_test ~= 0
     [gj_x_points, gj_y_points] = get_GJ_points(unloaded, torsion, test_interval_mm);
     temp_save_plot_and_points(gj_x_points, gj_y_points, 'GJ');
     
-    sig = return_to_start(ardiuno_serial);
-    sig = move_force_gauges(ardiuno_serial, 0, 20);
-    sig = move_force_gauges(ardiuno_serial, -80, -80);
+    sig = return_to_start(arduino_serial);
+    sig = move_force_gauges(arduino_serial, 0, 20);
+    sig = move_force_gauges(arduino_serial, -100, -100);
    
-    move_force_gauges_until_desired_force(ardiuno_serial, force_gage1_serial, force_gage2_serial, 0, 5);
+    %move_force_gauges_until_desired_force(arduino_serial, force_gage1_serial, force_gage2_serial, 0, 5);
     
     save_data_clear_temp(directory_name);
     num_of_test = num_of_test -1;
 
 end
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, 5, 5);
+sig = move_force_gauges(arduino_serial, 0, -1);
 disp(sig);
 %% Manually move inclinometer motor
-sig = move_x_mm(800,0, ardiuno_serial);
+sig = move_x_mm(100,1, arduino_serial);
 disp(sig);
 %% Return inclinometer motor back to start
-sig = return_to_start(ardiuno_serial);
+sig = return_to_start(arduino_serial);
 disp(sig)
 %% Data save to drive test
 save_data_clear_temp_drive("test111");
 %% Automated Data Collection Function
 function data_matrix = sensor_automation(test_interval_mm, direction) %inclinometer_serial
-    global ardiuno_serial inclinometer_serial force_gage1_serial force_gage2_serial;
+    global arduino_serial inclinometer_serial force_gage1_serial force_gage2_serial;
     data_matrix = zeros(0, 4);
     % data_matrix_back = zeros(0, 4);
     stop_num=0;
@@ -131,7 +134,7 @@ function data_matrix = sensor_automation(test_interval_mm, direction) %inclinome
         row_entry = [pitch, roll, force1, force2];
         % row_entry_back = [pitchBack, rollBack, force1, force2];
 
-        data_matrix = [data_matrix;row_entry_front];
+        data_matrix = [data_matrix;row_entry];
         disp("data_matrix: ");
         disp(data_matrix);
         % data_matrix_back = [data_matrix_back;row_entry_back];
@@ -139,7 +142,7 @@ function data_matrix = sensor_automation(test_interval_mm, direction) %inclinome
         % disp(data_matrix_back);
         
         %MOVE SENSOR
-        sig = move_x_mm(test_interval_mm, direction, ardiuno_serial);
+        sig = move_x_mm(-test_interval_mm, direction, arduino_serial);
         disp(sig);
         stop_num = str2double(sig);
     end
@@ -316,15 +319,6 @@ function ret_mm = get_distance_from_start(s)
     flush(s);
 end 
 
-function ret_state = get_testing_state(s)
-    GET_TESTING_STATE = 26;
-    serial_string = strcat(num2str(GET_TESTING_STATE),",0,1");
-    %ret_mm = serial_communication(s, serial_string);
-    custom_write(s, serial_string);
-    ret_state = custom_read(s);
-    flush(s);
-end 
-
 function ret_signal = set_current_position(pos,s)
     SET_CURRENT_POS = 6;
     serial_string = strcat(num2str(SET_CURRENT_POS),",",num2str(pos),",0");
@@ -364,24 +358,6 @@ end
 function ret_signal = reset_arduino(s)
     RESET_ARDUINO = 16;
     serial_string = strcat(num2str(RESET_ARDUINO),",0,0");
-    custom_write(s, serial_string);
-    ret_signal = custom_read(s);
-    flush(s);
-end
-
-
-
-function ret_signal = reattach_interrupt(s)%ls is the back or front limit switch (0 = back, 1 = front)
-    REATTACH_INTERUPT = 18;
-    serial_string = strcat(num2str(REATTACH_INTERUPT),",0,0");
-    custom_write(s, serial_string);
-    ret_signal = custom_read(s);
-    flush(s);
-end
-
-function ret_signal = deattach_interrupt(s)%ls is the back or front limit switch (0 = back, 1 = front)
-    DEATTACH_INTERUPT = 20;
-    serial_string = strcat(num2str(DEATTACH_INTERUPT),",0,0");
     custom_write(s, serial_string);
     ret_signal = custom_read(s);
     flush(s);
