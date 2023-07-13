@@ -44,8 +44,8 @@ MultiStepper steppers;
 
 ezButton limitSwitchObj(LIMIT_SWITCH_PIN_2);
 
-float stepsPerRevolution_inclinometer = 200;   // change this to fit the number of steps per revolution
-float stepsPerRevolution_force_guages = 200;
+float stepsPerRevolution_inclinometer = 200*4;   // change this to fit the number of steps per revolution
+float stepsPerRevolution_force_guages = 200*4;
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
 volatile boolean testing_state;
@@ -54,8 +54,8 @@ int count;
 void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
 
-  inclinometer_stepper.setMaxSpeed(1000); //pulse/steps per second
-  inclinometer_stepper.setAcceleration(1000); //steps per second per second to accelerate
+  inclinometer_stepper.setMaxSpeed(4500); //pulse/steps per second
+  inclinometer_stepper.setAcceleration(4500); //steps per second per second to accelerate
   inclinometer_stepper.setCurrentPosition(0);
   inclinometer_stepper.setMinPulseWidth(30);
 
@@ -67,7 +67,7 @@ void setup() {
   // TMCdriver.pwm_autoscale(true);     // Needed for stealthChop
   // TMCdriver.en_spreadCycle(false);
 
-  int force_guage_maxV_and_accel = 500;
+  int force_guage_maxV_and_accel = 4500;
 
   left_stepper.setMaxSpeed(force_guage_maxV_and_accel); //pulse/steps per second
   left_stepper.setAcceleration(force_guage_maxV_and_accel); //steps per second per second to accelerate
