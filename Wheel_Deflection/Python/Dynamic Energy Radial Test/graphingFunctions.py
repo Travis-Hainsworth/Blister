@@ -65,13 +65,13 @@ def percent_diff_plot(energy_diffs, drop_heights, rims, heads):
         regression_curve = model.predict(X_poly)
 
         this_color = colors[i]
-        if rims[i] == rims[i-1]:
+        if rims[i][0] == rims[i-1][0]:
             this_color = colors[i-1]
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve, mode='lines',
-                                     name=f'{rims[i]} {heads[i]} regression', line=dict(color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]} regression', line=dict(color=this_color)))
         else:
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve, mode='lines',
-                                 name=f'{rims[i]} {heads[i]} regression', line=dict(dash='dash', color=this_color)))
+                                 name=f'{rims[i][0]} {heads[i][0]} regression', line=dict(dash='dash', color=this_color)))
 
         counter += 1
 
@@ -117,14 +117,14 @@ def height_vs_displacement(height, displacement, rims, heads):
         regression_curve = model.predict(X_poly)
         this_color = colors[i]
 
-        if rims[i] == rims[i-1]:
+        if rims[i][0] == rims[i-1][0]:
             this_color = colors[i-1]
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve, mode='lines',
-                                     name=f'{rims[i]} {heads[i]} regression', line=dict(color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]} regression', line=dict(color=this_color)))
 
         else:
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve,
-                                     name=f'{rims[i]} {heads[i]} Regression', line=dict(dash='dash', color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]} Regression', line=dict(dash='dash', color=this_color)))
 
         counter += 1
 
@@ -164,14 +164,14 @@ def energy_vs_displacement(energy, displacement, rims, heads):
         regression_curve = model.predict(X_poly)
 
         this_color = colors[i]
-        if rims[i] == rims[i-1]:
+        if rims[i][0] == rims[i-1][0]:
             this_color = colors[i-1]
             fig.add_trace(go.Scatter(x=sorted_energy, y=regression_curve,
-                                     name=f'{rims[i]} {heads[i]}', line=dict(color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]}', line=dict(color=this_color)))
 
         else:
             fig.add_trace(go.Scatter(x=sorted_energy, y=regression_curve,
-                                     name=f'{rims[i]} {heads[i]}', line=dict(dash='dash', color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]}', line=dict(dash='dash', color=this_color)))
 
         counter += 1
 

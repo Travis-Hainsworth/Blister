@@ -1,13 +1,16 @@
+import cProfile
+
 from scipy.signal import find_peaks
 from readInDataFiles import *
 
 
 def data_processor(file_path):
+    # pro = cProfile.Profile()
+    # pro.enable()
     df, height, rim, head = get_mocap_data(file_path)
     list_mocap_data, displacements = clean_mocap_data(df)
     q_drop_heights = []
     q_percent_absorbed = []
-    dfs = []
 
     for i, df in enumerate(list_mocap_data):
         index_of_starting_height = df['drop_head_y'].argmax()
@@ -26,11 +29,14 @@ def data_processor(file_path):
 
         q_drop_heights.append(int(height[i]))
         q_percent_absorbed.append(percent_absorbed)
-
+    # pro.disable()
+    # pro.print_stats(sort='cumtime')
     return q_percent_absorbed, displacements, q_drop_heights, rim, head
 
 
 def file_processor(filepaths):
+    # pro = cProfile.Profile()
+    # pro.enable()
     energies, percents, heights, rims, heads = [], [], [], [], []
     for filepath in filepaths:
         energy, percent, height, rim, head = data_processor(filepath)
@@ -39,7 +45,8 @@ def file_processor(filepaths):
         rims.append(rim)
         percents.append(percent)
         heads.append(head)
-
+    # pro.disable()
+    # pro.print_stats(sort='cumtime')
     return energies, percents, heights, rims, heads
 
 
