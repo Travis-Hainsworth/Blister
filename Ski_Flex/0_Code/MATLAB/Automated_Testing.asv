@@ -78,7 +78,7 @@ sig = move_force_gauges(ardiuno_serial, 0, 20);
 sig = move_force_gauges(ardiuno_serial, -80, -80);
 save_data_clear_temp(directory_name);
 %% Manually move force motors
-sig = move_force_gauges(ardiuno_serial, 10, 20);
+sig = move_force_gauges(arduino_serial, 20, 20);
 disp(sig);
 %% Manually move inclinometer motor
 sig = move_x_mm(300,0, ardiuno_serial);
@@ -87,10 +87,7 @@ disp(sig);
 sig = return_to_start(ardiuno_serial);
 disp(sig)
 %%
-disp("ski");
-[p,r]= get_HWT905TTL_data(inclinometer_back_serial);
-disp("level");
-[p,r]= get_HWT905TTL_data(inclinometer_back_serial);
+[p,r]= get_HWT905TTL_data(ski_inclinometer_serial);
 %%
 clear all;
 close all;
