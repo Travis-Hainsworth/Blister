@@ -33,7 +33,7 @@ def get_mocap_data(folder_dir):
 
     # Use ThreadPoolExecutor for parallel processing
     with ThreadPoolExecutor(max_workers=NUM_CORES) as executor:
-        processed_data = list(executor.map(process_single_file, [folder_dir]*len(files), files))
+        processed_data = list(executor.map(process_single_file, [folder_dir] * len(files), files))
 
     # Unpack the results into separate lists
     combined_csvs, height, rim, head = zip(*processed_data)
@@ -58,6 +58,7 @@ def fix_mocap_df(df):
 
 def clean_mocap_data(list_df):
     clean_list_df = []
+    disp_deg = []
     displacements = []
     pattern_drop_head = r'^Unlabeled \d+\.\d+ Y$'
     degrees = [0, 45, 90, 135, 180, 225, 270, 315]
@@ -70,18 +71,14 @@ def clean_mocap_data(list_df):
         important_info['drop_head_y'] = drop_head_y
 
         if 'Wheel1:Marker 0deg.1 Y' in df.columns:
-            rim_top_x = pd.to_numeric(df['Wheel1:Marker 0deg.1 X'], errors='coerce')
             rim_top_y = pd.to_numeric(df['Wheel1:Marker 0deg.1 Y'], errors='coerce')
-            rim_top_z = pd.to_numeric(df['Wheel1:Marker 0deg.1 Z'], errors='coerce')
 
             rim_hub_x = pd.to_numeric(df[' X'], errors='coerce')
             rim_hub_y = pd.to_numeric(df['Wheel1:Marker Hub.1 Y'], errors='coerce')
             rim_hub_z = pd.to_numeric(df['Wheel1:Marker Hub.1 Z'], errors='coerce')
 
         else:
-            rim_top_x = pd.to_numeric(df['RigidBody:Marker 0deg.1 X'], errors='coerce')
             rim_top_y = pd.to_numeric(df['RigidBody:Marker 0deg.1 Y'], errors='coerce')
-            rim_top_z = pd.to_numeric(df['RigidBody:Marker 0deg.1 Z'], errors='coerce')
 
             rim_hub_x = pd.to_numeric(df['RigidBody:Marker Hub.1 X'], errors='coerce')
             rim_hub_y = pd.to_numeric(df['RigidBody:Marker Hub.1 Y'], errors='coerce')
@@ -95,14 +92,14 @@ def clean_mocap_data(list_df):
             degree_y = pd.to_numeric(df[degree_cols[1]], errors='coerce')
             degree_z = pd.to_numeric(df[degree_cols[2]], errors='coerce')
 
-            displacement_degree = np.sqrt((rim_hub_y - degree_y) ** 2 + (rim_hub_x - degree_x) ** 2 + (rim_hub_z - degree_z) ** 2)
-            max_displacement_degree = displacement_degree.min()
-            scaled_displacement_degree = max_displacement_degree - displacement_degree[0]
+            displacement_degree = np.sqrt((rim_hub_y - degree_y) ** 2 +
+                                          (rim_hub_x - degree_x) ** 2 +
+                                          (rim_hub_z - degree_z) ** 2)
 
-            important_info['displacement_{}deg'.format(degree)] = scaled_displacement_degree
-            important_info['Marker_{}deg_X'.format(degree)] = degree_x
-            important_info['Marker_{}deg_Y'.format(degree)] = degree_y
-            important_info['Marker_{}deg_Z'.format(degree)] = degree_z
+            max_displacement_degree = displacement_degree.min()
+            scaled_displacement_degree = np.abs(max_displacement_degree - displacement_degree[0])
+
+            disp_deg.append(scaled_displacement_degree)
 
         displacement = np.abs(rim_hub_y - rim_top_y)
         max_displacement = displacement.min()
@@ -110,7 +107,4 @@ def clean_mocap_data(list_df):
         displacements.append(scaled_displacement)
 
         clean_list_df.append(important_info)
-
-    return clean_list_df, displacements
-
-
+    return clean_list_df, displacements, disp_deg

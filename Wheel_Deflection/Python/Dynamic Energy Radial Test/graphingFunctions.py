@@ -1,6 +1,7 @@
 from dataProcessing import *
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import cross_val_score
@@ -8,33 +9,13 @@ from sklearn.impute import SimpleImputer
 import re
 
 
-def plot_all_markers(dfs, drop_heights):
-    degrees = [0, 45, 90, 135, 180, 225, 270, 315]
-
+def plot_all_markers(lists, rims):
+    x_values = np.arange(0, 1000, 100)
     fig = go.Figure()
 
-    for degree in degrees:
-        deformations = []
-        for df_list in dfs:
-            for df in df_list:
-                print(df)
-                pattern_degree = r'^(RigidBody|Wheel1):Marker {}deg\.1 Y$'.format(degree)
-                degree_cols = [col for col in df.columns if re.match(pattern_degree, col)]
-                if len(degree_cols) > 0:
-                    degree_y = pd.to_numeric(df[degree_cols[0]], errors='coerce')
-                    displacement_degree = np.abs(df['rim_hub_y'] - degree_y)
-                    max_displacement_degree = displacement_degree.min()
-                    scaled_displacement_degree = max_displacement_degree - displacement_degree[0]
-                    deformations.append(scaled_displacement_degree)
-
-        fig.add_trace(go.Scatter(x=drop_heights, y=deformations, mode='lines', name='{} deg'.format(degree)))
-
-    fig.update_layout(
-        xaxis_title='Drop Height',
-        yaxis_title='Deformation',
-        title='Deformations vs Drop Height for Different Degrees'
-    )
-
+    # Loop through each column and create individual plots
+    for i in range(len(lists)):
+        fig.add_trace(go.Scatter(x=x_values, y=lists[i], mode='lines', name=rims[i][0]))
     fig.show()
 
 
