@@ -16,15 +16,19 @@ global ardiuno_serial inclinometer_front_serial inclinometer_back_serial force_g
 global ei_dtheta ei_moment ei_displacment gj_dtheta gj_moment gj_displacment ei_distance_from_tip;
 
 % Serial USB connections
-ardiuno_port = 'COM16';                      % write in arduino port
+ardiuno_port = 'COM16';    
+%% % write in arduino port
 inclinometer_port_front = 'COM11';            % write in front inclometer port
-inclinometer_port_back = 'COM12';             % write in back inclometer port
+inclinometer_port_back = 'COM12';  
+%% % write in back inclometer port
 force_gage1_port = 'COM8';                    % write in loadcell1 port
 force_gage2_port = 'COM7';                    % write in loadcell2 port
 
 ardiuno_serial = serialport(ardiuno_port, 115200);
+%%
 inclinometer_front_serial = serialport(inclinometer_port_front, 9600);
 inclinometer_back_serial = serialport(inclinometer_port_back, 9600);
+%%
 force_gage_left_serial = serialport(force_gage1_port, 9600);
 force_gage_right_serial = serialport(force_gage2_port, 9600);
 %% Run Full test
