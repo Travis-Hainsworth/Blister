@@ -204,8 +204,8 @@ function [pitch, roll] = get_HWT905TTL_data(port)
                     ww = [ww;w'];
                     AA = [AA;A'];
                     tt = [tt;t];
-                    pitch = A(2);
-                    roll = A(1);
+                    pitch = A(1);
+                    roll = A(2);
                     if (size(aa,1)>5*f)%clear history data
                         aa = aa(f:5*f,:);
                         ww = ww(f:5*f,:);
