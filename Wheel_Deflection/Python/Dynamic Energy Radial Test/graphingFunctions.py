@@ -1,21 +1,19 @@
 from dataProcessing import *
 import numpy as np
 import plotly.graph_objects as go
-import plotly.express as px
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import cross_val_score
 from sklearn.impute import SimpleImputer
-import re
 
 
-def plot_all_markers(lists, rims):
-    x_values = np.arange(0, 1000, 100)
+def plot_all_markers(lists, rims, heads):
+    x_values = np.arange(0, 100, 10)
     fig = go.Figure()
 
     # Loop through each column and create individual plots
     for i in range(len(lists)):
-        fig.add_trace(go.Scatter(x=x_values, y=lists[i], mode='lines', name=rims[i][0]))
+        fig.add_trace(go.Scatter(x=x_values, y=lists[i], mode='lines', name=f'{rims[i][0]} {heads[i][0]}'))
     fig.show()
 
 
@@ -46,20 +44,21 @@ def percent_diff_plot(energy_diffs, drop_heights, rims, heads):
         regression_curve = model.predict(X_poly)
 
         this_color = colors[i]
-        if rims[i][0] == rims[i-1][0]:
-            this_color = colors[i-1]
+        if rims[i][0] == rims[i - 1][0]:
+            this_color = colors[i - 1]
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve, mode='lines',
-                                     name=f'{rims[i][0]} {heads[i][0]} regression', line=dict(color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]}', line=dict(color=this_color)))
         else:
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve, mode='lines',
-                                 name=f'{rims[i][0]} {heads[i][0]} regression', line=dict(dash='dash', color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]}',
+                                     line=dict(dash='dash', color=this_color)))
 
         counter += 1
 
     fig.update_layout(
-        title=f'Energy Absorbed From Drop Heights',
+        title=f'Energy Absorbed vs. Drop Heights Regression Lines, n=62',
         xaxis=dict(title=f'Drop Height'),
-        yaxis=dict(title='potential - rebound'),
+        yaxis=dict(title='Energy Absorbed (J)'),
         showlegend=True,
         font=dict(size=15)
     )
@@ -98,19 +97,20 @@ def height_vs_displacement(height, displacement, rims, heads):
         regression_curve = model.predict(X_poly)
         this_color = colors[i]
 
-        if rims[i][0] == rims[i-1][0]:
-            this_color = colors[i-1]
+        if rims[i][0] == rims[i - 1][0]:
+            this_color = colors[i - 1]
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve, mode='lines',
-                                     name=f'{rims[i][0]} {heads[i][0]} regression', line=dict(color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]}', line=dict(color=this_color)))
 
         else:
             fig.add_trace(go.Scatter(x=sorted_drop_heights, y=regression_curve,
-                                     name=f'{rims[i][0]} {heads[i][0]} Regression', line=dict(dash='dash', color=this_color)))
+                                     name=f'{rims[i][0]} {heads[i][0]}',
+                                     line=dict(dash='dash', color=this_color)))
 
         counter += 1
 
     fig.update_layout(
-        title=f'Displacement vs. Drop Height',
+        title=f'Displacement vs. Drop Height Regression Lines, n=62',
         xaxis=dict(title=f'Drop Height'),
         yaxis=dict(title='Displacement (in)'),
         showlegend=True,
@@ -119,7 +119,7 @@ def height_vs_displacement(height, displacement, rims, heads):
     fig.show()
 
 
-def energy_vs_displacement(energy, displacement, rims, heads):
+def energy_vs_displacement(energy, displacement, rims, heads, norm=False):
     counter = 0
     fig = go.Figure()
     colors = ['Red', 'Blue', 'Green', 'aqua', 'Purple', 'Black', 'Orange', 'Pink', 'aqua', 'Brown', 'Darkblue',
@@ -134,6 +134,9 @@ def energy_vs_displacement(energy, displacement, rims, heads):
         if len(sorted_defs) == 0 or len(sorted_energy) == 0:
             continue
 
+        if norm:
+            sorted_energy = (sorted_energy - np.min(sorted_energy)) / (np.max(sorted_energy) - np.min(sorted_energy))
+
         # Find the best degree for the polynomial regression
         best_degree = find_best_degree(sorted_energy, sorted_defs, [1, 2, 3, 4])
 
@@ -145,8 +148,8 @@ def energy_vs_displacement(energy, displacement, rims, heads):
         regression_curve = model.predict(X_poly)
 
         this_color = colors[i]
-        if rims[i][0] == rims[i-1][0]:
-            this_color = colors[i-1]
+        if rims[i][0] == rims[i - 1][0]:
+            this_color = colors[i - 1]
             fig.add_trace(go.Scatter(x=sorted_energy, y=regression_curve,
                                      name=f'{rims[i][0]} {heads[i][0]}', line=dict(color=this_color)))
 
@@ -157,13 +160,63 @@ def energy_vs_displacement(energy, displacement, rims, heads):
         counter += 1
 
     fig.update_layout(
-        title=f'Energy vs. Displacement',
-        xaxis=dict(title=f'Energy (J)'),
+        title=f'Energy Absorbed vs. Displacement Regression Lines, n=62',
+        xaxis=dict(title=f'Normalized Energy Absorbed (J)'),
         yaxis=dict(title='Displacement (in)'),
         showlegend=True,
         font=dict(size=15)
     )
     fig.show()
+
+
+# def energy_vs_energy(energy_dif, displacement, rims, heads, norm=False):
+#     counter = 0
+#     fig = go.Figure()
+#     colors = ['Red', 'Blue', 'Green', 'aqua', 'Purple', 'Black', 'Orange', 'Pink', 'aqua', 'Brown', 'Darkblue',
+#               'Lightblue', 'salmon']
+#
+#     for i in range(len(energy)):
+#         sorted_defs, sorted_energy = index_filtering(displacement[i], energy[i])
+#
+#         # Preprocess the data
+#         sorted_energy, sorted_defs = preprocess_data(sorted_energy, sorted_defs)
+#
+#         if len(sorted_defs) == 0 or len(sorted_energy) == 0:
+#             continue
+#
+#         if norm:
+#             sorted_energy = (sorted_energy - np.min(sorted_energy)) / (np.max(sorted_energy) - np.min(sorted_energy))
+#
+#         # Find the best degree for the polynomial regression
+#         best_degree = find_best_degree(sorted_energy, sorted_defs, [1, 2, 3, 4])
+#
+#         # Fit the polynomial regression model
+#         poly_features = PolynomialFeatures(degree=best_degree)
+#         X_poly = poly_features.fit_transform(sorted_energy.reshape(-1, 1))
+#         model = LinearRegression()
+#         model.fit(X_poly, sorted_defs)
+#         regression_curve = model.predict(X_poly)
+#
+#         this_color = colors[i]
+#         if rims[i][0] == rims[i - 1][0]:
+#             this_color = colors[i - 1]
+#             fig.add_trace(go.Scatter(x=sorted_energy, y=regression_curve,
+#                                      name=f'{rims[i][0]} {heads[i][0]}', line=dict(color=this_color)))
+#
+#         else:
+#             fig.add_trace(go.Scatter(x=sorted_energy, y=regression_curve,
+#                                      name=f'{rims[i][0]} {heads[i][0]}', line=dict(dash='dash', color=this_color)))
+#
+#         counter += 1
+#
+#     fig.update_layout(
+#         title=f'Energy vs. Displacement',
+#         xaxis=dict(title=f'Normalized Energy (J)'),
+#         yaxis=dict(title='Displacement (in)'),
+#         showlegend=True,
+#         font=dict(size=15)
+#     )
+#     fig.show()
 
 
 def preprocess_data(X, y):
@@ -196,5 +249,3 @@ def find_best_degree(X, y, degrees):
             best_degree = degree
 
     return best_degree
-
-

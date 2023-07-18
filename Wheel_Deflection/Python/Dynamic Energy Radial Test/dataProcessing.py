@@ -1,6 +1,4 @@
 import cProfile
-
-import pandas as pd
 from scipy.signal import find_peaks
 from readInDataFiles import *
 
@@ -9,14 +7,13 @@ def data_processor(file_path):
     # pro = cProfile.Profile()
     # pro.enable()
     df, height, rim, head = get_mocap_data(file_path)
-    list_mocap_data, displacements, disp_deg = clean_mocap_data(df)
+    list_mocap_data, displacements = clean_mocap_data(df)
     q_drop_heights = []
     q_percent_absorbed = []
 
     for i, df in enumerate(list_mocap_data):
         index_of_starting_height = df['drop_head_y'].argmax()
         displacements[i] = displacements[i] * .0393701
-        disp_deg[i] = disp_deg[i] * .0393701
 
         starting_height = df['drop_head_y'][index_of_starting_height]
         height_of_rebound, _ = find_peaks(df['drop_head_y'], prominence=1)
@@ -35,24 +32,20 @@ def data_processor(file_path):
         q_percent_absorbed.append(percent_absorbed)
     # pro.disable()
     # pro.print_stats(sort='cumtime')
-    return q_percent_absorbed, displacements, q_drop_heights, rim, head, disp_deg
+    return q_percent_absorbed, displacements, q_drop_heights, rim, head
 
 
 def file_processor(filepaths):
-    # pro = cProfile.Profile()
-    # pro.enable()
-    energies, percents, heights, rims, heads, all_disps = [], [], [], [], [], []
+    energies, percents, heights, rims, heads = [], [], [], [], []
     for filepath in filepaths:
-        energy, percent, height, rim, head, disp_df = data_processor(filepath)
+        energy, percent, height, rim, head = data_processor(filepath)
         energies.append(energy)
         heights.append(height)
         rims.append(rim)
         percents.append(percent)
         heads.append(head)
-        all_disps.append(disp_df)
-    # pro.disable()
-    # pro.print_stats(sort='cumtime')
-    return energies, percents, heights, rims, heads, all_disps
+
+    return energies, percents, heights, rims, heads
 
 
 def index_filtering(percent_diffs, x_axis):
