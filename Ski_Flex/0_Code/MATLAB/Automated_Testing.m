@@ -92,7 +92,7 @@ sig = return_to_start(ardiuno_serial);
 disp(sig)
 %%
 disp("ski");
-[p,r]= get_HWT905TTL_data(inclinometer_back_serial);
+[p,r]= get_HWT905TTL_data(inclinometer_front_serial);
 disp("level");
 [p,r]= get_HWT905TTL_data(inclinometer_back_serial);
 %%
