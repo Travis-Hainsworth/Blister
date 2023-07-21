@@ -114,7 +114,7 @@ void loop() {
               float length_mm = (float) message_arr[1];
               long steps = convert_distance_from_mm_to_steps(stepsPerRevolution_inclinometer, length_mm, lead_distance);
               move_x_steps(steps);
-              send_finish_signal(steps);
+              send_finish_signal(MOVE_X);
               break;
             }
             case MOVE_FORCE_GAUGES:
@@ -208,7 +208,7 @@ void loop() {
 }
 
 void send_finish_signal(int sig){
-    Serial.flush();
+    // Serial.flush();
     Serial.println(sig);
 }
 
