@@ -12,6 +12,7 @@
 #define STEP_PIN_L         5      // Step
 
 #define LIMIT_SWITCH_PIN_2 3
+#define LIMIT_SWITCH_PIN_1 2
 
 AccelStepper inclinometer_stepper (AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 AccelStepper left_stepper (AccelStepper::DRIVER, STEP_PIN_L, DIR_PIN_L);
@@ -49,12 +50,25 @@ void setup() {
   right_stepper.setMinPulseWidth(30);
   
   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), killed_switch_triggered, FALLING);
 
   steppers.addStepper(left_stepper);
   steppers.addStepper(right_stepper);
 }
 
 const int STOP_SIGNAL = 42;
+const int KILL_SWITCH_SIGNAL = 86;
+
+void killed_switch_triggered(){
+    delayMicroseconds(20000);
+    int buttonState = digitalRead(LIMIT_SWITCH_PIN_1);
+    if (buttonState == LOW){
+      inclinometer_stepper.stop();
+      left_stepper.stop();
+      right_stepper.stop();
+      send_finish_signal(KILL_SWITCH_SIGNAL);
+    }
+}
 
 void stop_testing(){
     delayMicroseconds(20000);
