@@ -25,7 +25,7 @@ float stepsPerRevolution_inclinometer = 200*4;   // change this to fit the numbe
 float stepsPerRevolution_force_guages = 200*4;
 const float lead_distance = 5;//distance in mm that one full turn of lead screw
 
-volatile boolean testing_state;
+volatile boolean kill_switch_pressed;
 
 void setup() {
   Serial.begin(115200);               // initialize hardware serial for debugging
@@ -54,6 +54,8 @@ void setup() {
 
   steppers.addStepper(left_stepper);
   steppers.addStepper(right_stepper);
+
+  kill_switch_pressed = false;
 }
 
 const int STOP_SIGNAL = 42;
@@ -63,6 +65,7 @@ void killed_switch_triggered(){
     delayMicroseconds(20000);
     int buttonState = digitalRead(LIMIT_SWITCH_PIN_1);
     if (buttonState == LOW){
+      kill_switch_pressed = true;
       inclinometer_stepper.stop();
       left_stepper.stop();
       right_stepper.stop();
@@ -98,7 +101,7 @@ const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
     limitSwitchObj.loop();
-    if (Serial.available() > 0){
+    if (Serial.available() > 0 && ~kill_switch_pressed){
           String message = Serial.readStringUntil("\n");
           Serial.flush();
 
@@ -204,11 +207,14 @@ void loop() {
               break;
             }
           }  
+    }else{
+      send_finish_signal(KILL_SWITCH_SIGNAL);
+      kill_switch_pressed = false;
     }
 }
 
 void send_finish_signal(int sig){
-    // Serial.flush();
+    Serial.flush();
     Serial.println(sig);
 }
 
