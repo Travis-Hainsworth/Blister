@@ -44,26 +44,17 @@ class TireCalculator:
         show_graphs_button = tk.Button(self.root, text="Show Graphs", command=self.show_graphs)
 
         # Place labels, input boxes, subtext, and the Calculate button in the grid
-        label_weight.grid(row=0, column=0, padx=5, pady=5)
-        self.entry_weight.grid(row=0, column=1, padx=5, pady=5)
 
-        label_aggression.grid(row=2, column=0, padx=5, pady=5)
-        self.entry_aggression.grid(row=2, column=1, padx=5, pady=5)
-        subtext_aggression.grid(row=3, column=0, columnspan=2, padx=5, pady=(0, 10), sticky='w')
+        labels = [label_weight, label_aggression, label_finesse_power, label_trail_environment, label_front_travel, label_rear_travel]
+        entries = [self.entry_weight, self.entry_aggression, self.entry_finesse_power, self.entry_trail_environment, self.entry_front_travel, self.entry_rear_travel]
+        subtexts = [subtext_aggression, subtext_finesse_power, subtext_trail_environment]
 
-        label_finesse_power.grid(row=4, column=0, padx=5, pady=5)
-        self.entry_finesse_power.grid(row=4, column=1, padx=5, pady=5)
-        subtext_finesse_power.grid(row=5, column=0, columnspan=2, padx=5, pady=(0, 10), sticky='w')
+        for count, label in enumerate(labels):
+            label.grid(row=count*2, column=0, padx=5, pady=5)
+            entries[count].grid(row=count*2, column=1, padx=5, pady=5)
 
-        label_trail_environment.grid(row=6, column=0, padx=5, pady=5)
-        self.entry_trail_environment.grid(row=6, column=1, padx=5, pady=5)
-        subtext_trail_environment.grid(row=7, column=0, columnspan=2, padx=5, pady=(0, 10), sticky='w')
-
-        label_front_travel.grid(row=8, column=0, padx=5, pady=5)
-        self.entry_front_travel.grid(row=8, column=1, padx=5, pady=5)
-
-        label_rear_travel.grid(row=10, column=0, padx=5, pady=5)
-        self.entry_rear_travel.grid(row=10, column=1, padx=5, pady=5)
+        for index, value in enumerate(range(3, 8, 2)):
+            subtexts[index].grid(row=value, column=0, columnspan=2, padx=5, pady=(0, 10), sticky='w')
 
         calculate_button.grid(row=12, column=0, columnspan=2, padx=5, pady=10)
         show_graphs_button.grid(row=13, column=0, columnspan=2, padx=5, pady=10)
