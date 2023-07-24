@@ -1,0 +1,232 @@
+# MATLAB SERIAL CONTROL FUNCTIONS DOCUMENTATION
+
+This MATLAB script contains a collection of functions that facilitate serial communication with an Arduino or similar microcontroller to control and monitor hardware components. These functions are designed to control motors, force gauges, and an inclinometer, and provide feedback mechanisms for precise positioning and leveling operations.
+
+## `return_to_start(s)`
+
+**Description:**
+This function sends a command to the connected device to return to the starting position.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_mm`: The response received from the device after issuing the command.
+
+## `move_x_mm(dis_mm, dir, s)`
+
+**Description:**
+This function moves the hardware by a specified distance in a given direction.
+
+**Parameters:**
+- `dis_mm`: The distance (in millimeters) to move.
+- `dir`: The direction of movement (0 or 1).
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after issuing the command.
+
+## `move_force_gauges(s, left_mm, right_mm)`
+
+**Description:**
+This function moves force gauges to specific positions.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+- `left_mm`: The position (in millimeters) to move the left force gauge.
+- `right_mm`: The position (in millimeters) to move the right force gauge.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after issuing the command.
+
+## `move_force_gauges_until_desired_force(s, force_gauge_left, force_gauge_right, desired_force, step_size)`
+
+**Description:**
+This function adjusts force gauges' positions to reach a desired force level.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+- `force_gauge_left`: The left force gauge's serial port object.
+- `force_gauge_right`: The right force gauge's serial port object.
+- `desired_force`: The desired force level.
+- `step_size`: The step size for force gauge position adjustment.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after reaching the desired force level.
+
+## `level_force_gauges(s, desired_angle, precision, inclinometer, step_size)`
+
+**Description:**
+This function adjusts the force gauges' positions to achieve a desired leveling angle.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+- `desired_angle`: The desired leveling angle.
+- `precision`: The precision to achieve the desired leveling angle.
+- `inclinometer`: The serial port object for the inclinometer.
+- `step_size`: The step size for force gauge position adjustment.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after leveling the force gauges.
+
+## `make_message(m, actual_angle, desired_angle, precision, step_size)`
+
+**Description:**
+This function creates a serial communication message based on the current angle and desired angle for leveling the force gauges.
+
+**Parameters:**
+- `m`: The base message string.
+- `actual_angle`: The current angle read from the inclinometer.
+- `desired_angle`: The desired leveling angle.
+- `precision`: The precision to achieve the desired leveling angle.
+- `step_size`: The step size for force gauge position adjustment.
+
+**Return Value:**
+- `message`: The complete serial communication message.
+
+## `get_distance_from_start(s)`
+
+**Description:**
+This function retrieves the current distance from the starting position.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_mm`: The response received from the device, representing the current distance from the starting position.
+
+## `get_testing_state(s)`
+
+**Description:**
+This function retrieves the current testing state.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_state`: The response received from the device, representing the current testing state.
+
+## `set_current_position(pos, s)`
+
+**Description:**
+This function sets the current position to a specific value.
+
+**Parameters:**
+- `pos`: The position value to set.
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after setting the current position.
+
+## `set_stepsPerRev(stepsPerRev, s)`
+
+**Description:**
+This function sets the steps per revolution value.
+
+**Parameters:**
+- `stepsPerRev`: The steps per revolution value to set.
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after setting the steps per revolution.
+
+## `set_acceleration(acceleration, s)`
+
+**Description:**
+This function sets the acceleration value.
+
+**Parameters:**
+- `acceleration`: The acceleration value to set.
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after setting the acceleration.
+
+## `set_max_speed(max_speed, s)`
+
+**Description:**
+This function sets the maximum speed value.
+
+**Parameters:**
+- `max_speed`: The maximum speed value to set.
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after setting the maximum speed.
+
+## `reset_arduino(s)`
+
+**Description:**
+This function sends a command to reset the connected Arduino or microcontroller.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after the reset.
+
+## `set_enable_switch(s, enable)`
+
+**Description:**
+This function sets the enable switch.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+- `enable`: The value to enable or disable the switch.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after setting the enable switch.
+
+## `reattach_interrupt(s)`
+
+**Description:**
+This function reattaches an interrupt.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after reattaching the interrupt.
+
+## `deattach_interrupt(s)`
+
+**Description:**
+This function detaches an interrupt.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `ret_signal`: The response received from the device after detaching the interrupt.
+
+## `serial_communication(s, message)`
+
+**Description:**
+This function sends a custom serial message and waits for a response.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+- `message`: The custom message to send.
+
+**Return Value:**
+- `sig`: The response received from the device after sending the message.
+
+## `custom_write(s, message)`
+
+**Description:**
+This function writes a custom message to the serial port.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+- `message`: The custom message to write.
+
+## `custom_read(s)`
+
+**Description:**
+This function reads data from the serial port.
+
+**Parameters:**
+- `s`: The MATLAB serial object representing the communication channel.
+
+**Return Value:**
+- `out`: The data read from the serial port.

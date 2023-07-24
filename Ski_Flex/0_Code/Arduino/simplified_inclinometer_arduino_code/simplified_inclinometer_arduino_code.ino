@@ -50,7 +50,7 @@ void setup() {
   right_stepper.setMinPulseWidth(30);
   
   attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_2), stop_testing, FALLING);
-  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), killed_switch_triggered, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN_1), kill_switch_triggered, FALLING);
 
   steppers.addStepper(left_stepper);
   steppers.addStepper(right_stepper);
@@ -61,7 +61,7 @@ void setup() {
 const int STOP_SIGNAL = 42;
 const int KILL_SWITCH_SIGNAL = 86;
 
-void killed_switch_triggered(){
+void kill_switch_triggered(){
     delayMicroseconds(20000);
     int buttonState = digitalRead(LIMIT_SWITCH_PIN_1);
     if (buttonState == LOW){

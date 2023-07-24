@@ -1,0 +1,70 @@
+# Arduino Stepper Motor Control Documentation
+
+## Introduction
+This Arduino sketch is designed to control a system with three stepper motors: one inclinometer stepper and two force gauge steppers. The sketch utilizes the AccelStepper library to handle the stepper motor control, MultiStepper library for managing multiple steppers, and other libraries for sensor reading and serial communication.
+
+## Hardware Setup
+The hardware setup should include three stepper motors connected to the Arduino board. The connections should be made as follows:
+- Inclinometer Stepper: Connect the step and direction pins to the pins defined as `STEP_PIN` and `DIR_PIN`.
+- Left Stepper (Force Gauge): Connect the step and direction pins to the pins defined as `STEP_PIN_L` and `DIR_PIN_L`.
+- Right Stepper (Force Gauge): Connect the step and direction pins to the pins defined as `STEP_PIN_R` and `DIR_PIN_R`.
+- Limit Switch: Connect the limit switch to the pin defined as `LIMIT_SWITCH_PIN_2`.
+- Kill Switch: Connect the kill switch to the pin defined as `LIMIT_SWITCH_PIN_1`.
+
+## Command Format
+The sketch listens for commands through the Serial port. The commands should be in the format: `command,value1,value2`, where `command` is the operation to be performed, and `value1` and `value2` are the parameters required for that operation.
+
+### Supported Commands:
+- `2,distance_mm,#`: Move the inclinometer stepper a given distance in millimeters. A negative value moves it towards the back, and a positive value moves it towards the front.
+- `4,distance_mm,direction`: Move both force gauge steppers by given distances in millimeters. `direction` indicates the direction of the movement.
+- `6,#,#`: Move the inclinometer stepper to its start position.
+- `8,max_speed,#`: Set the maximum speed for the inclinometer stepper.
+- `10,acceleration,#`: Set the acceleration for the inclinometer stepper.
+- `12,max_speed,#`: Set the steps per revolution for the inclinometer stepper.
+- `14,#,#`: Get the current position of the inclinometer stepper in millimeters.
+- `16,#,#`: Reset the Arduino and initialize the setup again.
+
+## Functions
+
+### `parse_serial_input`
+- Description: This function parses the input string from the Serial port into an array of integers.
+- Input:
+  - `inputString`: The input string received from the Serial port.
+  - `numValues`: The number of integer values in the input string.
+  - `message_arr`: An integer array where the parsed values will be stored.
+
+### `convert_distance_from_mm_to_steps`
+- Description: This function converts a given distance in millimeters to the corresponding number of steps for a given stepper motor.
+- Input:
+  - `spr`: Steps per revolution for the stepper motor.
+  - `length_mm`: The distance in millimeters to be converted.
+  - `lead_distance`: The distance in millimeters for one full turn of the lead screw.
+
+### `convert_distance_from_steps_to_mm`
+- Description: This function converts a given number of steps to the corresponding distance in millimeters for a given stepper motor.
+- Input:
+  - `spr`: Steps per revolution for the stepper motor.
+  - `length_steps`: The number of steps to be converted.
+  - `lead_distance`: The distance in millimeters for one full turn of the lead screw.
+
+### `move_x_steps`
+- Description: This function moves the inclinometer stepper by a given number of steps.
+- Input:
+  - `x`: The number of steps to move the inclinometer stepper.
+
+### `send_finish_signal`
+- Description: This function sends a finish signal through the Serial port.
+- Input:
+  - `sig`: The finish signal to be sent.
+
+### `stop_testing`
+- Description: This function is an interrupt service routine (ISR) triggered when one of the limit switches is pressed by the ski inclinometer. It stops the ski inclinometer stepper and sends a finish signal for the test to stop the data collection, allowing Matlab to shape data, graph it, and put the rig back to a start testing state.
+
+### `kill_switch_triggered`
+- Description: This function is an interrupt service routine (ISR) triggered when the big red button is pressed. Its purpose is to stop all movement and testing procedures when an immediate stop is needed.
+
+## Limitations
+The documentation provided here is based on the code available and assumes a specific hardware setup and usage context. Modifications to the code or hardware may require adjustments to the documentation. Please refer to the documentation on hardware and the circuit for these changes.
+
+## Disclaimer
+This documentation is intended for informational purposes only and may not cover all possible scenarios or use cases. Users are advised to understand the code and its implications thoroughly before implementation.
