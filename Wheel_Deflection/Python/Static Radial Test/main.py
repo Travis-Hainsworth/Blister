@@ -1,42 +1,65 @@
-from readInDataFiles import *
-from calculateRadialCompression import *
-import matplotlib.pyplot as plt
+from graphFunctions import *
 
-def dataProcessingMain(filePathOptitrack, filePathMTS):
+# If you want to see the non-smoothed data add "True" to the after the list folder path.
+# For the file paths don't remove the "r" from the front of the path
+# Mocap data then MTS data
+# ex: r"C:\Users\ethan\Test\ENVE_Static_Mocap_Data_New"
+# If you want to see the un-smoothed data then add "True" after the last file path.
 
-    # Import mocap data. Make sure every file you want to look at is in the folder you input.
-    # Don't remove the "r" before the file path.
-    list_mocap_data = getMocapData(filePathOptitrack)
-    clean_mocap = clean_mocap_data(list_mocap_data)
+# ################################################## SINGLE GRAPHS #####################################################
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_MTS\6-21")
 
-    # Import mts data. Make sure every file you want to look at is in the folder you input.
-    # Don't remove the "r" before teh file path.
-    list_mts_data = getMTSData(filePathMTS)#"r{}".format(filePath))
-    clean_mts = clean_MTS_data(list_mts_data)
+final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Stans_Mocap\6-21",
+                             r"C:\Users\ethan\Test\6-21 cleaned data\Stans_MTS\6-21")
 
-    # Make both of the files the same size so they can be graphed.
-    synced_data = mocap_synced(clean_mocap, clean_mts)
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Light_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\Light_MTS\6-21")
+#
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\R30_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\R30_MTS\6-21")
 
-    for counter in range(len(list_mocap_data)):
-        column_names = synced_data[counter].columns
-        axle_marker_data, rim_top_marker_data = get_useful_markers(synced_data[counter],
-                                                                   column_names.get_loc('center_hub_y'),
-                                                                   column_names.get_loc('rim_top_y'))
-        radial_compression_data = calc_radial_compression(axle_marker_data, rim_top_marker_data)
-        radial_compression_data_inches = [i * 0.0393701 for i in radial_compression_data]
+# final_data = data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_Mocap\6-21",
+#                              r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_MTS\6-21")
 
-        load_compression_data = pd.DataFrame({'Load (lbf)': np.double(clean_mts[counter]['Load (lbf)']),
-                                              'Compression (in)': np.double(radial_compression_data_inches)})
-        
-        synced_data[counter]['Compression (in)'] = np.double(radial_compression_data_inches)
+# final_data = data_processing(r"C:\Users\ethan\Test\Static_New_Data\DTS_Mocap",
+#                              r"C:\Users\ethan\Test\Static_New_Data\DTS_MTS")
 
-        fig, ax = plt.subplots(figsize=(12, 6))
-        ax.plot(load_compression_data['Load (lbf)'], load_compression_data['Compression (in)'])
-        plt.ylabel('Compression (in)')
-        plt.xlabel('Load (lbf)')
-        ax.set_xticks(np.arange(0, 701, 100))
-        plt.show()
-        
-    return synced_data
+#################################################### All Graphs ########################################################
 
-dataProcessingMain('/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/DTS 2-10-23 Tire On/Optitrack Data', '/Users/jacobvogel/Desktop/Blister Labs/GitHub/Blister/Wheel_Deflection/0_Data/DTS 2-10-23 Tire On/MTS Data')
+# rims = ['ENVE', 'Stans', 'Light', 'R30', 'WAOU', 'DTS']
+# good_data = [
+#     data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_Mocap\6-21",
+#                     r"C:\Users\ethan\Test\6-21 cleaned data\ENVE_MTS\6-21"),
+#
+#     data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Stans_Mocap\6-21",
+#                     r"C:\Users\ethan\Test\6-21 cleaned data\Stans_MTS\6-21"),
+#
+#     data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\Light_Mocap\6-21",
+#                     r"C:\Users\ethan\Test\6-21 cleaned data\Light_MTS\6-21"),
+#
+#     data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\R30_Mocap\6-21",
+#                     r"C:\Users\ethan\Test\6-21 cleaned data\R30_MTS\6-21"),
+#
+#     data_processing(r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_Mocap\6-21",
+#                     r"C:\Users\ethan\Test\6-21 cleaned data\WAOU_MTS\6-21"),
+#
+#     data_processing(r"C:\Users\ethan\Test\Static_New_Data\DTS_Mocap",
+#                              r"C:\Users\ethan\Test\Static_New_Data\DTS_MTS")
+#
+# ]
+#
+# mean_list = []
+# std_list = []
+# ind = []
+#
+# for i in range(len(good_data)):
+#     mean, std, ind_var, _ = interpolate_data(good_data[i])
+#     mean_list.append(mean)
+#     std_list.append(std)
+#     ind.append(ind_var)
+# multiple_rims_graph(mean_list, std_list, ind, rims)
+
+# ######### SINGLE GRAPHING ##########
+mean, std, ind_var, disp = interpolate_data(final_data)
+plot_interpolated_data(disp, mean, std, ind_var)
