@@ -34,29 +34,28 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
     plt.plot(independent_variable[pad:], smooth_mean, color='gray', label='Data')
 
     plt.setp(plt.gca().lines, linewidth=1)
-    #
-    # Linear regression
-    x = independent_variable[pad:]
-    y = smooth_mean
-    slope, intercept, r_value, p_value, std_err = linregress(x, y)
-    # Plot regression line
-    plt.plot(x, intercept + slope * x, color='red', label='Linear Regression', linestyle='dotted')
-    print(intercept, slope)
-    # # Polynomial regression
+
+    # # Linear regression
     # x = independent_variable[pad:]
     # y = smooth_mean
-    # degree = 2 # Define the degree of the polynomial
-    # coefficients = np.polyfit(x, y, degree)
-    # poly = np.poly1d(coefficients)
-    # print(coefficients, poly)
+    # slope, intercept, r_value, p_value, std_err = linregress(x, y)
     #
     # # Plot regression line
+    # plt.plot(x, intercept + slope * x, color='red', label='Linear Regression', linestyle='dotted')
+
+    # Polynomial regression
+    x = independent_variable[pad:]
+    y = smooth_mean
+    degree = 2 # Define the degree of the polynomial
+    coefficients = np.polyfit(x, y, degree)
+    poly = np.poly1d(coefficients)
+
+    # Plot regression line
     # equation = f'y = {coefficients[0]}x^2 + {coefficients[1]}x + {coefficients[2]}'
     # print(equation)
-    #
-    # plt.plot(x, poly(x), color='purple', label=f'Polynomial Regression', linestyle='dashed')
-    # plt.legend()
 
+    plt.plot(x, poly(x), color='purple', label=f'Polynomial Regression', linestyle='dashed')
+    plt.legend()
 
     # Individual test graph
     plt.subplot(122)
@@ -68,8 +67,6 @@ def plot_interpolated_data(displacements, mean_of_displacements, std_of_displace
         plt.plot(independent_variable, displacements[i], label=f'Test {i + 1}')
 
     # plt.legend()
-    ax.set_xlim(ax.get_xlim()[::-1])
-
     plt.show()
 
 
@@ -107,33 +104,25 @@ def multiple_rims_graph(mean_list, std_list, ind_var, rims, old_data_index=0, sm
         lower_bound = smooth_mean - smooth_std
         upper_bound = smooth_mean + smooth_std
 
-        if 'Stans' in rims[i] or 'DTS' in rims[i]:
-            color = 'blue'
-            label = 'Alloy'
-        else:
-            color = 'red'
-            label = 'Carbon'
-        # elif 'Stans' in rims[i] or 'WAOU' in rims[i]:
-        #     color = 'red'
-        #     label = '3-cross 32'
-        # elif 'DTS' in rims[i] or 'R30' in rims[i]:
-        #     color = 'green'
-        #     label = '3-cross 28'
-        # elif 'Light' in rims[i]:
-        #     color = 'orange'
-        #     label = '2-cross 32'
         rim_label = rims[i]
-        # for color_key in color_mapping.keys():
-        #     if color_key in rim_label:
-        #         color = color_mapping[color_key]
-        #         break
-        # else:
-        #     color = mcolors.hsv_to_rgb((hues[i], 1, 1))  # Convert HSV to RGB
-        #     color_mapping[rim_label] = color
+        for color_key in color_mapping.keys():
+            if color_key in rim_label:
+                color = color_mapping[color_key]
+                break
+        else:
+            color = mcolors.hsv_to_rgb((hues[i], 1, 1))  # Convert HSV to RGB
+            color_mapping[rim_label] = color
 
         plt.fill_between(unified_ind_var[smoothing_window - 1:], lower_bound, upper_bound, color=color, alpha=.1)
-        plt.plot(unified_ind_var[smoothing_window - 1:], smooth_mean, color=color, label=label)
 
+        if i >= old_data_index != 0:
+            line_style = '--'
+            label = rim_label.replace("old ", "")  # Remove "old " from the label
+        else:
+            line_style = '-'
+            label = rim_label
+
+        plt.plot(unified_ind_var[smoothing_window - 1:], smooth_mean, color=color, linestyle=line_style, label=label)
         plt.setp(plt.gca().lines, linewidth=1)
 
     plt.legend()
