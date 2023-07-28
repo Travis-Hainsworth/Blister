@@ -1,7 +1,8 @@
 import serial
 import time
-import ArduinoController
+from ArduinoController import ArduinoController
 from SkiRigSensorController import ForceGaugeReader, InclinometerReader
+from SkiProfileCalculator import SkiProfileCalculator
 
 class SkiRigAutomationController:
     def __init__(self, ski_inclinometer_port, level_inclinometer_port, arduino_port, force_gauge_left_port, force_gauge_right_port):
@@ -9,6 +10,7 @@ class SkiRigAutomationController:
         self.level_inclinometer_reader = InclinometerReader(level_inclinometer_port)
         self.arduino_controller = ArduinoController(arduino_port)
         self.force_gauge_reader = ForceGaugeReader(force_gauge_left_port, force_gauge_right_port)
+        self.ski_profile_calculator = 
 
     def sensor_automation(self, test_interval_mm, direction):
         data_matrix = []
@@ -72,7 +74,7 @@ class SkiRigAutomationController:
             left_step = self.adjust_step_size(desired_force_left, force_left)
             right_step = self.adjust_step_size(desired_force_right, force_right)
 
-            message = self.make_message(str(MOVE_FORCE_GAUGES), force_left, desired_force_left, precision, left_step)
+            message = self.make_message(str(self.arduino_controller.MOVE_FORCE_GAUGES), force_left, desired_force_left, precision, left_step)
             message = self.make_message(message, force_right, desired_force_right, precision, right_step)
             ret_signal = self.arduino_controller.serial_communication(message)
             force_left, force_right = self.force_gauge_reader.force_average(1)
