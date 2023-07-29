@@ -96,6 +96,7 @@ const int SET_ACCELERATION = 10;
 const int SET_STEPS_PER_REVOLUTION = 12;
 const int GET_CURRENT_POSITION = 14;
 const int RESET_ARDUINO = 16;
+const int RESET_KILL_SWITCH = 17;
 const int MOVE_FORCE_GAUGES = 24;
 const int COMMAND_NOT_RECOGNIZED = 101;
 
@@ -208,8 +209,9 @@ void loop() {
             }
           }  
     }else{
-      send_finish_signal(KILL_SWITCH_SIGNAL);
-      kill_switch_pressed = false;
+        send_finish_signal(KILL_SWITCH_SIGNAL);
+        kill_switch_pressed = false;
+
     }
 }
 
