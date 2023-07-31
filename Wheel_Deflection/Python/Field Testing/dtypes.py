@@ -58,3 +58,18 @@ dtype_dict = {
     'RigidBody:Marker Hub.1 X': 'float32',
     'RigidBody:Marker Hub.1 Z': 'float32'
 }
+
+wheel_pattern_y = r'^Wheel:Marker\d+\.\d+ Y$'
+hub_pattern_y = r'^Hub\.4 Y$'
+wheel_pattern_x = r'^Wheel:Marker\d+\.\d+ X$'
+hub_pattern_x = r'^Hub\.4 X$'
+wheel_pattern_z = r'^Wheel:Marker\d+\.\d+ Z$'
+hub_pattern_z = r'^Hub\.4 Z$'
+
+wheel_pattern_y_col = r'^wheel_y_.*'
+hub_pattern_y_col = r'^hub_y_.*'
+wheel_pattern_x_col = r'^wheel_x_.*'
+hub_pattern_x_col = r'^hub_x_.*'
+wheel_pattern_z_col = r'^wheel_z_.*'
+hub_pattern_z_col = r'^hub_z_.*'
+
