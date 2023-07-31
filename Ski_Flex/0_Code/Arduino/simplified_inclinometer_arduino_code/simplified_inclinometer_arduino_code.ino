@@ -102,7 +102,7 @@ const int COMMAND_NOT_RECOGNIZED = 101;
 
 void loop() {
     limitSwitchObj.loop();
-    if (Serial.available() > 0 && ~kill_switch_pressed){
+    if (Serial.available() > 0){
           String message = Serial.readStringUntil("\n");
           Serial.flush();
 
@@ -202,16 +202,18 @@ void loop() {
               send_finish_signal(RESET_ARDUINO);
               break;
             }
+            case RESET_KILL_SWITCH:
+            {
+              kill_switch_pressed = false;
+              send_finish_signal(RESET_KILL_SWITCH);
+              break;
+            }
             default:
             {
               send_finish_signal(COMMAND_NOT_RECOGNIZED);
               break;
             }
           }  
-    }else{
-        send_finish_signal(KILL_SWITCH_SIGNAL);
-        kill_switch_pressed = false;
-
     }
 }
 
