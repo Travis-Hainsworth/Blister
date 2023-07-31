@@ -1,125 +1,114 @@
+import threading
 import pandas as pd
+import numpy as np
 import os
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
+""""
+Gets all MTS files within a folder. Make sure the files are named with a number
+This function uses threading to read in multiple csvs at the same time to reduce the run time.
 
-from matplotlib import pyplot as plt
+Input: 
+folder_dir = path to the folder containing the MTS data
+
+Output:
+list_of_csvs = list of dataframes containing the data from all of the files with in the folder
+"""
 
 
-def process_file(folder_dir, file):
-    path = os.path.join(folder_dir, file.title())
-    df = pd.read_csv(path, header=2, low_memory=False)
+def get_mts_data(folder_dir):
+    list_of_csvs = []
+    files = os.listdir(folder_dir)
+    files.sort()
+    num_csv_files = sum(file.endswith('.csv') for file in files)
+    list_of_csvs = num_csv_files * [None]
+    lock = threading.RLock()
 
-    file_parts = str(path).split('_')
-    rim = file_parts[1].split('\\')[1]
-    df = df.drop(index=[0, 1])
-    df = fix_mocap_df(df)
-    df = df.drop(index=2)
-    df.set_index('Frame', inplace=True)
+    def read_csv_file(index, file):
+        if file.endswith('.csv'):
+            try:
+                path = os.path.join(folder_dir, file)
+                df = pd.read_csv(path, header=6, low_memory=False, dtype=str)
+                df = df.drop(index=0)
+                df = df.rename(columns={'Crosshead ': 'Crosshead (in)', 'Load ': 'Load (lbf)', 'Time ': 'Time (sec)'})
 
-    return df, rim
+                with lock:
+                    list_of_csvs[index] = df
+            except (pd.errors.EmptyDataError, pd.errors.ParserError):
+                # Handle the error if the CSV file cannot be read or processed correctly
+                print(f"Error processing file: {file}")
+
+    with ThreadPoolExecutor() as executor:
+        executor.map(read_csv_file, range(num_csv_files), files)
+
+    return list_of_csvs
+
+
+""""
+Gets all mocap files within a folder. Make sure the files are named with a number.
+This function uses threading to read in multiple csvs at the same time to reduce the run time.
+
+Input: 
+folder_dir = path to the folder containing the MTS data
+
+Output:
+combinedCSVs = list of dataframes containing the data from all of the files with in the folder
+"""
 
 
 def get_mocap_data(folder_dir):
-    files = sorted(os.listdir(folder_dir))
-    combined_csvs, weight, height = [], [], []
-    rim, head = '', ''
+    files = os.listdir(folder_dir)
+    files.sort()
+    num_csv_files = sum(file.endswith('.csv') for file in files)
+    list_of_csvs = num_csv_files * [None]
+    lock = threading.RLock()
 
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_file, folder_dir, file) for file in files]
+    def read_csv_file(index, file):
+        if file.endswith('.csv'):
+            try:
+                path = os.path.join(folder_dir, file)
+                df = pd.read_csv(path, header=2, low_memory=False, dtype=str)
+                df = df.drop([0, 1, 2])
+                df = fix_mocap_df(df)
 
-        for future in concurrent.futures.as_completed(futures):
-            df, r = future.result()
-            combined_csvs.append(df)
-            rim = r
+                with lock:
+                    list_of_csvs[index] = df
+            except (pd.errors.EmptyDataError, pd.errors.ParserError):
+                # Handle the error if the CSV file cannot be read or processed correctly
+                print(f"Error processing file: {file}")
 
-    return combined_csvs, weight, height, rim, head
+    with ThreadPoolExecutor() as executor:
+        executor.map(read_csv_file, range(num_csv_files), files)
+
+    return list_of_csvs
+
+
+"""
+This function renames some of the important column names in the mocap data csv.
+Used in the get_mocap_data function.
+
+Input:
+df = the dataframe with the mocap data
+
+Output:
+df: new dataframe with renamed columns
+"""
 
 
 def fix_mocap_df(df):
+    first_row = np.array(df.iloc[0])
     new_cols = {'Unnamed: 0': 'Frame', 'Name': 'Time (sec)'}
-    first_row = df.iloc[0]
-    marker_name = ""
+    marker_name = ''
 
-    for count, col in enumerate(df.columns):
-        if count >= 2:
-            if count % 3 == 0:
-                marker_name = col
-            new_cols[col] = marker_name + " " + first_row[count]
+    for count, col in enumerate(df.columns[2:], start=2):
+        marker_name = col if count % 3 == 0 else marker_name
+        new_cols[col] = f"{marker_name} {first_row[count]}"
 
-    df = df.rename(columns=new_cols, errors="raise")
+    df = df.rename(columns=new_cols)
+    firstRow = df.iloc[0]
+    YVals = firstRow[3::3].astype(float)
+    col = YVals.idxmin()
+    df[col] = np.double(df[col]) - np.double(df[col].iloc[0])
+    df = df.rename(columns={col: 'rim_y'})
+
     return df
 
-
-def clean_mocap_data(list_df):
-    clean_list_df = []
-    # Find the MTS head column
-    for df in list_df:
-        # Getting all the y values of each marker and finding the max
-        first_row = df.iloc[0]
-        y_vals = first_row[2::3].astype(float)
-
-        max_y = max(y_vals)
-
-        # Labeling the columns corresponding to the rim top marker
-        for index in y_vals.index:
-            if y_vals[index] == max_y:
-                # Rim Top Y Column -> rimTopY
-                num_index = df.columns.get_loc(index)
-                df.rename(columns={df.columns[num_index]: 'rim_top_y'}, inplace=True)
-                df.rename(columns={df.columns[num_index - 1]: 'rim_top_x'}, inplace=True)
-                df.rename(columns={df.columns[num_index + 1]: 'rim_top_z'}, inplace=True)
-                y_vals = y_vals.drop(index)
-
-        # recalculate max to find axel column
-        max_y = max(y_vals)
-
-        for index in y_vals.index:
-            if y_vals[index] == max_y:
-                # Axel Top Y Column -> axelY
-                num_index = df.columns.get_loc(index)
-                df.rename(columns={df.columns[num_index]: 'axel_y'}, inplace=True)
-                df.rename(columns={df.columns[num_index - 1]: 'axel_x'}, inplace=True)
-                df.rename(columns={df.columns[num_index + 1]: 'axel_z'}, inplace=True)
-                y_vals = y_vals.drop(index)
-
-        # Re-labelling the xyz columns of the stand marker
-        num_index = df.columns.get_loc(y_vals.index[0])
-        df.rename(columns={df.columns[num_index]: 'stand_y'}, inplace=True)
-        df.rename(columns={df.columns[num_index - 1]: 'stand_x'}, inplace=True)
-        df.rename(columns={df.columns[num_index + 1]: 'stand_z'}, inplace=True)
-
-        # finds original distance between the stand and rim markers
-        first_row = df.iloc[0]
-
-        rim_to_stand = {}
-
-        rim_to_stand_x = float(first_row['rim_top_x']) - float(first_row['stand_x'])
-        rim_to_stand["x"] = rim_to_stand_x
-
-        rim_to_stand_y = float(first_row['rim_top_y']) - float(first_row['stand_y'])
-        rim_to_stand["y"] = rim_to_stand_y
-
-        rim_to_stand_z = float(first_row['rim_top_z']) - float(first_row['stand_z'])
-        rim_to_stand["z"] = rim_to_stand_z
-
-        # Converting these columns to have type float
-        df['rim_top_x'] = pd.to_numeric(df['rim_top_x'], errors='coerce')
-        df['rim_top_y'] = pd.to_numeric(df['rim_top_y'], errors='coerce')
-        df['rim_top_z'] = pd.to_numeric(df['rim_top_z'], errors='coerce')
-        df['stand_x'] = pd.to_numeric(df['stand_x'], errors='coerce')
-        df['stand_y'] = pd.to_numeric(df['stand_y'], errors='coerce')
-        df['stand_z'] = pd.to_numeric(df['stand_z'], errors='coerce')
-        df['Time (sec)'] = pd.to_numeric(df['Time (sec)'], errors='coerce')
-
-        """"
-            first finds the distance between the stand and rim for each point in time
-            and subtracts the original distance to filter out noise from the stand
-            moving due to the carrige and piston catch
-            """
-
-        df['Displacementx'] = rim_to_stand["x"] - (df['rim_top_x'] - df['stand_x'])
-        df['Displacementy'] = rim_to_stand["y"] - (df['rim_top_y'] - df['stand_y'])
-        df['Displacementz'] = rim_to_stand["z"] - (df['rim_top_z'] - df['stand_z'])
-
-        clean_list_df.append(df)
-    return clean_list_df

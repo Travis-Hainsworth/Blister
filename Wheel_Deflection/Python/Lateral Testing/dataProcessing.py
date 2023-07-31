@@ -1,42 +1,14 @@
 from readInDataFiles import *
-import numpy as np
 
 
-def data_processing_main(file_path, axis):
-    list_mocap_data, weight, height, rim, head = get_mocap_data(file_path)
-    list_mocap_data = clean_mocap_data(list_mocap_data)
-    max_defs = []
+# Helper function for file reading. Make sure to change the file paths to match your file path.
+# Keep the file paths consistent, so you only need the rim name for it to work.
+def process_lateral_data(rims):
+    mocap_data = []
+    mts_data = []
 
-    for i, df in enumerate(list_mocap_data):
-        if axis == 'y':
-            index_of_max_def = df['Displacementy'].argmax()
-            max_def = df['Displacementy'][index_of_max_def]
-            max_def = round(max_def, 4)
+    for rim in rims:
+        mocap_data.append(get_mocap_data(r"C:\Users\ethan\Test\Static_Lateral\{}\MOCAP".format(rim)))
+        mts_data.append(get_mts_data(r"C:\Users\ethan\Test\Static_Lateral\{}\MTS".format(rim)))
 
-            max_defs.append(max_def)
-
-        elif axis == 'z':
-            index_of_max_def = df['Displacementz'].argmax()
-            max_def = df['Displacementz'][index_of_max_def]
-            max_def = round(max_def, 4)
-
-            max_defs.append(max_def)
-
-        else:
-            index_of_max_def = df['Displacementx'].argmax()
-            max_def = df['Displacementx'][index_of_max_def]
-            max_def = round(max_def, 4)
-
-            max_defs.append(max_def)
-
-    return max_defs, rim
-
-
-def processor(filepaths):
-    deformations, rims = [], []
-    for filepath in filepaths:
-        max_defs, rim = data_processing_main(filepath, axis='y')
-        deformations.append(max_defs)
-        rims.append(rim)
-
-    return deformations, rims
+    return mocap_data, mts_data
