@@ -36,14 +36,12 @@ def plot_lateral_deformations(mocap_datasets, mts_datasets, rims):
         mean_line = np.mean(all_lines_padded, axis=0)
         std_dev_line = np.std(all_lines_padded, axis=0)
 
-        legend_name = f'Mean Line ± Standard Deviation ({rims[i]})'
-
         # Plot the mean line and the shaded error bar for the current dataset
         fig.add_trace(go.Scatter(
             x=np.arange(len(mean_line)),
             y=mean_line,
             line=dict(width=1),
-            name=legend_name
+            name=rims[i]
         ))
 
         fig.add_trace(go.Scatter(
@@ -67,7 +65,7 @@ def plot_lateral_deformations(mocap_datasets, mts_datasets, rims):
     fig.update_layout(
         xaxis_title='Load (lbf)',
         yaxis_title='Displacement (mm)',
-        title='Lateral Deformation n=25',
+        title='Lateral Deformation, Mean Line ± σ, n=25',
         legend=dict(
             x=0.01,
             y=0.99,
