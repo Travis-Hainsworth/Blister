@@ -1,0 +1,6 @@
+This folder contain a basic concept GUI for what could be a future rim finder on the blister webiste. All the .txt files come from the "Dynamic Energy Radial Test"
+file. In "graphingFunctions.py" in the "energy_vs_displacement" function has 2 commented out lines that do the .txt writing. I would suggest making some better way of
+getting/storing this data especially if there are more rims to be tested and it put on a website.
+
+More work with the equations to some how use the data from the lateral testing would be a good idea. 
+Another way to plot the individual rim points would be a good idea too but we could not think of a good way to show the very small spread of points we had.
