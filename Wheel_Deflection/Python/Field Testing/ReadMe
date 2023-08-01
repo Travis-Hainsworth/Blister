@@ -1,0 +1,12 @@
+This folder contains the python code that was made to analyze the field testing done in summer 2023.
+The code is very bare bones as the data we collected was not useful so this code was left unfinished.
+
+If this code ends up being used you will need to change a few things.
+The changes are all in the "process_field_data" function in dataProcessing.py and have to do with the naming of the markers in the rigid body
+We ended up making the wheel a rigid body and the hub a rigid body.
+The other changes are in the file "dtypes.py" which is where you would put the names of the markers you made for the RigidBody.
+
+You can also specify what frame in the motive file you want to look at. What we did is open the motive take and scroll through the time range and stop it right
+before the impact to look at the frame number. Then add it to this line: current_value = df[' X'].iloc[int(start_index) + 100] where 100 would be the frame number.
+
+
