@@ -1,11 +1,20 @@
-import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 
-# Plots the lateral deformation vs the load  found from the mts,
 def plot_lateral_deformations(mocap_datasets, mts_datasets, rims):
-    fig = go.Figure()
+    fig, ax = plt.subplots()
+
+    plt.ylabel('Lateral Deformation (mm)', fontsize=14)
+    plt.xlabel('Load (lbf)', fontsize=14)
+
+    plt.suptitle('Quasi-Static Loading on Bike Rims with Tires', fontsize=20)
+    plt.title(r'Shaded Region: +/- 1 $\sigma$   n=25', fontsize=15)
+
+    hues = np.linspace(0, 1, len(mocap_datasets) + 1)  # Generate equally spaced hues
+    color_mapping = {}
 
     for i, (mocap, mts) in enumerate(zip(mocap_datasets, mts_datasets)):
         all_lines = []
@@ -36,46 +45,22 @@ def plot_lateral_deformations(mocap_datasets, mts_datasets, rims):
         mean_line = np.mean(all_lines_padded, axis=0)
         std_dev_line = np.std(all_lines_padded, axis=0)
 
+        rim_label = rims[i]
+        for color_key in color_mapping.keys():
+            if color_key in rim_label:
+                color = color_mapping[color_key]
+                break
+        else:
+            color = mcolors.hsv_to_rgb((hues[i], 1, 1))  # Convert HSV to RGB
+            color_mapping[rim_label] = color
+
         # Plot the mean line and the shaded error bar for the current dataset
-        fig.add_trace(go.Scatter(
-            x=np.arange(len(mean_line)),
-            y=mean_line,
-            line=dict(width=1),
-            name=rims[i]
-        ))
+        ax.plot(np.arange(len(mean_line)), mean_line, label=rims[i], color=color)
+        ax.fill_between(np.arange(len(mean_line)), mean_line - (2 * std_dev_line), mean_line + (2 * std_dev_line),
+                        color=color, alpha=0.2)
 
-        fig.add_trace(go.Scatter(
-            x=np.arange(len(mean_line)),
-            y=mean_line - (2 * std_dev_line),
-            fill=None,
-            mode='lines',
-            line=dict(width=0),
-            showlegend=False
-        ))
+    ax.set_xlim([0, 200])
+    ax.legend(fontsize=14)
 
-        fig.add_trace(go.Scatter(
-            x=np.arange(len(mean_line)),
-            y=mean_line + (2 * std_dev_line),
-            fill='tonexty',
-            mode='lines',
-            line=dict(width=0),
-            showlegend=False
-        ))
+    plt.show()
 
-    fig.update_layout(
-        xaxis_title='Load (lbf)',
-        yaxis_title='Displacement (mm)',
-        title='Lateral Deformation, Mean Line ± σ, n=25',
-        legend=dict(
-            x=0.01,
-            y=0.99,
-            bgcolor='rgba(255, 255, 255, 0.5)',
-            bordercolor='rgba(0, 0, 0, 0.5)',
-            borderwidth=1
-        ),
-        margin=dict(l=50, r=20, t=80, b=50),
-        template='plotly_white',
-        xaxis_range=[0, 200]
-    )
-
-    fig.show()
