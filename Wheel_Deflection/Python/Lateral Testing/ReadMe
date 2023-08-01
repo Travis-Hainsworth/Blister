@@ -1,0 +1,13 @@
+This is the code that is used for the static lateral testing. Some code optimization would be a good impovement.
+
+The only thing you need to change in order to run it is in the "dataProcessing.py", "process_lateral_data" function.
+change these 2 lines so that the file path is to the folder containing all your data. The {} should be the name of the rims.
+
+mocap_data.append(get_mocap_data(r"C:\Users\ethan\Test\Static_Lateral\{}\MOCAP".format(rim)))
+mts_data.append(get_mts_data(r"C:\Users\ethan\Test\Static_Lateral\{}\MTS".format(rim)))
+
+Then in the "main.py" make sure this list is full of the rim names that are in the file paths.
+rims = ['R30 Alloy', 'R30 Carbon', 'Light', 'WAOU']
+
+So an example full file path should look like this:
+"C:\Users\ethan\Test\Static_Lateral\R30 Alloy\MOCAP"
