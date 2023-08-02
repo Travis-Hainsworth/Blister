@@ -22,7 +22,7 @@ disp(directories);
 %% Select Data
 ski_to_analyze = "line_sickday_2016_181cm_114mm";
 relative_dir_path = strcat('G:\.shortcut-targets-by-id\1jaXuO8culNZtbUZ1rrY8TEjG_TDjo2f5\Blister Labs Ski Flex\Ski_Data\', ski_to_analyze);
-data_to_retrieve = [8,9,10];
+data_to_retrieve = [6,7,8,9,10];
 existing_dirs = check_subdirectories(relative_dir_path, data_to_retrieve)
 
 %% load data
