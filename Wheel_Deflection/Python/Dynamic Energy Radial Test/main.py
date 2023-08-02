@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from graphingFunctions import *
 import cProfile
 
@@ -14,12 +16,18 @@ energy_absorbed, displacement, drop_heights, rims, heads = file_processor([
     r"C:\Users\ethan\Test\Energy_Testing\Waou_Rock",
     r"C:\Users\ethan\Test\Energy_Testing\R30_Flat",
     r"C:\Users\ethan\Test\Energy_Testing\R30_Rock",
-    r"C:\Users\ethan\Test\Energy_Testing\Light_Flat"
+    r"C:\Users\ethan\Test\Energy_Testing\Light_Flat",
+    r"C:\Users\ethan\Test\Energy_Testing\Light_Rock",
+    r"C:\Users\ethan\Test\Energy_Testing\R30AL_Flat",
+    r"C:\Users\ethan\Test\Energy_Testing\R30AL_Rock",
+    # r"C:\Users\ethan\Test\Energy_Testing\Flat_Test"
+
 ])
 # pro.disable()
 # pro.print_stats(sort='cumtime')
 percent_diff_plot(energy_absorbed, drop_heights, rims, heads)
 height_vs_displacement(drop_heights, displacement, rims, heads)
 energy_vs_displacement(energy_absorbed, displacement, rims, heads, norm=True)
-# energy_vs_energy(energy_absorbedm energy_absorbed)
+energy_vs_displacement(energy_absorbed, displacement, rims, heads, norm=False)
+
 
