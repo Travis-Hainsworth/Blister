@@ -24,7 +24,11 @@ import cProfile
 #
 # ])
 energy_absorbed, displacement, drop_heights, rims, heads = file_processor([
-    r"C:\Users\ethan\Test\Energy_Testing\Light_Angle",
+    r"C:\Users\Rady-MoCapCamera\Desktop\DynamicRadialTestingSummer2023\Angled (R-4)\LightEN928",
+    r"C:\Users\Rady-MoCapCamera\Desktop\DynamicRadialTestingSummer2023\Angled (R-4)\StansFlow",
+    r"C:\Users\Rady-MoCapCamera\Desktop\DynamicRadialTestingSummer2023\Angled (R-4)\Reserve30HD",
+    r"C:\Users\Rady-MoCapCamera\Desktop\DynamicRadialTestingSummer2023\Angled (R-4)\DTSwissM1900",
+    r"C:\Users\Rady-MoCapCamera\Desktop\DynamicRadialTestingSummer2023\Angled (R-4)\EnveAM30",
 ])
 # pro.disable()
 # pro.print_stats(sort='cumtime')
