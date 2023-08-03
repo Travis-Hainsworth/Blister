@@ -18,9 +18,9 @@ def process_single_file(folder_dir, file):
     # height = file_parts[7].split("Height")[1]
     # head = file_parts[9][:4]
     # rim = file_parts[4]
-    height = file_parts[6].split("Height")[1]
-    head = file_parts[4]
-    rim = file_parts[3]
+    height = file_parts[4].split("Height")[1]
+    head = file_parts[2]
+    rim = file_parts[1]
 
     df = df.drop(index=[0, 1])
     df = fix_mocap_df(df)
