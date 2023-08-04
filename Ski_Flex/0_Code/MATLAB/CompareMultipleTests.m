@@ -41,6 +41,7 @@ figure
 hold on
 plot(testAvg)
 title('Average EI data');
+ylabel('Nm^2');
 hold off
 %% put to 1-10 scale
 
